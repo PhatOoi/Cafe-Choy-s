@@ -1,8 +1,11 @@
 <?php
-class HomeController extends Controllers
+
+use App\Http\Controllers\Controller;
+
+class HomeController extends Controller
 {
     public function index()
     {
-        return view('HomeController');
+        return view('home');
     }
 }

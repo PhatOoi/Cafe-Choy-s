@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Coffee - Free Bootstrap 4 Template by Colorlib</title>
+    <title>Coffee Choy's</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     
@@ -31,17 +31,15 @@
   <body>
   	<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
 	    <div class="container">
-	      <a class="navbar-brand" href="index.html">Coffee<small>Blend</small></a>
+	      <a class="navbar-brand" href="{{ url('/login') }}">Coffee<small>Choy's</small></a>
 	      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav" aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
 	        <span class="oi oi-menu"></span> Menu
 	      </button>
 	      <div class="collapse navbar-collapse" id="ftco-nav">
 	        <ul class="navbar-nav ml-auto">
-	          <li class="nav-item active"><a href="index.html" class="nav-link">Home</a></li>
-	          <li class="nav-item"><a href="menu.html" class="nav-link">Menu</a></li>
-	          <li class="nav-item"><a href="services.html" class="nav-link">Services</a></li>
-	          <li class="nav-item"><a href="blog.html" class="nav-link">Blog</a></li>
-	          <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
+	          <li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Home</a></li>
+	          <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+	          <li class="nav-item"><a href="{{ url('/about') }}" class="nav-link">About</a></li>
 	          <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="room.html" id="dropdown04" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Shop</a>
               <div class="dropdown-menu" aria-labelledby="dropdown04">
@@ -117,27 +115,27 @@
 	    				<div class="col-md-4 d-flex ftco-animate">
 	    					<div class="icon"><span class="icon-phone"></span></div>
 	    					<div class="text">
-	    						<h3>000 (123) 456 7890</h3>
-	    						<p>A small river named Duden flows by their place and supplies.</p>
+	    						<h3>190099</h3>
+	    						<p>Liên hệ với chúng tôi để được hỗ trợ.</p>
 	    					</div>
 	    				</div>
 	    				<div class="col-md-4 d-flex ftco-animate">
 	    					<div class="icon"><span class="icon-my_location"></span></div>
 	    					<div class="text">
-	    						<h3>198 West 21th Street</h3>
-	    						<p>	203 Fake St. Mountain View, San Francisco, California, USA</p>
+	    						<h3>Tòa nhà JOVE</h3>
+	    						<p>	Quốc lộ 1A,Trung Mỹ Tây,TP. HCM</p>
 	    					</div>
 	    				</div>
 	    				<div class="col-md-4 d-flex ftco-animate">
 	    					<div class="icon"><span class="icon-clock-o"></span></div>
 	    					<div class="text">
-	    						<h3>Open Monday-Friday</h3>
+	    						<h3>Thứ Ba - Chủ Nhật</h3>
 	    						<p>8:00am - 9:00pm</p>
 	    					</div>
 	    				</div>
 	    			</div>
 	    		</div>
-	    		<div class="book p-4">
+	    		{{-- <div class="book p-4">
 	    			<h3>Book a Table</h3>
 	    			<form action="#" class="appointment-form">
 	    				<div class="d-md-flex">
@@ -174,7 +172,7 @@
 		            </div>
 	    				</div>
 	    			</form>
-	    		</div>
+	    		</div> --}}
     		</div>
     	</div>
     </section>
@@ -184,11 +182,11 @@
     	<div class="one-half ftco-animate">
     		<div class="overlap">
 	        <div class="heading-section ftco-animate ">
-	        	<span class="subheading">Discover</span>
-	          <h2 class="mb-4">Our Story</h2>
+	        	<span class="subheading">Choy's Coffee</span>
+	          <h2 class="mb-4">Niềm tự hào của chúng tôi</h2>
 	        </div>
 	        <div>
-	  				<p>On her way she met a copy. The copy warned the Little Blind Text, that where it came from it would have been rewritten a thousand times and everything that was left from its origin would be the word "and" and the Little Blind Text should turn around and return to its own, safe country. But nothing the copy said could convince her and so it didn’t take long until a few insidious Copy Writers ambushed her, made her drunk with Longe and Parole and dragged her into their agency, where they abused her for their.</p>
+	  			<p>Niềm tự hào của quán chúng tôi không chỉ nằm ở cà phê, mà còn ở sự đa dạng trong từng loại thức uống. Từ cà phê đậm đà, trà thanh mát đến các loại nước trái cây tươi ngon – tất cả đều được pha chế kỹ lưỡng từ nguyên liệu chất lượng cao.Chúng tôi luôn không ngừng sáng tạo để mang đến cho khách hàng nhiều lựa chọn phong phú, phù hợp với mọi sở thích và nhu cầu. Mỗi ly nước không chỉ là một thức uống giải khát, mà còn là sự kết hợp của hương vị, cảm xúc và trải nghiệm..</p>
 	  			</div>
   			</div>
     	</div>
@@ -203,8 +201,8 @@
               	<span class="flaticon-choices"></span>
               </div>
               <div class="media-body">
-                <h3 class="heading">Easy to Order</h3>
-                <p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic.</p>
+                <h3 class="heading">Dễ Dàng Đặt Hàng</h3>
+                <p>Mang đến trải nghiệm đặt hàng nhanh chóng và tiện lợi, giúp bạn dễ dàng chọn món yêu thích chỉ trong vài bước đơn giản.</p>
               </div>
             </div>      
           </div>
@@ -214,8 +212,8 @@
               	<span class="flaticon-delivery-truck"></span>
               </div>
               <div class="media-body">
-                <h3 class="heading">Fastest Delivery</h3>
-                <p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic.</p>
+                <h3 class="heading">Giao Hàng Nhanh Chóng</h3>
+                <p>Cam kết giao hàng nhanh chóng và đảm bảo chất lượng, giúp bạn nhận được món uống yêu thích chỉ trong thời gian ngắn nhất.</p>
               </div>
             </div>      
           </div>
@@ -224,8 +222,8 @@
               <div class="icon d-flex justify-content-center align-items-center mb-5">
               	<span class="flaticon-coffee-bean"></span></div>
               <div class="media-body">
-                <h3 class="heading">Quality Coffee</h3>
-                <p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic.</p>
+                <h3 class="heading">Chất Lượng Sản Phẩm</h3>
+                <p>Cung cấp những sản phẩm chất lượng cao, được chọn lọc kỹ lưỡng từ nguyên liệu tốt nhất.</p>
               </div>
             </div>    
           </div>
@@ -238,9 +236,9 @@
     		<div class="row align-items-center">
     			<div class="col-md-6 pr-md-5">
     				<div class="heading-section text-md-right ftco-animate">
-	          	<span class="subheading">Discover</span>
+	          	<span class="subheading">Khám Phá</span>
 	            <h2 class="mb-4">Our Menu</h2>
-	            <p class="mb-4">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean.</p>
+	            <p class="mb-4">Mỗi món nước đều được pha chế tỉ mỉ, kết hợp hương vị độc đáo nhằm mang đến cho bạn trải nghiệm mới mẻ và đầy cảm hứng. Hãy để mỗi lần ghé quán là một hành trình khám phá hương vị thú vị.</p>
 	            <p><a href="#" class="btn btn-primary btn-outline-primary px-4 py-3">View Full Menu</a></p>
 	          </div>
     			</div>
