@@ -50,6 +50,7 @@
               </div>
             </li>
 	          <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+			  <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Login</a></li>
 	          <li class="nav-item cart"><a href="cart.html" class="nav-link"><span class="icon icon-shopping_cart"></span><span class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a></li>
 	        </ul>
 	      </div>

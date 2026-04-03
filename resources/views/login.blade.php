@@ -1,126 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ececec;
+            height: 100vh;
+            padding: 20px;
+            background: url('images/backgrlogin.jpg') no-repeat center center/cover;
+        }
 
-    <!-- Tailwind Config -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {}
+        .container {
+            width: 900px;
+            min-height: 520px;
+            background-color: #fff;
+            display: flex;
+            border-radius: 15px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* QUAN TRỌNG */
+        #toggle {
+            display: none;
+        }
+
+        .left {
+            width: 52%;
+            padding: 60px 50px;
+            transition: 0.4s;
+        }
+
+        .left h2,
+        .left h1 {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        .input-box {
+            width: 100%;
+            margin-bottom: 18px;
+        }
+
+        .input-box label {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .input-box input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #bbb;
+            margin-top: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: black;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: #333;
+        }
+
+        .toggle-text {
+            margin-top: 15px;
+            font-size: 15px;
+        }
+
+        .toggle-text label {
+            color: blue;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .right {
+            width: 48%;
+            background: black;
+            color: white;
+            padding: 90px 50px;
+            clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
+        }
+
+        .right-container {
+            margin-left: 100px;
+            margin-top: 40px;
+        }
+
+        .right h1 {
+            font-size: 40px;
+            line-height: 1.3;
+        }
+
+        .right p {
+            margin-top: 15px;
+            opacity: 0.85;
+        }
+
+        .register-form {
+            display: none;
+        }
+
+        /* TOGGLE FORM */
+        #toggle:checked~.container .login-form {
+            display: none;
+        }
+
+        #toggle:checked~.container .register-form {
+            display: block;
+        }
+
+        @media (max-width: 750px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .left,
+            .right {
+                width: 100%;
+                clip-path: none;
+            }
+
+            .right-container {
+                margin-left: 0;
+                text-align: center;
             }
         }
-    </script>
+    </style>
 </head>
 
-<body class="bg-gray-100">
+<body>
 
-<div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <!-- BẮT BUỘC PHẢI CÓ -->
+    <input type="checkbox" id="toggle">
 
-    <!-- Title -->
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-        </h2>
+    <div class="container">
+        <div class="left">
 
-        <p class="mt-2 text-center text-sm text-gray-600 max-w-md mx-auto">
-            Or
-            <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
-                create an account
-            </a>
-        </p>
-    </div>
+            <!-- LOGIN -->
+            <div class="login-form">
+                <h2>Login</h2>
 
-    <!-- Form -->
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-
-            {{-- ERROR --}}
-            @if(session('error'))
-                <div class="mb-4 text-red-500 text-sm">
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            {{-- FORM --}}
-                @csrf
-
-                <!-- Email -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">
-                        Email address
-                    </label>
-                    <input name="email" type="email" required
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Enter your email">
+                <div class="input-box">
+                    <label>Email</label>
+                    <input type="email" placeholder="Enter your email">
                 </div>
 
-                <!-- Password -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">
-                        Password
-                    </label>
-                    <input name="password" type="password" required
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Enter your password">
+                <div class="input-box">
+                    <label>Password</label>
+                    <input type="password" placeholder="Enter your Password">
                 </div>
 
-                <!-- Remember -->
-                <div class="flex items-center justify-between">
-                    <label class="flex items-center">
-                        <input type="checkbox" name="remember"
-                            class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                        <span class="ml-2 text-sm text-gray-900">Remember me</span>
-                    </label>
+                <button class="btn">Login</button>
 
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-500">
-                        Forgot password?
-                    </a>
+                <p class="toggle-text">
+                    Don't have an account?
+                    <label for="toggle">Signup</label>
+                </p>
+            </div>
+
+            <!-- REGISTER -->
+            <div class="register-form">
+                <h1>Register</h1>
+
+                <div class="input-box">
+                    <label>Username</label>
+                    <input type="text" placeholder="Enter your username">
                 </div>
 
-                <!-- Button -->
-                <button type="submit"
-                    class="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                    Sign in
-                </button>
-            </form>
-
-            <!-- Social -->
-            <div class="mt-6">
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-white text-gray-500">
-                            Or continue with
-                        </span>
-                    </div>
+                <div class="input-box">
+                    <label>Email</label>
+                    <input type="email" placeholder="Enter your email">
                 </div>
 
-                <div class="mt-6 grid grid-cols-3 gap-3">
-                    <a href="#" class="flex justify-center p-3 border rounded-md">
-                        <img class="h-5 w-5" src="https://www.svgrepo.com/show/512120/facebook-176.svg">
-                    </a>
-                    <a href="#" class="flex justify-center p-3 border rounded-md">
-                        <img class="h-5 w-5" src="https://www.svgrepo.com/show/513008/twitter-154.svg">
-                    </a>
-                    <a href="#" class="flex justify-center p-3 border rounded-md">
-                        <img class="h-5 w-5" src="https://www.svgrepo.com/show/506498/google.svg">
-                    </a>
+                <div class="input-box">
+                    <label>Password</label>
+                    <input type="password" placeholder="Enter your Password">
                 </div>
+
+                <button class="btn">Register</button>
+
+                <p class="toggle-text">
+                    Already have an account?
+                    <label for="toggle">Login</label>
+                </p>
             </div>
 
         </div>
+
+        <div class="right">
+            <div class="right-container">
+                <h1>WELCOME<br>BACK!</h1>
+                <p>Chào mừng bạn đến với Coffee Choy's ☕</p>
+            </div>
+        </div>
     </div>
 
-</div>
-
 </body>
+
 </html>
