@@ -17,6 +17,10 @@ Route::get('/about',[AboutController::class,'index']);
 
 Route::get('/login',[LoginController::class,'index']);
 
+// Trang giỏ hàng
+Route::get('/cart', function () {
+    return view('cart');
+});
 
 Route::get('/test-db', function () {
     $users = DB::table('users')->get();
