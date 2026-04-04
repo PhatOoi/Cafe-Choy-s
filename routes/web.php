@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\RegisterController;

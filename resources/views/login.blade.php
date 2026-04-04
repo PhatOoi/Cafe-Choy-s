@@ -7,7 +7,15 @@
     <title>Login</title>
    <link rel="stylesheet" href="css/login.css">
     <style>
-        
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ececec;
+            height: 100vh;
+            padding: 20px;
+            background: url('images/backgrlogin.jpg') no-repeat center center/cover;
+        }
     </style>
 </head>
 

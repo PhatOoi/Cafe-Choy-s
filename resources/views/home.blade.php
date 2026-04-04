@@ -28,6 +28,7 @@
 	<link rel="stylesheet" href="css/flaticon.css">
 	<link rel="stylesheet" href="css/icomoon.css">
 	<link rel="stylesheet" href="css/style.css">
+	
 </head>
 
 <body>
@@ -40,7 +41,7 @@
 			</button>
 			<div class="collapse navbar-collapse" id="ftco-nav">
 				<ul class="navbar-nav ml-auto">
-					<li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Home</a></li>
+					<li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
 					<li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
 					<li class="nav-item"><a href="{{ url('/about') }}" class="nav-link">About</a></li>
 					<li class="nav-item dropdown">
@@ -322,8 +323,8 @@
 							<div class="block-18 text-center">
 								<div class="text">
 									<div class="icon"><span class="flaticon-coffee-cup"></span></div>
-									<strong class="number" data-number="100">0</strong>
-									<span>Coffee Branches</span>
+									<strong class="number" data-number="56">0</strong>
+									<span>Số Chi Nhánh Quán</span>
 								</div>
 							</div>
 						</div>
@@ -331,8 +332,8 @@
 							<div class="block-18 text-center">
 								<div class="text">
 									<div class="icon"><span class="flaticon-coffee-cup"></span></div>
-									<strong class="number" data-number="85">0</strong>
-									<span>Number of Awards</span>
+									<strong class="number" data-number="21">0</strong>
+									<span>Giải Thưởng</span>
 								</div>
 							</div>
 						</div>
@@ -341,7 +342,7 @@
 								<div class="text">
 									<div class="icon"><span class="flaticon-coffee-cup"></span></div>
 									<strong class="number" data-number="10567">0</strong>
-									<span>Happy Customer</span>
+									<span>Khách hàng hạnh phúc</span>
 								</div>
 							</div>
 						</div>
@@ -349,8 +350,8 @@
 							<div class="block-18 text-center">
 								<div class="text">
 									<div class="icon"><span class="flaticon-coffee-cup"></span></div>
-									<strong class="number" data-number="900">0</strong>
-									<span>Staff</span>
+									<strong class="number" data-number="254">0</strong>
+									<span>Nhân Viên</span>
 								</div>
 							</div>
 						</div>
@@ -364,10 +365,9 @@
 		<div class="container">
 			<div class="row justify-content-center mb-5 pb-3">
 				<div class="col-md-7 heading-section ftco-animate text-center">
-					<span class="subheading">Discover</span>
-					<h2 class="mb-4">Best Coffee Sellers</h2>
-					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there
-						live the blind texts.</p>
+					<span class="subheading">Khám phá</span>
+					<h2 class="mb-4">Thực đơn bán chạy nhất</h2>
+					<p>Khách hàng thấy tuyệt vời khi dùng các thức uống này.</p>
 				</div>
 			</div>
 			<div class="row">
@@ -376,7 +376,7 @@
 						<a href="#" class="img" style="background-image: url(images/menu-1.jpg);"></a>
 						<div class="text text-center pt-4">
 							<h3><a href="#">Coffee Capuccino</a></h3>
-							<p>A small river named Duden flows by their place and supplies</p>
+							<p>Đang chỉnh</p>
 							<p class="price"><span>$5.90</span></p>
 							<p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>
 						</div>
@@ -387,7 +387,7 @@
 						<a href="#" class="img" style="background-image: url(images/menu-2.jpg);"></a>
 						<div class="text text-center pt-4">
 							<h3><a href="#">Coffee Capuccino</a></h3>
-							<p>A small river named Duden flows by their place and supplies</p>
+							<p>Đang Chỉnh</p>
 							<p class="price"><span>$5.90</span></p>
 							<p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>
 						</div>
@@ -398,7 +398,7 @@
 						<a href="#" class="img" style="background-image: url(images/menu-3.jpg);"></a>
 						<div class="text text-center pt-4">
 							<h3><a href="#">Coffee Capuccino</a></h3>
-							<p>A small river named Duden flows by their place and supplies</p>
+							<p>Đang chỉnh</p>
 							<p class="price"><span>$5.90</span></p>
 							<p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>
 						</div>
@@ -409,7 +409,7 @@
 						<a href="#" class="img" style="background-image: url(images/menu-4.jpg);"></a>
 						<div class="text text-center pt-4">
 							<h3><a href="#">Coffee Capuccino</a></h3>
-							<p>A small river named Duden flows by their place and supplies</p>
+							<p>Đang chỉnh</p>
 							<p class="price"><span>$5.90</span></p>
 							<p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>
 						</div>
@@ -419,7 +419,7 @@
 		</div>
 	</section>
 
-	<section class="ftco-gallery">
+	{{-- <section class="ftco-gallery">
 		<div class="container-wrap">
 			<div class="row no-gutters">
 				<div class="col-md-3 ftco-animate">
@@ -456,7 +456,7 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</section> --}}
 
 	{{-- <section class="ftco-menu">
 		<div class="container">
@@ -638,7 +638,7 @@
 			</div>
 		</div>
 	</section> --}}
-
+{{-- 
 	<section class="ftco-section img" id="ftco-testimony" style="background-image: url(images/bg_1.jpg);"
 		data-stellar-background-ratio="0.5">
 		<div class="overlay"></div>
@@ -734,9 +734,9 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</section> --}}
 
-	<section class="ftco-section">
+	{{-- <section class="ftco-section">
 		<div class="container">
 			<div class="row justify-content-center mb-5 pb-3">
 				<div class="col-md-7 heading-section ftco-animate text-center">
@@ -799,15 +799,22 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</section> --}}
 
-
+{{-- gg map --}}
 	<section class="ftco-appointment">
 		<div class="overlay"></div>
 		<div class="container-wrap">
 			<div class="row no-gutters d-md-flex align-items-center">
 				<div class="col-md-6 d-flex align-self-stretch">
-					<div id="map"></div>
+					<iframe
+						src="https://www.google.com/maps?q=Cao%20Đẳng%20Kỹ%20Thuật%20Du%20Lịch%20Sài%20Gòn&hl=vi&z=16&output=embed"
+						width="100%" 
+						height="400" 
+						style="border:0;" 
+						allowfullscreen="" 
+						loading="lazy">
+					</iframe>
 				</div>
 				<div class="col-md-6 appointment ftco-animate">
 					<h3 class="mb-3">Book a Table</h3>
@@ -852,93 +859,333 @@
 		</div>
 	</section>
 
-	<footer class="ftco-footer ftco-section img">
-		<div class="overlay"></div>
-		<div class="container">
-			<div class="row mb-5">
-				<div class="col-lg-3 col-md-6 mb-5 mb-md-5">
-					<div class="ftco-footer-widget mb-4">
-						<h2 class="ftco-heading-2">About Us</h2>
-						<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia,
-							there live the blind texts.</p>
-						<ul class="ftco-footer-social list-unstyled float-md-left float-lft mt-5">
-							<li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-							<li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-							<li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-						</ul>
-					</div>
-				</div>
-				<div class="col-lg-4 col-md-6 mb-5 mb-md-5">
-					<div class="ftco-footer-widget mb-4">
-						<h2 class="ftco-heading-2">Recent Blog</h2>
-						<div class="block-21 mb-4 d-flex">
-							<a class="blog-img mr-4" style="background-image: url(images/image_1.jpg);"></a>
-							<div class="text">
-								<h3 class="heading"><a href="#">Even the all-powerful Pointing has no control about</a>
-								</h3>
-								<div class="meta">
-									<div><a href="#"><span class="icon-calendar"></span> Sept 15, 2018</a></div>
-									<div><a href="#"><span class="icon-person"></span> Admin</a></div>
-									<div><a href="#"><span class="icon-chat"></span> 19</a></div>
-								</div>
-							</div>
-						</div>
-						<div class="block-21 mb-4 d-flex">
-							<a class="blog-img mr-4" style="background-image: url(images/image_2.jpg);"></a>
-							<div class="text">
-								<h3 class="heading"><a href="#">Even the all-powerful Pointing has no control about</a>
-								</h3>
-								<div class="meta">
-									<div><a href="#"><span class="icon-calendar"></span> Sept 15, 2018</a></div>
-									<div><a href="#"><span class="icon-person"></span> Admin</a></div>
-									<div><a href="#"><span class="icon-chat"></span> 19</a></div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="col-lg-2 col-md-6 mb-5 mb-md-5">
-					<div class="ftco-footer-widget mb-4 ml-md-4">
-						<h2 class="ftco-heading-2">Services</h2>
-						<ul class="list-unstyled">
-							<li><a href="#" class="py-2 d-block">Cooked</a></li>
-							<li><a href="#" class="py-2 d-block">Deliver</a></li>
-							<li><a href="#" class="py-2 d-block">Quality Foods</a></li>
-							<li><a href="#" class="py-2 d-block">Mixed</a></li>
-						</ul>
-					</div>
-				</div>
-				<div class="col-lg-3 col-md-6 mb-5 mb-md-5">
-					<div class="ftco-footer-widget mb-4">
-						<h2 class="ftco-heading-2">Have a Questions?</h2>
-						<div class="block-23 mb-3">
-							<ul>
-								<li><span class="icon icon-map-marker"></span><span class="text">203 Fake St. Mountain
-										View, San Francisco, California, USA</span></li>
-								<li><a href="#"><span class="icon icon-phone"></span><span class="text">+2 392 3929
-											210</span></a></li>
-								<li><a href="#"><span class="icon icon-envelope"></span><span
-											class="text">info@yourdomain.com</span></a></li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12 text-center">
+	<footer class="coffee-footer">
+    <!-- Newsletter Section -->
+    <div class="newsletter-section">
+        <div class="container">
+            <div class="newsletter-content">
+                <h3>Nhận ưu đãi đặc biệt</h3>
+                <p>Đăng ký để nhận thông tin về cà phê mới và ưu đãi độc quyền</p>
+                <div class="newsletter-form">
+                    <input type="email" placeholder="Nhập email của bạn" id="emailInput">
+                    <button onclick="subscribeNewsletter()">Đăng ký</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-					<p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-						Copyright &copy;
-						<script>document.write(new Date().getFullYear());</script> All rights reserved | This template
-						is made with <i class="icon-heart" aria-hidden="true"></i> by <a href="https://colorlib.com"
-							target="_blank">Colorlib</a>
-						<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-					</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+    <!-- Main Footer -->
+    <div class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Brand -->
+                <div class="footer-brand">
+                    <h2>☕ CoffeeChoy's</h2>
+                    <p>Hân hạnh đồng hành cùng quý khách!.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
 
+                <!-- Quick Links -->
+                <div class="footer-links">
+                    <h4>Khám phá</h4>
+                    <ul>
+                        <li><a href="#">Menu</a></li>
+                        <li><a href="#">Cửa hàng</a></li>
+                        <li><a href="#">Đặt hàng online</a></li>
+                    </ul>
+                </div>
+
+                <!-- Services -->
+                <div class="footer-links">
+                    <h4>Dịch vụ</h4>
+                    <ul>
+                        <li><a href="#">Ship tận nơi</a></li>
+                        <li><a href="#">Catering</a></li>
+                        <li><a href="#">Thẻ thành viên</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div class="footer-contact">
+                    <h4>Liên hệ</h4>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>+190099</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <span>8:00 - 21:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="copyright">
+        <div class="container">
+            <p>&copy; 2026 CoffeeChoy's. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* === COFFEE FOOTER STYLES === */
+    .coffee-footer {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #ffffff;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+        line-height: 1.6;
+        margin-top: 100px; /* Khoảng cách với nội dung chính */
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    /* Newsletter */
+    .newsletter-section {
+        background: rgba(255, 107, 0, 0.1);
+        padding: 60px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .newsletter-content {
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .newsletter-content h3 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        background: linear-gradient(45deg, #ffffff, #ff6b00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .newsletter-content p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 32px;
+    }
+
+    .newsletter-form {
+        display: flex;
+        max-width: 400px;
+        margin: 0 auto;
+        gap: 12px;
+    }
+
+    .newsletter-form input {
+        flex: 1;
+        padding: 16px 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 1rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .newsletter-form input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .newsletter-form input:focus {
+        outline: none;
+        border-color: #ff6b00;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
+    }
+
+    .newsletter-form button {
+        padding: 16px 28px;
+        background: linear-gradient(45deg, #ff6b00, #ff8c42);
+        border: none;
+        border-radius: 50px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(255, 107, 0, 0.3);
+    }
+
+    .newsletter-form button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(255, 107, 0, 0.4);
+    }
+
+    /* Main Footer */
+    .main-footer {
+        padding: 60px 0 40px;
+    }
+
+    .footer-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 40px;
+    }
+
+    .footer-brand h2 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        background: linear-gradient(45deg, #ffffff, #ff6b00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .footer-brand p {
+        opacity: 0.8;
+        margin-bottom: 24px;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 16px;
+    }
+
+    .social-links a {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .social-links a:hover {
+        background: #ff6b00;
+        transform: translateY(-3px);
+    }
+
+    /* Links */
+    .footer-links h4,
+    .footer-contact h4 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .footer-links h4::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        width: 30px;
+        height: 2px;
+        background: #ff6b00;
+    }
+
+    .footer-links ul {
+        list-style: none;
+    }
+
+    .footer-links li {
+        margin-bottom: 12px;
+    }
+
+    .footer-links a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .footer-links a:hover {
+        color: #ff6b00;
+        padding-left: 6px;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        opacity: 0.9;
+    }
+
+    .contact-item i {
+        color: #ff6b00;
+        width: 20px;
+    }
+
+    /* Copyright */
+    .copyright {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 20px 0;
+        text-align: center;
+    }
+
+    .copyright p {
+        opacity: 0.7;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .newsletter-form {
+            flex-direction: column;
+        }
+        
+        .footer-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+            text-align: center;
+        }
+        
+        .newsletter-content h3 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+    function subscribeNewsletter() {
+        const emailInput = document.getElementById('emailInput');
+        const email = emailInput.value.trim();
+        const button = emailInput.nextElementSibling;
+        
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            button.style.background = '#ef4444';
+            setTimeout(() => button.style.background = '', 500);
+            return;
+        }
+        
+        button.textContent = 'Đã đăng ký!';
+		
+        button.style.background = '#10b981';
+        emailInput.value = '';
+        
+        setTimeout(() => {
+            button.textContent = 'Đăng ký';
+            button.style.background = 'linear-gradient(45deg, #ff6b00, #ff8c42)';
+        }, 2000);
+    }
+
+    // Enter key
+    document.getElementById('emailInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') subscribeNewsletter();
+    });
+</script>
 
 
 	<!-- loader -->
@@ -948,7 +1195,8 @@
 				stroke="#F96D00" />
 		</svg></div>
 
-
+	
+	<script src="js/footer.js"></script>
 	<script src="js/jquery.min.js"></script>
 	<script src="js/jquery-migrate-3.0.1.min.js"></script>
 	<script src="js/popper.min.js"></script>
