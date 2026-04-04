@@ -32,6 +32,7 @@
                     <label>Password</label>
                     <input type="password" placeholder="Enter your Password">
                 </div>
+                <p style="margin-bottom: 10px;"><a href="/forgot-password" style="color:#3498db;">Quên mật khẩu?</a></p>
 
                 <button class="btn">Login</button>
 

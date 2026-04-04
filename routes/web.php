@@ -5,6 +5,8 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\LoginController;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\ForgotPasswordController;
+
 // Trang chủ
 Route::get('/', function () {
     return view('home');
@@ -26,3 +28,11 @@ Route::get('/test-db', function () {
     $users = DB::table('users')->get();
     return $users;
 });
+
+// Quên mật khẩu
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showEmailForm'])->name('forgot-password.email-form');
+Route::post('/forgot-password/send-code', [ForgotPasswordController::class, 'sendCode'])->name('forgot-password.send-code');
+Route::get('/forgot-password/verify', [ForgotPasswordController::class, 'showVerifyForm'])->name('forgot-password.verify-form');
+Route::post('/forgot-password/verify', [ForgotPasswordController::class, 'verifyCode'])->name('forgot-password.verify-code');
+Route::get('/forgot-password/reset', [ForgotPasswordController::class, 'showResetForm'])->name('forgot-password.reset-form');
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('forgot-password.reset-password');
