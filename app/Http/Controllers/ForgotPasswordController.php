@@ -46,14 +46,14 @@ class ForgotPasswordController extends Controller
     public function verifyCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
             'code' => 'required|digits:6',
         ]);
-        $reset = DB::table('password_resets')->where('email', $request->email)->first();
+        $email = $request->email;
+        $reset = DB::table('password_resets')->where('email', $email)->first();
         if (!$reset || !Hash::check($request->code, $reset->token)) {
             return back()->withErrors(['code' => 'Mã xác thực không đúng!']);
         }
-        session(['reset_email' => $request->email]);
+        session(['reset_email' => $email]);
         return redirect()->route('forgot-password.reset-form');
     }
 
@@ -66,17 +66,17 @@ class ForgotPasswordController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
             'password' => 'required|min:6|confirmed',
         ]);
-        $user = User::where('email', $request->email)->first();
+        $email = $request->email;
+        $user = User::where('email', $email)->first();
         if (!$user) {
             return back()->withErrors(['email' => 'Email không tồn tại!']);
         }
         $user->password = Hash::make($request->password);
         $user->save();
         // Xóa mã reset
-        DB::table('password_resets')->where('email', $request->email)->delete();
+        DB::table('password_resets')->where('email', $email)->delete();
         return redirect()->route('login')->with('status', 'Đổi mật khẩu thành công!');
     }
 }

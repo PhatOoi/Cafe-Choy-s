@@ -54,11 +54,27 @@
 						</div>
 					</li>
 					<li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
-					<li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Login</a></li>
-					<li class="nav-item cart"><a href="/cart" class="nav-link"><span
-								class="icon icon-shopping_cart"></span><span
-								class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
-					</li>
+					@if(Auth::check())
+						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
+									class="icon icon-shopping_cart"></span><span
+									class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
+						</li>
+						<li class="nav-item">
+							<span class="nav-link">Hello, {{ Auth::user()->name }}</span>
+						</li>
+						<li class="nav-item">
+							<form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
+								@csrf
+							</form>
+							<a href="#" class="nav-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="cursor:pointer;">Đăng xuất</a>
+						</li>
+					@else
+						<li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Login</a></li>
+						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
+									class="icon icon-shopping_cart"></span><span
+									class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
+						</li>
+					@endif
 				</ul>
 			</div>
 		</div>

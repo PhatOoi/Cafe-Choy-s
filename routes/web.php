@@ -6,6 +6,7 @@ use App\Http\Controllers\AboutController;
 use App\Http\Controllers\LoginController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\RegisterController;
 
 // Trang chủ
 Route::get('/', function () {
@@ -18,6 +19,8 @@ Route::get('/menu', [MenuController::class, 'index']);
 Route::get('/about',[AboutController::class,'index']);
 
 Route::get('/login',[LoginController::class,'index']);
+Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Trang giỏ hàng
 Route::get('/cart', function () {
@@ -36,3 +39,6 @@ Route::get('/forgot-password/verify', [ForgotPasswordController::class, 'showVer
 Route::post('/forgot-password/verify', [ForgotPasswordController::class, 'verifyCode'])->name('forgot-password.verify-code');
 Route::get('/forgot-password/reset', [ForgotPasswordController::class, 'showResetForm'])->name('forgot-password.reset-form');
 Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('forgot-password.reset-password');
+
+// Đăng ký người dùng mới
+Route::post('/register', [RegisterController::class, 'register'])->name('register');
