@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
             [
                 'role_id'    => 1,
                 'name'       => 'Admin Coffee Choy',
-                'email'      => 'admin@coffeechoys.vn',
+                'email'      => 'choyscaffe@gmail.com',
                 'password'   => Hash::make('Admin@123'),
                 'phone'      => '0901000001',
                 'is_active'  => true,
