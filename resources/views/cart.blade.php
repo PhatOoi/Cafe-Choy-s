@@ -425,6 +425,15 @@
     }
 </style>
 
+<style>
+    /* Xóa background, border, shadow của phần thanh toán */
+    .card {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+</style>
+
 	<script src="js/jquery.min.js"></script>
 	<script src="js/jquery-migrate-3.0.1.min.js"></script>
 	<script src="js/popper.min.js"></script>
