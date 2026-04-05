@@ -43,23 +43,10 @@
 				<ul class="navbar-nav ml-auto">
 					<li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
 					<li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
-					<li class="nav-item"><a href="{{ url('/about') }}" class="nav-link">About</a></li>
-					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="room.html" id="dropdown04" data-toggle="dropdown"
-							aria-haspopup="true" aria-expanded="false">Shop</a>
-						<div class="dropdown-menu" aria-labelledby="dropdown04">
-							<a class="dropdown-item" href="shop.html">Shop</a>
-							<a class="dropdown-item" href="product-single.html">Single Product</a>
-							<a class="dropdown-item" href="/cart">Cart</a>
-							<a class="dropdown-item" href="checkout.html">Checkout</a>
-						</div>
-					</li>
-					<li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+					
+					<li class="nav-item"><a href="contact.html" class="nav-link">Liên hệ</a></li>
 					@if(Auth::check())
-						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
-									class="icon icon-shopping_cart"></span><span
-									class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
-						</li>
+						
 						<li class="nav-item">
 							<span class="nav-link">Hello, {{ Auth::user()->name }}</span>
 						</li>
@@ -69,11 +56,15 @@
 							</form>
 							<a href="#" class="nav-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="cursor:pointer;">Đăng xuất</a>
 						</li>
+						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
+									class="icon icon-shopping_cart"></span><span
+									class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
+						</li>
 					@else
 						<li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Login</a></li>
 						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
 									class="icon icon-shopping_cart"></span><span
-									class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
+									class="bag d-flex justify-content-center align-items-center"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
 						</li>
 					@endif
 				</ul>

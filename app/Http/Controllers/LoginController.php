@@ -23,7 +23,7 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            return redirect('/');
+            return redirect('/menu');
         }
 
         return back()->with('error', 'Gmail hoặc mật khẩu không đúng!');

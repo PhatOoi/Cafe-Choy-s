@@ -37,7 +37,28 @@
 					<li class="nav-item"><a href="/menu" class="nav-link">Menu</a></li>
 					<li class="nav-item"><a href="/about" class="nav-link">Về Chúng Tôi</a></li>
 					<li class="nav-item active"><a href="/cart" class="nav-link">Giỏ Hàng</a></li>
-					<li class="nav-item"><a href="/login" class="nav-link">Đăng Nhập</a></li>
+					@if(Auth::check())
+						
+						<li class="nav-item">
+							<span class="nav-link">Hello, {{ Auth::user()->name }}</span>
+						</li>
+						<li class="nav-item">
+							<form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
+								@csrf
+							</form>
+							<a href="#" class="nav-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="cursor:pointer;">Đăng xuất</a>
+						</li>
+						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
+									class="icon icon-shopping_cart"></span><span
+									class="bag d-flex justify-content-center align-items-center"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
+						</li>
+					@else
+						<li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Login</a></li>
+						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
+									class="icon icon-shopping_cart"></span><span
+									class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
+						</li>
+					@endif
 				</ul>
 			</div>
 		</div>
@@ -60,51 +81,347 @@
 								</tr>
 							</thead>
 							<tbody>
-								<tr>
-									<td colspan="5" class="text-center">Giỏ hàng của bạn đang trống</td>
-								</tr>
+								@if(count($cart) > 0)
+									@foreach($cart as $key => $item)
+										@php
+											$itemTotal = $item['price'] * $item['qty'];
+										@endphp
+										<tr>
+											<td>
+												<strong>{{ $item['name'] }}</strong>
+												<br>
+												<small class="text-muted">
+													Kích cỡ: {{ $item['size'] }}<br>
+													Đường: {{ $item['sugar'] }}<br>
+													Đá: {{ $item['ice'] }}
+													@if(!empty($item['toppings']) && count($item['toppings']) > 0)
+														<br>Topping: {{ implode(', ', $item['toppings']) }}
+													@endif
+													@if(!empty($item['note']))
+														<br>Ghi chú: {{ $item['note'] }}
+													@endif
+												</small>
+											</td>
+											<td>{{ number_format($item['price']) }} đ</td>
+											<td>{{ $item['qty'] }}</td>
+											<td>{{ number_format($itemTotal) }} đ</td>
+											<td>
+												<a href="/cart/remove/{{ $key }}" class="btn btn-sm btn-danger">Xóa</a>
+											</td>
+										</tr>
+									@endforeach
+								@else
+									<tr>
+										<td colspan="5" class="text-center">Giỏ hàng của bạn đang trống</td>
+									</tr>
+								@endif
 							</tbody>
 						</table>
 					</div>
+					
+					@if(count($cart) > 0)
+						@php
+											$total = 0;
+											foreach($cart as $item) {
+												$total += $item['price'] * $item['qty'];
+											}
+										@endphp
+						<div class="row mt-5">
+							<div class="col-md-6 offset-md-6">
+								<div class="card">
+									<div class="card-body">
+										<h5 class="card-title">Tổng Cộng</h5>
+										<h3 class="text-danger">{{ number_format($total) }} đ</h3>
+										<button class="btn btn-primary btn-block mt-3">Thanh Toán</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					@endif
 				</div>
 			</div>
 		</div>
 	</section>
 
-	<footer class="ftco-footer ftco-section">
-		<div class="container-xl">
-			<div class="row mb-5">
-				<div class="col-md-6 col-lg-3">
-					<div class="ftco-footer-widget mb-4">
-						<h2 class="ftco-heading-2">Coffee Choy's</h2>
-						<p>Cung cấp cà phê hạng nhất với chất lượng tuyệt vời.</p>
-						<ul class="ftco-footer-social list-unstyled float-md-left float-lft mt-5">
-							<li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-							<li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-							<li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-						</ul>
-					</div>
-				</div>
-				<div class="col-md-6 col-lg-3">
-					<div class="ftco-footer-widget mb-4 ml-md-5">
-						<h2 class="ftco-heading-2">Danh Mục</h2>
-						<ul class="list-unstyled">
-							<li><a href="/menu" class="py-2 d-block">Menu</a></li>
-							<li><a href="/about" class="py-2 d-block">Về Chúng Tôi</a></li>
-							<li><a href="/cart" class="py-2 d-block">Giỏ Hàng</a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="container-xl border-top pt-5">
-			<div class="row">
-				<div class="col-md-12 text-center">
-					<p>&copy; 2025 Coffee Choy's. All Rights Reserved.</p>
-				</div>
-			</div>
-		</div>
-	</footer>
+	<div class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Brand -->
+                <div class="footer-brand">
+                    <h2>☕ CoffeeChoy's</h2>
+                    <p>Hân hạnh đồng hành cùng quý khách!.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="footer-links">
+                    <h4>Khám phá</h4>
+                    <ul>
+                        <li><a href="#">Menu</a></li>
+                        <li><a href="#">Cửa hàng</a></li>
+                        <li><a href="#">Đặt hàng online</a></li>
+                    </ul>
+                </div>
+
+                <!-- Services -->
+                <div class="footer-links">
+                    <h4>Dịch vụ</h4>
+                    <ul>
+                        <li><a href="#">Ship tận nơi</a></li>
+                        <li><a href="#">Catering</a></li>
+                        <li><a href="#">Thẻ thành viên</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div class="footer-contact">
+                    <h4>Liên hệ</h4>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>+190099</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <span>8:00 - 21:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="copyright">
+        <div class="container">
+            <p>&copy; 2026 CoffeeChoy's. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* === COFFEE FOOTER STYLES === */
+    .coffee-footer {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #ffffff;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+        line-height: 1.6;
+        margin-top: 100px; /* Khoảng cách với nội dung chính */
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    /* Newsletter */
+    .newsletter-section {
+        background: rgba(255, 107, 0, 0.1);
+        padding: 60px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .newsletter-content {
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .newsletter-content h3 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        background: linear-gradient(45deg, #ffffff, #ff6b00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .newsletter-content p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 32px;
+    }
+
+    .newsletter-form {
+        display: flex;
+        max-width: 400px;
+        margin: 0 auto;
+        gap: 12px;
+    }
+
+    .newsletter-form input {
+        flex: 1;
+        padding: 16px 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-size: 1rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .newsletter-form input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .newsletter-form input:focus {
+        outline: none;
+        border-color: #ff6b00;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
+    }
+
+    .newsletter-form button {
+        padding: 16px 28px;
+        background: linear-gradient(45deg, #ff6b00, #ff8c42);
+        border: none;
+        border-radius: 50px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(255, 107, 0, 0.3);
+    }
+
+    .newsletter-form button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(255, 107, 0, 0.4);
+    }
+
+    /* Main Footer */
+    .main-footer {
+        padding: 60px 0 40px;
+    }
+
+    .footer-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 40px;
+    }
+
+    .footer-brand h2 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        background: linear-gradient(45deg, #ffffff, #ff6b00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .footer-brand p {
+        opacity: 0.8;
+        margin-bottom: 24px;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 16px;
+    }
+
+    .social-links a {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .social-links a:hover {
+        background: #ff6b00;
+        transform: translateY(-3px);
+    }
+
+    /* Links */
+    .footer-links h4,
+    .footer-contact h4 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .footer-links h4::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        width: 30px;
+        height: 2px;
+        background: #ff6b00;
+    }
+
+    .footer-links ul {
+        list-style: none;
+    }
+
+    .footer-links li {
+        margin-bottom: 12px;
+    }
+
+    .footer-links a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .footer-links a:hover {
+        color: #ff6b00;
+        padding-left: 6px;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        opacity: 0.9;
+    }
+
+    .contact-item i {
+        color: #ff6b00;
+        width: 20px;
+    }
+
+    /* Copyright */
+    .copyright {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 20px 0;
+        text-align: center;
+    }
+
+    .copyright p {
+        opacity: 0.7;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .newsletter-form {
+            flex-direction: column;
+        }
+        
+        .footer-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+            text-align: center;
+        }
+        
+        .newsletter-content h3 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
 
 	<script src="js/jquery.min.js"></script>
 	<script src="js/jquery-migrate-3.0.1.min.js"></script>

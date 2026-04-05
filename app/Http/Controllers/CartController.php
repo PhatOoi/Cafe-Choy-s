@@ -8,26 +8,61 @@ use App\Models\Product;
 class CartController extends Controller
 {
     public function add(Request $request)
-    {
-        $product = Product::find($request->id);
-
-        $cart = session()->get('cart', []);
-
-        if(isset($cart[$request->id])) {
-            $cart[$request->id]['quantity']++;
-        } else {
-            $cart[$request->id] = [
-                "name" => $product->name,
-                "price" => $product->price,
-                "quantity" => 1
-            ];
-        }
-
-        session()->put('cart', $cart);
-
-        return redirect()->back();
+{
+    if (!auth()->check()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized'
+        ], 401);
     }
 
+    $product = Product::find($request->product_id);
+
+    if (!$product) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Product not found'
+        ], 404);
+    }
+
+    $cart = session()->get('cart', []);
+
+    $toppingsStr = is_array($request->toppings)
+        ? implode(',', $request->toppings)
+        : '';
+
+    $cartKey = $request->product_id . '_' .
+               $request->size . '_' .
+               $request->sugar . '_' .
+               $request->ice . '_' .
+               $toppingsStr;
+
+    if (isset($cart[$cartKey])) {
+        $cart[$cartKey]['qty'] += $request->qty;
+    } else {
+        $cart[$cartKey] = [
+            'product_id' => $request->product_id,
+            'name' => $product->name,
+            'price' => $product->price,
+            'size' => $request->size,
+            'sugar' => $request->sugar,
+            'ice' => $request->ice,
+            'toppings' => $request->toppings,
+            'note' => $request->note,
+            'qty' => $request->qty,
+        ];
+    }
+
+    session()->put('cart', $cart);
+
+    $cartCount = array_sum(array_column($cart, 'qty'));
+
+    // ✅ FIX QUAN TRỌNG
+    return response()->json([
+        'success' => true,
+        'cart_count' => $cartCount
+    ]);
+}
     public function index()
     {
         $cart = session()->get('cart', []);
@@ -35,14 +70,21 @@ class CartController extends Controller
     }
 
     public function remove($id)
-    {
-        $cart = session()->get('cart');
-
-        if(isset($cart[$id])) {
-            unset($cart[$id]);
-            session()->put('cart', $cart);
-        }
-
-        return redirect()->back();
+{
+    if (!auth()->check()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized'
+        ], 401);
     }
+
+    $cart = session()->get('cart', []);
+
+    if (isset($cart[$id])) {
+        unset($cart[$id]);
+        session()->put('cart', $cart);
+    }
+
+    return redirect('/cart');
+}
 }
