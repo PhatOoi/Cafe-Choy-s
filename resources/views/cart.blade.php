@@ -58,7 +58,7 @@
 						<li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Login</a></li>
 						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
 									class="icon icon-shopping_cart"></span><span
-									class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
+									class="bag d-flex justify-content-center align-items-center"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
 						</li>
 					@endif
 				</ul>
@@ -150,7 +150,7 @@
             <div class="footer-grid">
                 <!-- Brand -->
                 <div class="footer-brand">
-                    <h2>☕ CoffeeChoy's</h2>
+                    <h2>CoffeeChoy's</h2>
                     <p>Hân hạnh đồng hành cùng quý khách!.</p>
                     <div class="social-links">
                         <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
