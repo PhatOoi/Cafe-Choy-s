@@ -36,16 +36,16 @@ class ProductSeeder extends Seeder
 
         // Extras
         DB::table('extras')->insert([
-            ['name' => 'Trân Châu Đen',            'price' => 5000],
-            ['name' => 'Trân Châu Trắng',          'price' => 5000],
-            ['name' => 'Thạch Cà Phê',             'price' => 5000],
-            ['name' => 'Thêm Espresso',            'price' => 10000],
-            ['name' => 'Ít Đường',                 'price' => 0],
-            ['name' => 'Không Đường',              'price' => 0],
-            ['name' => 'Nhiều Đá',                 'price' => 0],
-            ['name' => 'Ít Đá',                    'price' => 0],
-            ['name' => 'Whipping Cream',           'price' => 10000],
-            ['name' => 'Sữa Tươi Thay Sữa Đặc',  'price' => 5000],
+            ['name' => 'Trân Châu Đen',            'price' => 5000, 'type' => 'topping'],
+            ['name' => 'Trân Châu Trắng',          'price' => 5000, 'type' => 'topping'],
+            ['name' => 'Thạch Cà Phê',             'price' => 5000, 'type' => 'topping'],
+            ['name' => 'Thêm Espresso',            'price' => 10000, 'type' => 'topping'],
+            ['name' => 'Ít Đường',                 'price' => 0, 'type' => 'sugar'],
+            ['name' => 'Không Đường',              'price' => 0, 'type' => 'sugar'],
+            ['name' => 'Nhiều Đá',                 'price' => 0, 'type' => 'ice'],
+            ['name' => 'Ít Đá',                    'price' => 0, 'type' => 'ice'],
+            ['name' => 'Whipping Cream',           'price' => 10000, 'type' => 'topping'],
+            ['name' => 'Sữa Tươi Thay Sữa Đặc',    'price' => 5000, 'type' => 'topping'],
         ]);
 
         // Product extras (product_id => [extra_ids])
