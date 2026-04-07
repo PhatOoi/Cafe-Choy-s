@@ -135,7 +135,8 @@
                                             '{{ addslashes($product->name) }}',
                                             {{ $product->price }},
                                             '{{ $category->name }}',
-                                            '{{ asset('images/' . $product->image_url) }}'
+                                            '{{ asset('images/' . $product->image_url) }}',
+                                            {{ $category->id }}
                                         )">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -250,7 +251,7 @@
 
                 {{-- Đường --}}
                 <p class="section-label">
-                    Đường
+                    Đường & Sữa
                     <span class="optional-badge">Tùy chọn</span>
                 </p>
                 <div class="option-row">
@@ -1326,7 +1327,7 @@
         var modalState = { productId: null, basePrice: 0, sizeExtra: 0, toppingTotal: 0, qty: 1 };
         var cartTotal = 0;
 
-        function openModal(id, name, price, cat, imgUrl) {
+        function openModal(id, name, price, cat, imgUrl, categoryId) {
 
     // 🚨 CHẶN CHƯA LOGIN
     if (!isLoggedIn) {
@@ -1360,6 +1361,16 @@
 
     document.querySelectorAll('.topping-item').forEach(t => t.classList.remove('active'));
     modalState.toppingTotal = 0;
+
+    // Ẩn/hiện topping theo category id
+    var toppingGrid = document.querySelector('.topping-grid');
+    if (categoryId === 2 || categoryId === 3) {
+        toppingGrid.style.display = '';
+        toppingGrid.previousElementSibling.style.display = '';
+    } else {
+        toppingGrid.style.display = 'none';
+        toppingGrid.previousElementSibling.style.display = 'none';
+    }
 
     updateTotal();
 
@@ -1453,7 +1464,7 @@
     // 🔥 sửa selector cho đúng
     document.querySelector('.bag small').textContent = data.cart_count;
 
-    showToast('✅ Đã thêm vào giỏ hàng!');
+    showToast('Đã thêm vào giỏ hàng!');
 })
         }
 
@@ -1468,7 +1479,7 @@
             return n.toLocaleString('vi-VN') + 'đ';
         }
         function redirectLogin() {
-            showToast('⚠️ Vui lòng đăng nhập!');
+            showToast('Vui lòng đăng nhập!');
             setTimeout(() => {
                 window.location.href = "{{ url('/login') }}";
             }, 1200);

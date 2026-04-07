@@ -29,7 +29,7 @@ class ProductSeeder extends Seeder
             ['category_id' => 3, 'name' => 'Frappuccino Caramel', 'description' => 'Đá xay cà phê caramel phủ whipping cream',      'price' => 55000, 'stock' => 50,  'status' => 'available', 'image_url' => 'FrappuccinoCaramel.jpg', 'created_at' => now()],
             ['category_id' => 3, 'name' => 'Đá Xay Chocolate',   'description' => 'Đá xay chocolate đậm đà mát lạnh',              'price' => 50000, 'stock' => 50,  'status' => 'available', 'image_url' => 'da-xay-chocolate.jpg', 'created_at' => now()],
             ['category_id' => 4, 'name' => 'Nước Ép Cam',        'description' => 'Cam tươi vắt nguyên chất 100%',                 'price' => 35000, 'stock' => 40,  'status' => 'available', 'image_url' => 'epcam.jpg', 'created_at' => now()],
-            ['category_id' => 4, 'name' => 'Sinh Tố Bơ',         'description' => 'Bơ chín mịn xay với sữa tươi và đá',           'price' => 45000, 'stock' => 30,  'status' => 'available', 'image_url' => 'drink-7.jpg', 'created_at' => now()],
+            ['category_id' => 4, 'name' => 'Sinh Tố Bơ',         'description' => 'Bơ chín mịn xay với sữa tươi và đá',           'price' => 45000, 'stock' => 30,  'status' => 'available', 'image_url' => 'sinh-to-bo.jpg', 'created_at' => now()],
             ['category_id' => 5, 'name' => 'Bánh Sừng Bò',       'description' => 'Croissant bơ Pháp nướng giòn mỗi sáng',        'price' => 35000, 'stock' => 20,  'status' => 'available', 'image_url' => 'banhsung.jpg', 'created_at' => now()],
             ['category_id' => 5, 'name' => 'Cookie Socola',      'description' => 'Bánh quy mềm chip socola nguyên tảng',          'price' => 25000, 'stock' => 30,  'status' => 'available', 'image_url' => 'dessert-1.jpg', 'created_at' => now()],
         ]);
@@ -39,13 +39,18 @@ class ProductSeeder extends Seeder
             ['name' => 'Trân Châu Đen',            'price' => 5000, 'type' => 'topping'],
             ['name' => 'Trân Châu Trắng',          'price' => 5000, 'type' => 'topping'],
             ['name' => 'Thạch Cà Phê',             'price' => 5000, 'type' => 'topping'],
-            ['name' => 'Thêm Espresso',            'price' => 10000, 'type' => 'topping'],
+            ['name' => 'Kem Trứng',                'price' => 12000, 'type' => 'topping'],
+            ['name' => 'Nhiều Sữa',                'price' => 0, 'type' => 'sugar'],
+            ['name' => 'Ít Sữa',                   'price' => 0, 'type' => 'sugar'],
+            ['name' => 'Không Sữa',                'price' => 0, 'type' => 'sugar'],
+            ['name' => 'Nhiều Đường',              'price' => 0, 'type' => 'sugar'],
             ['name' => 'Ít Đường',                 'price' => 0, 'type' => 'sugar'],
             ['name' => 'Không Đường',              'price' => 0, 'type' => 'sugar'],
             ['name' => 'Nhiều Đá',                 'price' => 0, 'type' => 'ice'],
             ['name' => 'Ít Đá',                    'price' => 0, 'type' => 'ice'],
-            ['name' => 'Whipping Cream',           'price' => 10000, 'type' => 'topping'],
-            ['name' => 'Sữa Tươi Thay Sữa Đặc',    'price' => 5000, 'type' => 'topping'],
+            ['name' => 'Đá Riêng',                 'price' => 0, 'type' => 'ice'],
+            ['name' => 'Thạch',                    'price' => 10000, 'type' => 'topping'],
+            ['name' => 'Trân châu Hoàng Kim',      'price' => 5000, 'type' => 'topping'],
         ]);
 
         // Product extras (product_id => [extra_ids])
