@@ -44,25 +44,9 @@ return new class extends Migration
             $table->foreign('order_id')->references('id')->on('orders')->nullOnDelete();
         });
 
-        Schema::create('order_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained('products');
-            $table->integer('quantity')->default(1);
-            $table->decimal('unit_price', 10, 2)->comment('Giá tại thời điểm đặt — snapshot');
-            $table->string('note', 200)->nullable();
+        // Đã chuyển tạo bảng order_items sang file migration riêng
 
-            $table->index('order_id', 'idx_oi_order');
-            $table->index('product_id', 'idx_oi_product');
-        });
-
-        Schema::create('order_item_extras', function (Blueprint $table) {
-            $table->foreignId('order_item_id')->constrained('order_items')->cascadeOnDelete();
-            $table->foreignId('extra_id')->constrained('extras');
-            $table->string('extra_name', 100)->comment('Snapshot tên topping lúc đặt');
-            $table->decimal('extra_price', 10, 2)->comment('Snapshot giá topping lúc đặt');
-            $table->primary(['order_item_id', 'extra_id']);
-        });
+        // Đã chuyển tạo bảng order_item_extras sang file migration riêng
     }
 
     public function down(): void
