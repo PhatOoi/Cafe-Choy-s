@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-	<title>Coffee Choy's</title>
+	<title>Choy's Cafe</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -34,7 +34,7 @@
 <body>
 	<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
 		<div class="container">
-			<a class="navbar-brand" href="{{ url('/login') }}">Coffee<small>Choy's</small></a>
+			<a class="navbar-brand" href="{{ url('/') }}">Choy's<small>Cafe</small></a>
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
 				aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="oi oi-menu"></span> Menu
@@ -205,7 +205,7 @@
 		<div class="one-half ftco-animate">
 			<div class="overlap">
 				<div class="heading-section ftco-animate ">
-					<span class="subheading">Choy's Coffee</span>
+					<span class="subheading">Choy's Cafe</span>
 					<h2 class="mb-4">Niềm tự hào của chúng tôi</h2>
 				</div>
 				<div>
@@ -871,7 +871,7 @@
             <div class="footer-grid">
                 <!-- Brand -->
                 <div class="footer-brand">
-                    <h2>☕ CoffeeChoy's</h2>
+					<h2>☕ Choy's Cafe</h2>
                     <p>Hân hạnh đồng hành cùng quý khách!.</p>
                     <div class="social-links">
                         <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -919,7 +919,7 @@
     <!-- Copyright -->
     <div class="copyright">
         <div class="container">
-            <p>&copy; 2026 CoffeeChoy's. Tất cả quyền được bảo lưu.</p>
+			<p>&copy; 2026 Choy's Cafe. Tất cả quyền được bảo lưu.</p>
         </div>
     </div>
 </footer>

@@ -24,7 +24,7 @@ class RegisterController extends Controller
                     $fail('Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.');
                 }
             }],
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|numeric|digits_between:8,10',
         ], [
             'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.',
             'password.required' => 'Bạn chưa nhập mật khẩu!',

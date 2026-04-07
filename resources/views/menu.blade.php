@@ -8,7 +8,7 @@
     <script>
         const isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
     </script>
-    <title>Menu — Coffee Choy's</title>
+    <title>Menu — Choy's Cafe</title>
 
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&family=Great+Vibes&display=swap"
@@ -36,7 +36,7 @@
     <div>
         <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
             <div class="container">
-                <a class="navbar-brand" href="{{ url('/login') }}">Coffee<small>Choy's</small></a>
+                <a class="navbar-brand" href="{{ url('/login') }}">Choy's Cafe</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
                     aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="oi oi-menu"></span> Menu
@@ -323,7 +323,7 @@
             <div class="footer-grid">
                 <!-- Brand -->
                 <div class="footer-brand">
-                    <h2>CoffeeChoy's</h2>
+                    <h2>Choy's Cafe</h2>
                     <p>Hân hạnh đồng hành cùng quý khách!.</p>
                     <div class="social-links">
                         <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -371,7 +371,7 @@
     <!-- Copyright -->
     <div class="copyright">
         <div class="container">
-            <p>&copy; 2026 CoffeeChoy's. Tất cả quyền được bảo lưu.</p>
+            <p>&copy; 2026 Choy's Cafe. Tất cả quyền được bảo lưu.</p>
         </div>
     </div>
 </footer>

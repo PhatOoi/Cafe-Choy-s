@@ -114,8 +114,8 @@
 
         <div class="right">
             <div class="right-container">
-                <h2>WELCOME TO ChoysCaffe!</h2>
-                <p>Chào mừng bạn đến với Coffee Choy's ☕</p>
+                <h2>WELCOME TO Choy's Cafe!</h2>
+                <p>Chào mừng bạn đến với Choy's Cafe ☕</p>
             </div>
         </div>
     </div>
