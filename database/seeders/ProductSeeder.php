@@ -20,18 +20,18 @@ class ProductSeeder extends Seeder
 
         // Products
         DB::table('products')->insert([
-            ['category_id' => 1, 'name' => 'Cà Phê Đen',         'description' => 'Cà phê nguyên chất pha phin truyền thống',       'price' => 25000, 'stock' => 100, 'status' => 'available', 'created_at' => now()],
-            ['category_id' => 1, 'name' => 'Cà Phê Sữa',         'description' => 'Cà phê phin kết hợp sữa đặc thơm ngon',         'price' => 30000, 'stock' => 100, 'status' => 'available', 'created_at' => now()],
-            ['category_id' => 1, 'name' => 'Cappuccino',          'description' => 'Espresso kết hợp sữa tươi đánh bọt mịn',        'price' => 45000, 'stock' => 80,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 1, 'name' => 'Latte',               'description' => 'Espresso với lớp sữa mịn và ít bọt',            'price' => 45000, 'stock' => 80,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 2, 'name' => 'Trà Sữa Trân Châu',  'description' => 'Trà đen với sữa tươi và trân châu đen',         'price' => 45000, 'stock' => 60,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 2, 'name' => 'Trà Sữa Matcha',     'description' => 'Matcha Nhật Bản hoà tan với sữa tươi béo ngậy', 'price' => 50000, 'stock' => 60,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 3, 'name' => 'Frappuccino Caramel', 'description' => 'Đá xay cà phê caramel phủ whipping cream',      'price' => 55000, 'stock' => 50,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 3, 'name' => 'Đá Xay Chocolate',   'description' => 'Đá xay chocolate đậm đà mát lạnh',              'price' => 50000, 'stock' => 50,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 4, 'name' => 'Nước Ép Cam',        'description' => 'Cam tươi vắt nguyên chất 100%',                 'price' => 35000, 'stock' => 40,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 4, 'name' => 'Sinh Tố Bơ',         'description' => 'Bơ chín mịn xay với sữa tươi và đá',           'price' => 45000, 'stock' => 30,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 5, 'name' => 'Bánh Sừng Bò',       'description' => 'Croissant bơ Pháp nướng giòn mỗi sáng',        'price' => 35000, 'stock' => 20,  'status' => 'available', 'created_at' => now()],
-            ['category_id' => 5, 'name' => 'Cookie Socola',      'description' => 'Bánh quy mềm chip socola nguyên tảng',          'price' => 25000, 'stock' => 30,  'status' => 'available', 'created_at' => now()],
+            ['category_id' => 1, 'name' => 'Cà Phê Đen',         'description' => 'Cà phê nguyên chất pha phin truyền thống',       'price' => 25000, 'stock' => 100, 'status' => 'available', 'image_url' => 'cafe_den.jpg', 'created_at' => now()],
+            ['category_id' => 1, 'name' => 'Cà Phê Sữa',         'description' => 'Cà phê phin kết hợp sữa đặc thơm ngon',         'price' => 30000, 'stock' => 100, 'status' => 'available', 'image_url' => 'cafe_sua.jpg', 'created_at' => now()],
+            ['category_id' => 1, 'name' => 'Cappuccino',          'description' => 'Espresso kết hợp sữa tươi đánh bọt mịn',        'price' => 45000, 'stock' => 80,  'status' => 'available', 'image_url' => 'cappuccino.jpg', 'created_at' => now()],
+            ['category_id' => 1, 'name' => 'Latte',               'description' => 'Espresso với lớp sữa mịn và ít bọt',            'price' => 45000, 'stock' => 80,  'status' => 'available', 'image_url' => 'latte.jpg', 'created_at' => now()],
+            ['category_id' => 2, 'name' => 'Trà Sữa Trân Châu',  'description' => 'Trà đen với sữa tươi và trân châu đen',         'price' => 45000, 'stock' => 60,  'status' => 'available', 'image_url' => 'tstranchau.jpg', 'created_at' => now()],
+            ['category_id' => 2, 'name' => 'Trà Sữa Matcha',     'description' => 'Matcha Nhật Bản hoà tan với sữa tươi béo ngậy', 'price' => 50000, 'stock' => 60,  'status' => 'available', 'image_url' => 'tsmatcha.jpg', 'created_at' => now()],
+            ['category_id' => 3, 'name' => 'Frappuccino Caramel', 'description' => 'Đá xay cà phê caramel phủ whipping cream',      'price' => 55000, 'stock' => 50,  'status' => 'available', 'image_url' => 'FrappuccinoCaramel.jpg', 'created_at' => now()],
+            ['category_id' => 3, 'name' => 'Đá Xay Chocolate',   'description' => 'Đá xay chocolate đậm đà mát lạnh',              'price' => 50000, 'stock' => 50,  'status' => 'available', 'image_url' => 'da-xay-chocolate.jpg', 'created_at' => now()],
+            ['category_id' => 4, 'name' => 'Nước Ép Cam',        'description' => 'Cam tươi vắt nguyên chất 100%',                 'price' => 35000, 'stock' => 40,  'status' => 'available', 'image_url' => 'epcam.jpg', 'created_at' => now()],
+            ['category_id' => 4, 'name' => 'Sinh Tố Bơ',         'description' => 'Bơ chín mịn xay với sữa tươi và đá',           'price' => 45000, 'stock' => 30,  'status' => 'available', 'image_url' => 'drink-7.jpg', 'created_at' => now()],
+            ['category_id' => 5, 'name' => 'Bánh Sừng Bò',       'description' => 'Croissant bơ Pháp nướng giòn mỗi sáng',        'price' => 35000, 'stock' => 20,  'status' => 'available', 'image_url' => 'banhsung.jpg', 'created_at' => now()],
+            ['category_id' => 5, 'name' => 'Cookie Socola',      'description' => 'Bánh quy mềm chip socola nguyên tảng',          'price' => 25000, 'stock' => 30,  'status' => 'available', 'image_url' => 'dessert-1.jpg', 'created_at' => now()],
         ]);
 
         // Extras
