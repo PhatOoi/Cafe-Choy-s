@@ -88,59 +88,86 @@
         </div>
     </section>
 
-    {{-- ===== GRID SẢN PHẨM ===== --}}
+    {{-- ===== GRID SẢN PHẨM THEO PHÂN LOẠI ===== --}}
     <section class="menu-section">
-        <div class="menu-grid">
-            @foreach($products as $product)
-                <div class="product-card">
-                    <div class="card-image-wrap">
-                        <img src="{{ asset('images/' . $product->image_url) }}"
-                            onerror="this.src='https://via.placeholder.com/400x280/c8b8a8/ffffff?text=Coffee'"
-                            alt="{{ $product->name }}" class="card-img">
-                        <div class="card-shine"></div>
-                        @if($product->is_new ?? false)
-                            <span class="card-badge badge-new">Mới</span>
-                        @endif
-                        @if($product->is_hot ?? false)
-                            <span class="card-badge badge-hot">Bán chạy</span>
-                        @endif
-                    </div>
-                    <div class="card-body">
-                        <p class="card-cat">{{ $product->category->name ?? 'Cà Phê' }}</p>
-                        <h3 class="card-name">{{ $product->name }}</h3>
-                        @if($product->description ?? false)
-                            <p class="card-desc">{{ Str::limit($product->description, 65) }}</p>
-                        @endif
-                        <div class="card-footer">
-                            <span class="card-price">
-                                {{ number_format($product->price) }}<span class="price-unit">đ</span>
-                            </span>
-                            @auth
-                                                        <button class="btn-add-cart" onclick="openModal(
-                                    {{ $product->id }},
-                                    '{{ addslashes($product->name) }}',
-                                    {{ $product->price }},
-                                    '{{ $product->category->name ?? 'Cà Phê' }}',
-                                    '{{ asset('images/' . $product->image_url) }}'
-                                )">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                                <circle cx="9" cy="21" r="1" />
-                                                                <circle cx="20" cy="21" r="1" />
-                                                                <path d="M1 1h4l2.68 13.39..." />
-                                                            </svg>
-                                                            <span>Thêm vào giỏ</span>
-                                                        </button>
-                            @else
-                                <button class="btn-add-cart" onclick="redirectLogin()">
-                                    <span>Đăng nhập để mua</span>
-                                </button>
-                            @endauth
+        @foreach($categories as $category)
+            <div class="menu-category-block">
+                <h2 class="menu-category-title"
+                    style="
+                        border-bottom: 2px solid #c8b8a8;
+                        margin-top: 40px;
+                        margin-bottom: 24px;
+                        padding-bottom: 8px;
+                        color: var(--category-title-color, #1a110d);
+                        text-align: left;
+                    "
+                >
+                    {{ $category->name }}
+                </h2>
+                <div class="menu-grid">
+                    @foreach($category->products as $product)
+                        <div class="product-card">
+                            <div class="card-image-wrap">
+                                <img src="{{ asset('images/' . $product->image_url) }}"
+                                    onerror="this.src='https://via.placeholder.com/400x280/c8b8a8/ffffff?text=Coffee'"
+                                    alt="{{ $product->name }}" class="card-img">
+                                <div class="card-shine"></div>
+                                @if($product->is_new ?? false)
+                                    <span class="card-badge badge-new">Mới</span>
+                                @endif
+                                @if($product->is_hot ?? false)
+                                    <span class="card-badge badge-hot">Bán chạy</span>
+                                @endif
+                            </div>
+                            <div class="card-body">
+                                <p class="card-cat">{{ $category->name }}</p>
+                                <h3 class="card-name">{{ $product->name }}</h3>
+                                @if($product->description ?? false)
+                                    <p class="card-desc">{{ Str::limit($product->description, 65) }}</p>
+                                @endif
+                                <div class="card-footer">
+                                    <span class="card-price">
+                                        {{ number_format($product->price) }}<span class="price-unit">đ</span>
+                                    </span>
+                                    @auth
+                                        <button class="btn-add-cart" onclick="openModal(
+                                            {{ $product->id }},
+                                            '{{ addslashes($product->name) }}',
+                                            {{ $product->price }},
+                                            '{{ $category->name }}',
+                                            '{{ asset('images/' . $product->image_url) }}'
+                                        )">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="9" cy="21" r="1" />
+                                                <circle cx="20" cy="21" r="1" />
+                                                <path d="M1 1h4l2.68 13.39..." />
+                                            </svg>
+                                            <span>Thêm vào giỏ</span>
+                                        </button>
+                                    @else
+                                        <button class="btn-add-cart" onclick="redirectLogin()">
+                                            <span>Đăng nhập để mua</span>
+                                        </button>
+                                    @endauth
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
+            </div>
+        @endforeach
+
+    <style>
+        body[data-theme="dark"] .menu-category-title {
+            color: #fff !important;
+            border-bottom: 2px solid #fff !important;
+        }
+        body[data-theme="light"] .menu-category-title {
+            color: #1a110d !important;
+            border-bottom: 2px solid #c8b8a8 !important;
+        }
+    </style>
     </section>
 
     {{-- ===== MODAL TOPPING ===== --}}
