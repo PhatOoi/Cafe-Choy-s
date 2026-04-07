@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-	<title>Giỏ Hàng - Coffee Choy's</title>
+    <title>Giỏ Hàng - Choy's Cafe</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -29,7 +29,7 @@
 <body>
 	<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
 		<div class="container">
-			<a class="navbar-brand" href="/">Coffee<br><span>Choy's</span></a>
+            <a class="navbar-brand" href="/">Choy's Cafe</a>
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav" aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="oi oi-menu"></span> Menu
 			</button>
@@ -38,7 +38,6 @@
 					<li class="nav-item"><a href="/" class="nav-link">Trang Chủ</a></li>
 					<li class="nav-item"><a href="/menu" class="nav-link">Menu</a></li>
 					<li class="nav-item"><a href="/about" class="nav-link">Về Chúng Tôi</a></li>
-					<li class="nav-item active"><a href="/cart" class="nav-link">Giỏ Hàng</a></li>
 					@if(Auth::check())
 						
 						<li class="nav-item">
@@ -150,7 +149,7 @@
             <div class="footer-grid">
                 <!-- Brand -->
                 <div class="footer-brand">
-                    <h2>CoffeeChoy's</h2>
+                    <h2>Choy's Cafe</h2>
                     <p>Hân hạnh đồng hành cùng quý khách!.</p>
                     <div class="social-links">
                         <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -198,7 +197,7 @@
     <!-- Copyright -->
     <div class="copyright">
         <div class="container">
-            <p>&copy; 2026 CoffeeChoy's. Tất cả quyền được bảo lưu.</p>
+            <p>&copy; 2026 Choy's Cafe. Tất cả quyền được bảo lưu.</p>
         </div>
     </div>
 </footer>

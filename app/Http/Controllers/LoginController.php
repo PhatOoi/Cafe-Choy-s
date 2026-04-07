@@ -30,7 +30,7 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             // Đăng nhập thành công, tạo lại session
             $request->session()->regenerate();
-            return redirect('/menu'); // Chuyển hướng đến trang menu
+            return redirect('/'); // Chuyển hướng đến trang chủ
         }
 
         // Đăng nhập thất bại, quay lại với thông báo lỗi
