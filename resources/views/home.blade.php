@@ -80,12 +80,11 @@
 				<div class="row slider-text justify-content-center align-items-center" data-scrollax-parent="true">
 
 					<div class="col-md-8 col-sm-12 text-center ftco-animate">
-						<span class="subheading">Welcome</span>
-						<h1 class="mb-4">The Best Coffee Testing Experience</h1>
-						<p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the
-							necessary regelialia.</p>
+						<span class="subheading">Chào mừng bạn</span>
+						<h1 class="mb-4">Trải nghiệm cà phê tuyệt vời nhất</h1>
+						<p class="mb-4 mb-md-5">Một dòng sông nhỏ tên Duden chảy ngang qua quán, mang đến nguồn cảm hứng và sự tươi mới cho từng ly nước.</p>
 						<p><a href="/menu"
-								class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
+						class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">Xem thực đơn</a></p>
 					</div>
 
 				</div>
@@ -98,12 +97,11 @@
 				<div class="row slider-text justify-content-center align-items-center" data-scrollax-parent="true">
 
 					<div class="col-md-8 col-sm-12 text-center ftco-animate">
-						<span class="subheading">Welcome</span>
-						<h1 class="mb-4">Amazing Taste &amp; Beautiful Place</h1>
-						<p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the
-							necessary regelialia.</p>
-						<p><a href="#" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a> <a href="#"
-								class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
+						<span class="subheading">Chào mừng bạn</span>
+						<h1 class="mb-4">Hương vị tuyệt vời &amp; không gian đẹp</h1>
+						<p class="mb-4 mb-md-5">Một dòng sông nhỏ tên Duden chảy ngang qua quán, mang đến nguồn cảm hứng và sự tươi mới cho từng ly nước.</p>
+						<p><a href="#" class="btn btn-primary p-3 px-xl-4 py-xl-3">Đặt ngay</a> <a href="#"
+						class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">Xem thực đơn</a></p>
 					</div>
 
 				</div>
@@ -116,12 +114,11 @@
 				<div class="row slider-text justify-content-center align-items-center" data-scrollax-parent="true">
 
 					<div class="col-md-8 col-sm-12 text-center ftco-animate">
-						<span class="subheading">Welcome</span>
-						<h1 class="mb-4">Creamy Hot and Ready to Serve</h1>
-						<p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the
-							necessary regelialia.</p>
-						<p><a href="#" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a> <a href="#"
-								class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
+						<span class="subheading">Chào mừng bạn</span>
+						<h1 class="mb-4">Nóng hổi, thơm ngậy, sẵn sàng phục vụ</h1>
+						<p class="mb-4 mb-md-5">Một dòng sông nhỏ tên Duden chảy ngang qua quán, mang đến nguồn cảm hứng và sự tươi mới cho từng ly nước.</p>
+						<p><a href="#" class="btn btn-primary p-3 px-xl-4 py-xl-3">Đặt ngay</a> <a href="#"
+						class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">Xem thực đơn</a></p>
 					</div>
 
 				</div>
@@ -268,11 +265,9 @@
 				<div class="col-md-6 pr-md-5">
 					<div class="heading-section text-md-right ftco-animate">
 						<span class="subheading">Khám Phá</span>
-						<h2 class="mb-4">Our Menu</h2>
-						<p class="mb-4">Mỗi món nước đều được pha chế tỉ mỉ, kết hợp hương vị độc đáo nhằm mang đến cho
-							bạn trải nghiệm mới mẻ và đầy cảm hứng. Hãy để mỗi lần ghé quán là một hành trình khám phá
-							hương vị thú vị.</p>
-						<p><a href="/menu" class="btn btn-primary btn-outline-primary px-4 py-3">View Full Menu</a></p>
+						<h2 class="mb-4">Thực đơn của chúng tôi</h2>
+						<p class="mb-4">Mỗi món nước đều được pha chế tỉ mỉ, kết hợp hương vị độc đáo nhằm mang đến cho bạn trải nghiệm mới mẻ và đầy cảm hứng. Hãy để mỗi lần ghé quán là một hành trình khám phá hương vị thú vị.</p>
+						<p><a href="/menu" class="btn btn-primary btn-outline-primary px-4 py-3">Xem toàn bộ thực đơn</a></p>
 					</div>
 				</div>
 				<div class="col-md-6">
