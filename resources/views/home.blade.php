@@ -61,7 +61,7 @@
 									class="bag d-flex justify-content-center align-items-center"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
 						</li>
 					@else
-						<li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Login</a></li>
+						<li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
 						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
 									class="icon icon-shopping_cart"></span><span
 									class="bag d-flex justify-content-center align-items-center"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>

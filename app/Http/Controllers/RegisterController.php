@@ -7,11 +7,14 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
+// Controller xử lý đăng ký tài khoản mới
 class RegisterController extends Controller
 {
+    // Xử lý đăng ký tài khoản
     public function register(Request $request)
     {
-        \Log::info('Đã vào hàm register');
+        \Log::info('Đã vào hàm register'); // Ghi log khi vào hàm
+        // Kiểm tra dữ liệu đầu vào và validate mật khẩu mạnh
         $request->validate([
             'username' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -30,6 +33,7 @@ class RegisterController extends Controller
         ]);
 
         try {
+            // Tạo user mới và lưu vào database
             $user = new User();
             $user->name = $request->username;
             $user->email = $request->email;
@@ -40,10 +44,12 @@ class RegisterController extends Controller
             $user->save();
             \Log::info('Đã lưu user thành công', ['user' => $user]);
         } catch (\Exception $e) {
+            // Ghi log lỗi và trả về thông báo lỗi
             \Log::error('Lỗi đăng ký: ' . $e->getMessage());
             return back()->withInput()->withErrors(['register_error' => 'Đăng ký thất bại: ' . $e->getMessage()]);
         }
 
+        // Đăng ký thành công, chuyển hướng về trang đăng nhập
         return redirect('/login')->with('register_success', 'Tạo tài khoản thành công! Bạn có thể đăng nhập.');
     }
 }

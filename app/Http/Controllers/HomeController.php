@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\Controller;
 
+// Controller hiển thị trang chủ
 class HomeController extends Controller
 {
+    // Hiển thị trang chủ
     public function index()
     {
         return view('home');
