@@ -34,6 +34,8 @@ Route::get('/test-db', function () {
     return $users;
 });
 
+Route::get('/search', [MenuController::class, 'search']);
+
 // Quên mật khẩu
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showEmailForm'])->name('forgot-password.email-form');
 Route::post('/forgot-password/send-code', [ForgotPasswordController::class, 'sendCode'])->name('forgot-password.send-code');

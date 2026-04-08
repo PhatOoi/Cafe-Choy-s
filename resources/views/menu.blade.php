@@ -33,53 +33,64 @@
     <!-- END nav -->
 
     {{-- ===== NAVBAR GIỮ NGUYÊN ===== --}}
-    <div>
-        <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
-            <div class="container">
-                <a class="navbar-brand" href="{{ url('/login') }}">Choy's Cafe</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
-                    aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="oi oi-menu"></span> Menu
-                </button>
-                <div class="collapse navbar-collapse" id="ftco-nav">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                        <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
-                        <li class="nav-item"><a href="contact.html" class="nav-link">Liên hệ</a></li>
-                        @if(Auth::check())
-
-                            <li class="nav-item">
-                                <span class="nav-link">Hello, {{ Auth::user()->name }}</span>
-                            </li>
-                            <li class="nav-item">
-                                <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
-                                    @csrf
-                                </form>
-                                <a href="#" class="nav-link"
-                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                                    style="cursor:pointer;">Đăng xuất</a>
-                            </li>
-                            <li class="nav-item cart"><a href="/cart" class="nav-link"><span
-                                        class="icon icon-shopping_cart"></span><span
-                                        class="bag d-flex justify-content-center align-items-center"><small
-                                            id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
-                            </li>
-                        @else
-                            <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
-                            <li class="nav-item cart"><a href="/cart" class="nav-link"><span
-                                        class="icon icon-shopping_cart"></span><span
-                                        class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
-                            </li>
-                        @endif
-                    </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url('/') }}">Choy's<small>Cafe</small></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
+            aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="oi oi-menu"> Menu</span>
+        </button>
+		<div class="nav-item search-item">
+                    <form action="{{ url('/search') }}" method="GET" class="search-form" style="position: relative;">
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" class="form-control search-input" name="q" placeholder="Tìm kiếm món ngon..." 
+                                   style="border-radius: 25px 0 0 25px; border: none; padding: 12px 20px; font-size: 14px;">
+                            <button type="submit" class="btn search-btn" style="border-radius: 0 25px 25px 0; background: #F96D00; border: none; padding: 12px 20px;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </div>
-        </nav>
+        <div class="collapse navbar-collapse" id="ftco-nav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
+                <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                
+                <!-- Search Form -->
+                
+                
+                <li class="nav-item"><a href="contact.html" class="nav-link">Liên hệ</a></li>
+                @if(Auth::check())
+                    
+                    <li class="nav-item">
+                        <span class="nav-link">Hello, {{ Auth::user()->name }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
+                            @csrf
+                        </form>
+                        <a href="#" class="nav-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="cursor:pointer;">Đăng xuất</a>
+                    </li>
+                    <li class="nav-item cart"><a href="/cart" class="nav-link"><span
+                                class="icon icon-shopping_cart"></span><span
+                                class="bag d-flex justify-content-center align-items-center"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
+                    </li>
+                @else
+                    <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
+                    <li class="nav-item cart"><a href="/cart" class="nav-link"><span
+                                class="icon icon-shopping_cart"></span><span
+                                class="bag d-flex justify-content-center align-items-center"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
+                    </li>
+                @endif
+            </ul>
+        </div>
     </div>
+</nav>
 
     {{-- ===== HERO ===== --}}
     <section class="menu-hero">
         <div class="menu-hero-inner">
+            <p><br></p>
             <p class="menu-tagline">Thức uống thủ công</p>
             <h1 class="menu-title">Thực đơn</h1>
             <div class="menu-divider">

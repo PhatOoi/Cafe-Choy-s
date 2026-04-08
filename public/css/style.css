@@ -9281,3 +9281,64 @@ textarea.form-control {
   100% {
     stroke-dasharray: 89, 200;
     stroke-dashoffset: -136px; } }
+/* Search Form Styles */
+.search-item {
+    margin: 0 15px;
+}
+
+.search-form {
+    margin: 0;
+}
+
+.search-input {
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: #fff !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+    color: rgba(255,255,255,0.7) !important;
+}
+
+.search-input:focus {
+    background: rgba(255,255,255,0.2) !important;
+    border-color: #F96D00 !important;
+    box-shadow: 0 0 0 0.2rem rgba(249, 109, 0, 0.25) !important;
+    color: #fff !important;
+}
+
+.search-btn {
+    transition: all 0.3s ease;
+    min-width: 50px;
+}
+
+.search-btn:hover {
+    background: #e55a00 !important;
+    transform: scale(1.05);
+}
+
+.search-btn i {
+    font-size: 14px;
+    color: white;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 991px) {
+    .search-item {
+        margin: 10px 0;
+        width: 100%;
+    }
+    
+    .search-form .input-group {
+        width: 100% !important;
+    }
+}
+
+/* Hover effect cho toàn bộ search box */
+.input-group {
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}

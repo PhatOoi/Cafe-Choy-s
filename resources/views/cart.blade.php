@@ -37,7 +37,6 @@
 				<ul class="navbar-nav ml-auto">
 					<li class="nav-item"><a href="/" class="nav-link">Trang Chủ</a></li>
 					<li class="nav-item"><a href="/menu" class="nav-link">Menu</a></li>
-					<li class="nav-item"><a href="/about" class="nav-link">Về Chúng Tôi</a></li>
 					@if(Auth::check())
 						
 						<li class="nav-item">
