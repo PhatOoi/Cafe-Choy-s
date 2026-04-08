@@ -10,7 +10,9 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
         <div class="container d-flex align-items-center">
-            <a class="navbar-brand mr-3" href="/">Choy's<small>Cafe</small></a>
+            <a class="navbar-brand mr-3" href="/">
+                <img src="/images/logo.png" alt="Choy's Cafe" style="height:72px;width:auto;max-width:none;object-fit:contain;display:block;padding:0;margin:0;background:transparent;">
+            </a>
             @include('components.search-bar')
         </div>
     </nav>
