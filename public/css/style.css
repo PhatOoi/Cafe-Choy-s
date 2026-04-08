@@ -1,3 +1,16 @@
+/* Scrollbar cho cart - màu đen đồng bộ bg */
+.table-responsive::-webkit-scrollbar {
+  height: 12px;
+  background: #111;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 6px;
+}
+.table-responsive {
+  scrollbar-color: #222 #111;
+  scrollbar-width: thin;
+}
 /*!
  * Bootstrap v4.1.0 (https://getbootstrap.com/)
  * Copyright 2011-2018 The Bootstrap Authors
