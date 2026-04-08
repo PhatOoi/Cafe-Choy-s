@@ -1,3 +1,56 @@
+/* Search bar modern style */
+.search-bar {
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
+  background: #181312;
+  border-radius: 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 0;
+  border: none;
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+.search-bar-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 12px;
+}
+.search-bar-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  padding: 10px 0;
+}
+.search-bar-input::placeholder {
+  color: #aaa;
+}
+.search-bar-mic {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.1rem;
+  margin-left: 8px;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+}
+.search-bar-mic:active {
+  color: #fff;
+}
+/* Đồng bộ font tiêu đề phân loại nước với tên đồ uống */
+.menu-category-title {
+  font-family: 'Playfair Display', serif !important;
+  font-weight: 600;
+  font-size: 2rem;
+  letter-spacing: 0.5px;
+}
 /* Scrollbar cho cart - màu đen đồng bộ bg */
 .table-responsive::-webkit-scrollbar {
   height: 12px;
