@@ -47,27 +47,30 @@
                         <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
                         <li class="nav-item"><a href="contact.html" class="nav-link">Liên hệ</a></li>
                         @if(Auth::check())
-						
-						<li class="nav-item">
-							<span class="nav-link">Hello, {{ Auth::user()->name }}</span>
-						</li>
-						<li class="nav-item">
-							<form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
-								@csrf
-							</form>
-							<a href="#" class="nav-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="cursor:pointer;">Đăng xuất</a>
-						</li>
-						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
-									class="icon icon-shopping_cart"></span><span
-									class="bag d-flex justify-content-center align-items-center"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
-						</li>
-					@else
-						<li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
-						<li class="nav-item cart"><a href="/cart" class="nav-link"><span
-									class="icon icon-shopping_cart"></span><span
-									class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
-						</li>
-					@endif
+
+                            <li class="nav-item">
+                                <span class="nav-link">Hello, {{ Auth::user()->name }}</span>
+                            </li>
+                            <li class="nav-item">
+                                <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
+                                    @csrf
+                                </form>
+                                <a href="#" class="nav-link"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                                    style="cursor:pointer;">Đăng xuất</a>
+                            </li>
+                            <li class="nav-item cart"><a href="/cart" class="nav-link"><span
+                                        class="icon icon-shopping_cart"></span><span
+                                        class="bag d-flex justify-content-center align-items-center"><small
+                                            id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
+                            </li>
+                        @else
+                            <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
+                            <li class="nav-item cart"><a href="/cart" class="nav-link"><span
+                                        class="icon icon-shopping_cart"></span><span
+                                        class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
             </div>
@@ -92,16 +95,14 @@
     <section class="menu-section">
         @foreach($categories as $category)
             <div class="menu-category-block">
-                <h2 class="menu-category-title"
-                    style="
-                        border-bottom: 2px solid #c8b8a8;
-                        margin-top: 40px;
-                        margin-bottom: 24px;
-                        padding-bottom: 8px;
-                        color: var(--category-title-color, #1a110d);
-                        text-align: left;
-                    "
-                >
+                <h2 class="menu-category-title" style="
+                            border-bottom: 2px solid #c8b8a8;
+                            margin-top: 40px;
+                            margin-bottom: 24px;
+                            padding-bottom: 8px;
+                            color: var(--category-title-color, #1a110d);
+                            text-align: left;
+                        ">
                     {{ $category->name }}
                 </h2>
                 <div class="menu-grid">
@@ -131,13 +132,13 @@
                                     </span>
                                     @auth
                                         <button class="btn-add-cart" onclick="openModal(
-                                            {{ $product->id }},
-                                            '{{ addslashes($product->name) }}',
-                                            {{ $product->price }},
-                                            '{{ $category->name }}',
-                                            '{{ asset('images/' . $product->image_url) }}',
-                                            {{ $category->id }}
-                                        )">
+                                                        {{ $product->id }},
+                                                        '{{ addslashes($product->name) }}',
+                                                        {{ $product->price }},
+                                                        '{{ $category->name }}',
+                                                        '{{ asset('images/' . $product->image_url) }}',
+                                                        {{ $category->id }}
+                                                    )">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="9" cy="21" r="1" />
@@ -159,16 +160,17 @@
             </div>
         @endforeach
 
-    <style>
-        body[data-theme="dark"] .menu-category-title {
-            color: #fff !important;
-            border-bottom: 2px solid #fff !important;
-        }
-        body[data-theme="light"] .menu-category-title {
-            color: #1a110d !important;
-            border-bottom: 2px solid #c8b8a8 !important;
-        }
-    </style>
+        <style>
+            body[data-theme="dark"] .menu-category-title {
+                color: #fff !important;
+                border-bottom: 2px solid #fff !important;
+            }
+
+            body[data-theme="light"] .menu-category-title {
+                color: #1a110d !important;
+                border-bottom: 2px solid #c8b8a8 !important;
+            }
+        </style>
     </section>
 
     {{-- ===== MODAL TOPPING ===== --}}
@@ -318,7 +320,7 @@
         </div>
         <span id="toastMsg"></span>
     </div>
-<div class="main-footer">
+    <div class="main-footer">
         <div class="container">
             <div class="footer-grid">
                 <!-- Brand -->
@@ -374,230 +376,231 @@
             <p>&copy; 2026 Choy's Cafe. Tất cả quyền được bảo lưu.</p>
         </div>
     </div>
-</footer>
+    </footer>
 
-<style>
-    /* === COFFEE FOOTER STYLES === */
-    .coffee-footer {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        color: #ffffff;
-        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-        line-height: 1.6;
-        margin-top: 100px; /* Khoảng cách với nội dung chính */
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-
-    /* Newsletter */
-    .newsletter-section {
-        background: rgba(255, 107, 0, 0.1);
-        padding: 60px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .newsletter-content {
-        text-align: center;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-
-    .newsletter-content h3 {
-        font-size: 2.2rem;
-        font-weight: 700;
-        margin-bottom: 16px;
-        background: linear-gradient(45deg, #ffffff, #ff6b00);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .newsletter-content p {
-        font-size: 1.1rem;
-        opacity: 0.9;
-        margin-bottom: 32px;
-    }
-
-    .newsletter-form {
-        display: flex;
-        max-width: 400px;
-        margin: 0 auto;
-        gap: 12px;
-    }
-
-    .newsletter-form input {
-        flex: 1;
-        padding: 16px 20px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 50px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #ffffff;
-        font-size: 1rem;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-    }
-
-    .newsletter-form input::placeholder {
-        color: rgba(255, 255, 255, 0.6);
-    }
-
-    .newsletter-form input:focus {
-        outline: none;
-        border-color: #ff6b00;
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
-    }
-
-    .newsletter-form button {
-        padding: 16px 28px;
-        background: linear-gradient(45deg, #ff6b00, #ff8c42);
-        border: none;
-        border-radius: 50px;
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 8px 25px rgba(255, 107, 0, 0.3);
-    }
-
-    .newsletter-form button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 35px rgba(255, 107, 0, 0.4);
-    }
-
-    /* Main Footer */
-    .main-footer {
-        padding: 60px 0 40px;
-    }
-
-    .footer-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr;
-        gap: 40px;
-    }
-
-    .footer-brand h2 {
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 16px;
-        background: linear-gradient(45deg, #ffffff, #ff6b00);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .footer-brand p {
-        opacity: 0.8;
-        margin-bottom: 24px;
-    }
-
-    .social-links {
-        display: flex;
-        gap: 16px;
-    }
-
-    .social-links a {
-        width: 44px;
-        height: 44px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff;
-        font-size: 1.1rem;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-    }
-
-    .social-links a:hover {
-        background: #ff6b00;
-        transform: translateY(-3px);
-    }
-
-    /* Links */
-    .footer-links h4,
-    .footer-contact h4 {
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin-bottom: 20px;
-        position: relative;
-    }
-
-    .footer-links h4::after {
-        content: '';
-        position: absolute;
-        bottom: -6px;
-        left: 0;
-        width: 30px;
-        height: 2px;
-        background: #ff6b00;
-    }
-
-    .footer-links ul {
-        list-style: none;
-    }
-
-    .footer-links li {
-        margin-bottom: 12px;
-    }
-
-    .footer-links a {
-        color: rgba(255, 255, 255, 0.8);
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .footer-links a:hover {
-        color: #ff6b00;
-        padding-left: 6px;
-    }
-
-    .contact-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-        opacity: 0.9;
-    }
-
-    .contact-item i {
-        color: #ff6b00;
-        width: 20px;
-    }
-
-    /* Copyright */
-    .copyright {
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 20px 0;
-        text-align: center;
-    }
-
-    .copyright p {
-        opacity: 0.7;
-        font-size: 0.9rem;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .newsletter-form {
-            flex-direction: column;
+    <style>
+        /* === COFFEE FOOTER STYLES === */
+        .coffee-footer {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #ffffff;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+            line-height: 1.6;
+            margin-top: 100px;
+            /* Khoảng cách với nội dung chính */
         }
-        
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Newsletter */
+        .newsletter-section {
+            background: rgba(255, 107, 0, 0.1);
+            padding: 60px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .newsletter-content {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .newsletter-content h3 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(45deg, #ffffff, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .newsletter-content p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 32px;
+        }
+
+        .newsletter-form {
+            display: flex;
+            max-width: 400px;
+            margin: 0 auto;
+            gap: 12px;
+        }
+
+        .newsletter-form input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .newsletter-form input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .newsletter-form input:focus {
+            outline: none;
+            border-color: #ff6b00;
+            box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
+        }
+
+        .newsletter-form button {
+            padding: 16px 28px;
+            background: linear-gradient(45deg, #ff6b00, #ff8c42);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 0, 0.3);
+        }
+
+        .newsletter-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(255, 107, 0, 0.4);
+        }
+
+        /* Main Footer */
+        .main-footer {
+            padding: 60px 0 40px;
+        }
+
         .footer-grid {
-            grid-template-columns: 1fr;
-            gap: 30px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+        }
+
+        .footer-brand h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(45deg, #ffffff, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-brand p {
+            opacity: 0.8;
+            margin-bottom: 24px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .social-links a {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .social-links a:hover {
+            background: #ff6b00;
+            transform: translateY(-3px);
+        }
+
+        /* Links */
+        .footer-links h4,
+        .footer-contact h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .footer-links h4::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background: #ff6b00;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #ff6b00;
+            padding-left: 6px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            opacity: 0.9;
+        }
+
+        .contact-item i {
+            color: #ff6b00;
+            width: 20px;
+        }
+
+        /* Copyright */
+        .copyright {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 0;
             text-align: center;
         }
-        
-        .newsletter-content h3 {
-            font-size: 1.8rem;
+
+        .copyright p {
+            opacity: 0.7;
+            font-size: 0.9rem;
         }
-    }
-</style>
-{{-- style menu --}}
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .newsletter-form {
+                flex-direction: column;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                text-align: center;
+            }
+
+            .newsletter-content h3 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+    {{-- style menu --}}
     <style>
         /* ===== BASE ===== */
         *,
@@ -1329,54 +1332,86 @@
 
         function openModal(id, name, price, cat, imgUrl, categoryId) {
 
-    // 🚨 CHẶN CHƯA LOGIN
-    if (!isLoggedIn) {
-        showToast('⚠️ Vui lòng đăng nhập!');
-        setTimeout(() => {
-            window.location.href = "{{ url('/login') }}";
-        }, 1200);
-        return;
-    }
+            // 🚨 CHẶN CHƯA LOGIN
+            if (!isLoggedIn) {
+                showToast('⚠️ Vui lòng đăng nhập!');
+                setTimeout(() => {
+                    window.location.href = "{{ url('/login') }}";
+                }, 1200);
+                return;
+            }
 
-    modalState = { productId: id, basePrice: price, sizeExtra: 0, toppingTotal: 0, qty: 1 };
+            modalState = { productId: id, basePrice: price, sizeExtra: 0, toppingTotal: 0, qty: 1 };
 
-    document.getElementById('sheetCat').textContent = cat;
-    document.getElementById('sheetName').textContent = name;
-    document.getElementById('priceBase').textContent = fmtPrice(price);
-    document.getElementById('sheetImg').src = imgUrl;
-    document.getElementById('qtyNum').textContent = '1';
-    document.getElementById('noteInput').value = '';
+            document.getElementById('sheetCat').textContent = cat;
+            document.getElementById('sheetName').textContent = name;
+            document.getElementById('priceBase').textContent = fmtPrice(price);
+            document.getElementById('sheetImg').src = imgUrl;
+            document.getElementById('qtyNum').textContent = '1';
+            document.getElementById('noteInput').value = '';
 
-    var sizeBtns = document.querySelectorAll('.size-btn');
-    sizeBtns.forEach((b, i) => b.classList.toggle('active', i === 0));
-    modalState.sizeExtra = 0;
+            var sizeBtns = document.querySelectorAll('.size-btn');
+            sizeBtns.forEach((b, i) => b.classList.toggle('active', i === 0));
+            modalState.sizeExtra = 0;
 
-    document.querySelectorAll('.option-chip[data-group="sugar"]').forEach((b, i, arr) => {
-        b.classList.toggle('active', i === arr.length - 1);
-    });
+            document.querySelectorAll('.option-chip[data-group="sugar"]').forEach((b, i, arr) => {
+                b.classList.toggle('active', i === arr.length - 1);
+            });
 
-    document.querySelectorAll('.option-chip[data-group="ice"]').forEach((b, i, arr) => {
-        b.classList.toggle('active', i === arr.length - 1);
-    });
+            document.querySelectorAll('.option-chip[data-group="ice"]').forEach((b, i, arr) => {
+                b.classList.toggle('active', i === arr.length - 1);
+            });
 
-    document.querySelectorAll('.topping-item').forEach(t => t.classList.remove('active'));
-    modalState.toppingTotal = 0;
+            document.querySelectorAll('.topping-item').forEach(t => t.classList.remove('active'));
+            modalState.toppingTotal = 0;
 
-    // Ẩn/hiện topping theo category id
-    var toppingGrid = document.querySelector('.topping-grid');
-    if (categoryId === 2 || categoryId === 3) {
-        toppingGrid.style.display = '';
-        toppingGrid.previousElementSibling.style.display = '';
-    } else {
-        toppingGrid.style.display = 'none';
-        toppingGrid.previousElementSibling.style.display = 'none';
-    }
+            // Ẩn/hiện topping theo category id
+            var toppingGrid = document.querySelector('.topping-grid');
+            var toppingLabel = toppingGrid.previousElementSibling;
 
-    updateTotal();
+            var sugarSection = document.querySelector('.option-chip[data-group="sugar"]').closest('.option-row').previousElementSibling;
+            var sugarRow = document.querySelector('.option-chip[data-group="sugar"]').closest('.option-row');
 
-    document.getElementById('modalBackdrop').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
+            var iceSection = document.querySelector('.option-chip[data-group="ice"]').closest('.option-row').previousElementSibling;
+            var iceRow = document.querySelector('.option-chip[data-group="ice"]').closest('.option-row');
+
+            var sizeSection = document.querySelector('.size-row').previousElementSibling;
+            var sizeRow = document.querySelector('.size-row');
+
+            // ===== RESET HIỆN TẤT CẢ =====
+            [toppingGrid, toppingLabel, sugarSection, sugarRow, iceSection, iceRow, sizeSection, sizeRow].forEach(el => {
+                if (el) el.style.display = '';
+            });
+
+            // ===== LOGIC =====
+            if (categoryId === 2 || categoryId === 3) {
+                // ✅ FULL
+                // không cần làm gì
+            }
+            else if (categoryId === 1 || categoryId === 4) {
+                // ❌ ẨN TOPPING
+                toppingGrid.style.display = 'none';
+                toppingLabel.style.display = 'none';
+            }
+            else if (categoryId === 5) {
+                // ❌ ẨN TẤT CẢ OPTION
+                toppingGrid.style.display = 'none';
+                toppingLabel.style.display = 'none';
+
+                sugarSection.style.display = 'none';
+                sugarRow.style.display = 'none';
+
+                iceSection.style.display = 'none';
+                iceRow.style.display = 'none';
+
+                sizeSection.style.display = 'none';
+                sizeRow.style.display = 'none';
+            }
+            updateTotal();
+
+            document.getElementById('modalBackdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
 
         function closeModal() {
             document.getElementById('modalBackdrop').classList.remove('open');
@@ -1452,20 +1487,20 @@
                 })
             })
                 .then(res => res.json())
-.then(data => {
+                .then(data => {
 
-    if (!data.success) {
-        showToast('❌ ' + (data.message || 'Lỗi server'));
-        return;
-    }
+                    if (!data.success) {
+                        showToast('❌ ' + (data.message || 'Lỗi server'));
+                        return;
+                    }
 
-    closeModal();
+                    closeModal();
 
-    // 🔥 sửa selector cho đúng
-    document.querySelector('.bag small').textContent = data.cart_count;
+                    // 🔥 sửa selector cho đúng
+                    document.querySelector('.bag small').textContent = data.cart_count;
 
-    showToast('Đã thêm vào giỏ hàng!');
-})
+                    showToast('Đã thêm vào giỏ hàng!');
+                })
         }
 
         function showToast(msg) {

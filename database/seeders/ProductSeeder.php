@@ -81,23 +81,21 @@ class ProductSeeder extends Seeder
         ]);
 
         // Product extras (product_id => [extra_ids])
-        $productExtras = [
-            1 => [4, 5, 6, 7, 8],           // Cà Phê Đen
-            2 => [4, 5, 6, 7, 8, 10],       // Cà Phê Sữa
-            3 => [4, 9],                     // Cappuccino
-            4 => [4, 9],                     // Latte
-            5 => [1, 2, 3, 5, 6, 7, 8],     // Trà Sữa Trân Châu
-            6 => [1, 2, 3, 5, 6, 7, 8],     // Trà Sữa Matcha
-            7 => [4, 9],                     // Frappuccino Caramel
-            8 => [9],                        // Đá Xay Chocolate
-        ];
+        $products = DB::table('products')
+            ->where('category_id', '!=', 5) // bỏ bánh & snack
+            ->pluck('id');
 
         $rows = [];
-        foreach ($productExtras as $productId => $extraIds) {
-            foreach ($extraIds as $extraId) {
-                $rows[] = ['product_id' => $productId, 'extra_id' => $extraId];
+
+        foreach ($products as $productId) {
+            foreach ([1, 2, 3, 4, 5, 6, 7, 8, 9] as $extraId) {
+                $rows[] = [
+                    'product_id' => $productId,
+                    'extra_id' => $extraId
+                ];
             }
         }
+
         DB::table('product_extras')->insert($rows);
     }
 }
