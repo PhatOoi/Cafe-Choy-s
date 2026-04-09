@@ -1386,27 +1386,47 @@
                 if (el) el.style.display = '';
             });
 
-            // ===== LOGIC =====
-            if (categoryId === 2 || categoryId === 3) {
-                // ✅ FULL
-                // không cần làm gì
-            }
-            else if (categoryId === 1 || categoryId === 4) {
-                // ❌ ẨN TOPPING
-                toppingGrid.style.display = 'none';
-                toppingLabel.style.display = 'none';
-            }
-            else if (categoryId === 5) {
-                // ❌ ẨN TẤT CẢ OPTION
-                toppingGrid.style.display = 'none';
-                toppingLabel.style.display = 'none';
-
+            // ===== LOGIC MỚI =====
+            var productName = document.getElementById('sheetName').textContent || '';
+            if (categoryId === 2) {
+                // Trà sữa: chỉ hiện topping, ẩn đường & sữa
                 sugarSection.style.display = 'none';
                 sugarRow.style.display = 'none';
-
+            } else if (categoryId === 3) {
+                // Đá xay: ẩn topping, đường, sữa, đá
+                toppingGrid.style.display = 'none';
+                toppingLabel.style.display = 'none';
+                sugarSection.style.display = 'none';
+                sugarRow.style.display = 'none';
                 iceSection.style.display = 'none';
                 iceRow.style.display = 'none';
-
+            } else if (categoryId === 4) {
+                // Sinh tố/nước ép: ẩn topping
+                toppingGrid.style.display = 'none';
+                toppingLabel.style.display = 'none';
+                if (productName.toLowerCase().includes('sinh tố')) {
+                    // Sinh tố: ẩn luôn đá, đường & sữa
+                    sugarSection.style.display = 'none';
+                    sugarRow.style.display = 'none';
+                    iceSection.style.display = 'none';
+                    iceRow.style.display = 'none';
+                } else {
+                    // Nước ép: ẩn đường & sữa
+                    sugarSection.style.display = 'none';
+                    sugarRow.style.display = 'none';
+                }
+            } else if (categoryId === 1) {
+                // Cà phê: ẩn topping
+                toppingGrid.style.display = 'none';
+                toppingLabel.style.display = 'none';
+            } else if (categoryId === 5) {
+                // Bánh/snack: ẩn tất cả option
+                toppingGrid.style.display = 'none';
+                toppingLabel.style.display = 'none';
+                sugarSection.style.display = 'none';
+                sugarRow.style.display = 'none';
+                iceSection.style.display = 'none';
+                iceRow.style.display = 'none';
                 sizeSection.style.display = 'none';
                 sizeRow.style.display = 'none';
             }
