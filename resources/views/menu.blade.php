@@ -48,7 +48,7 @@
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
                         <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
-                        <li class="nav-item"><a href="contact.html" class="nav-link">Liên hệ</a></li>
+
                         @if(Auth::check())
 
                             <li class="nav-item">
