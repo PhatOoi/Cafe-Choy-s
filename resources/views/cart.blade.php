@@ -471,6 +471,87 @@
 </footer>
 
 <style>
+    .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ff6b00;
+    transition: 0.3s;
+}
+
+.user-avatar:hover {
+    transform: scale(1.1);
+}
+
+/* DROPDOWN */
+.user-dropdown {
+    position: relative;
+}
+
+.user-dropdown .dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 120%;
+    background: #1a1a1a;
+    border-radius: 12px;
+    min-width: 230px;
+    padding: 10px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* SHOW HOVER */
+.user-dropdown:hover .dropdown-menu {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* USER INFO */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+}
+
+.user-info img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+}
+
+.user-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* ITEM */
+.dropdown-item {
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.dropdown-item:hover {
+    background: #ff6b00;
+    color: #fff;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
     /* === COFFEE FOOTER STYLES === */
     .coffee-footer {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -781,7 +862,51 @@
     }
 }
 </style>
+    <script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const userMenuBtn = document.getElementById('userMenuBtn');
+			const userDropdownMenu = document.getElementById('userDropdownMenu');
+			const dropdownContainer = document.querySelector('.user-dropdown-container');
 
+			if (userMenuBtn && userDropdownMenu) {
+				// Show dropdown on click
+				userMenuBtn.addEventListener('click', function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					userDropdownMenu.classList.toggle('active');
+					userMenuBtn.classList.toggle('active');
+				});
+
+				// Keep dropdown open when hovering
+				dropdownContainer.addEventListener('mouseenter', function() {
+					userDropdownMenu.classList.add('active');
+					userMenuBtn.classList.add('active');
+				});
+
+				dropdownContainer.addEventListener('mouseleave', function() {
+					userDropdownMenu.classList.remove('active');
+					userMenuBtn.classList.remove('active');
+				});
+
+				// Close dropdown when clicking outside
+				document.addEventListener('click', function(e) {
+					if (!dropdownContainer.contains(e.target)) {
+						userDropdownMenu.classList.remove('active');
+						userMenuBtn.classList.remove('active');
+					}
+				});
+
+				// Close dropdown when clicking on a link
+				const links = userDropdownMenu.querySelectorAll('.dropdown-link:not(.logout-link)');
+				links.forEach(link => {
+					link.addEventListener('click', function() {
+						userDropdownMenu.classList.remove('active');
+						userMenuBtn.classList.remove('active');
+					});
+				});
+			}
+		});
+	</script>
 	<script src="js/jquery.min.js"></script>
 	<script src="js/jquery-migrate-3.0.1.min.js"></script>
 	<script src="js/popper.min.js"></script>

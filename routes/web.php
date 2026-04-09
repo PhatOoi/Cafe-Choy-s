@@ -12,6 +12,7 @@ use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ProfileController;
 
 // Trang chủ
 Route::get('/', function () {
@@ -20,7 +21,6 @@ Route::get('/', function () {
 
 // Trang menu
 Route::get('/menu', [MenuController::class, 'index']);
-
 
 
 Route::get('/login',[LoginController::class,'index']);
@@ -36,6 +36,7 @@ Route::get('/test-db', function () {
     $users = DB::table('users')->get();
     return $users;
 });
+Route::get('/profile', [ProfileController::class, 'index'])->middleware('auth');
 
 Route::get('/search', [MenuController::class, 'search']);
 
