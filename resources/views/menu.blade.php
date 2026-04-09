@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="css/flaticon.css">
     <link rel="stylesheet" href="css/icomoon.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -35,49 +36,126 @@
     {{-- ===== NAVBAR GIỮ NGUYÊN ===== --}}
     <div>
         <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
-            <div class="container d-flex align-items-center">
-                <a class="navbar-brand mr-3" href="{{ url('/') }}">
-                    <img src="/images/logo.png" alt="Choy's Cafe" style="height:72px;width:auto;max-width:none;object-fit:contain;display:block;padding:0;margin:0;background:transparent;">
-                </a>
-                @include('components.search-bar')
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
-                    aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="oi oi-menu"></span> Menu
-                </button>
-                <div class="collapse navbar-collapse" id="ftco-nav">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                        <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
-                        <li class="nav-item"><a href="contact.html" class="nav-link">Liên hệ</a></li>
-                        @if(Auth::check())
+    <div class="container">
 
-                            <li class="nav-item">
-                                <span class="nav-link">Hello, {{ Auth::user()->name }}</span>
-                            </li>
-                            <li class="nav-item">
-                                <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
-                                    @csrf
-                                </form>
-                                <a href="#" class="nav-link"
-                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                                    style="cursor:pointer;">Đăng xuất</a>
-                            </li>
-                            <li class="nav-item cart"><a href="/cart" class="nav-link"><span
-                                        class="icon icon-shopping_cart"></span><span
-                                        class="bag d-flex justify-content-center align-items-center"><small
-                                            id="cart-count">{{ $cartCount ?? 0 }}</small></span></a>
-                            </li>
-                        @else
-                            <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
-                            <li class="nav-item cart"><a href="/cart" class="nav-link"><span
-                                        class="icon icon-shopping_cart"></span><span
-                                        class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a>
-                            </li>
-                        @endif
-                    </ul>
-                </div>
-            </div>
-        </nav>
+        <!-- LOGO -->
+        <a class="navbar-brand mr-3" href="{{ url('/') }}">
+            <img src="/images/logo.png"
+                 style="height:72px;width:auto;object-fit:contain;">
+        </a>
+
+        @include('components.search-bar')
+
+        <!-- MOBILE BUTTON -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav">
+            <span class="oi oi-menu"></span> Menu
+        </button>
+
+        <div class="collapse navbar-collapse" id="ftco-nav">
+            <ul class="navbar-nav ml-auto">
+
+                <!-- MENU ITEMS -->
+                <li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
+                <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                
+                <!-- SPACER -->
+                <li class="nav-item flex-spacer"></li>
+
+                <!-- CART -->
+                <li class="nav-item cart">
+                    <a href="/cart" class="nav-link">
+                        <span class="icon icon-shopping_cart"></span>
+                        <span class="bag">
+                            <small id="cart-count">{{ $cartCount ?? 0 }}</small>
+                        </span>
+                    </a>
+                </li>
+
+				<!-- USER DROPDOWN -->
+				@if(Auth::check())
+                <li class="nav-item user-dropdown-wrapper">
+                    <div class="user-dropdown-container">
+                        <!-- USER AVATAR BUTTON -->
+                        <button class="user-avatar-btn" type="button" id="userMenuBtn">
+                            @if(Auth::user()->avatar && file_exists(public_path('storage/' . Auth::user()->avatar)))
+                                <img src="{{ asset('storage/' . Auth::user()->avatar) }}" 
+                                     alt="{{ Auth::user()->name }}"
+                                     class="user-avatar">
+                            @else
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=ff6b00&color=fff&size=48"
+                                     alt="{{ Auth::user()->name }}"
+                                     class="user-avatar">
+                            @endif
+                        </button>
+
+                        <!-- USER DROPDOWN MENU -->
+                        <div class="user-dropdown-menu" id="userDropdownMenu">
+                            <!-- Header Info -->
+                            <div class="dropdown-header-info">
+                                @if(Auth::user()->avatar && file_exists(public_path('storage/' . Auth::user()->avatar)))
+                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" 
+                                         alt="{{ Auth::user()->name }}"
+                                         class="dropdown-avatar">
+                                @else
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=ff6b00&color=fff&size=60"
+                                         alt="{{ Auth::user()->name }}"
+                                         class="dropdown-avatar">
+                                @endif
+                                <div class="user-details">
+                                    <p class="user-name">{{ Auth::user()->name }}</p>
+                                    <p class="user-role">
+                                        @if(Auth::user()->role === 'admin')
+                                            <span class="badge-admin">Admin</span>
+                                        @else
+                                            <span class="badge-customer">Khách hàng</span>
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Menu Items -->
+                            <a href="/profile" class="dropdown-link">
+                                <i class="fas fa-user"></i>
+                                <span>Hồ sơ cá nhân</span>
+                            </a>
+
+                            @if(Auth::user()->role === 'admin')
+                            <a href="/admin" class="dropdown-link">
+                                <i class="fas fa-cog"></i>
+                                <span>Quản trị</span>
+                            </a>
+                            @endif
+
+                            <!-- Divider -->
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Logout -->
+                            <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
+                                @csrf
+                            </form>
+                            <a href="#" class="dropdown-link logout-link" 
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Đăng xuất</span>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+				@else
+                <li class="nav-item">
+                    <a href="{{ url('/login') }}" class="nav-link btn-login">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Đăng nhập
+                    </a>
+                </li>
+				@endif
+
+            </ul>
+        </div>
+    </div>
+</nav>
     </div>
 
     {{-- ===== HERO ===== --}}
@@ -382,6 +460,87 @@
     </footer>
 
     <style>
+        .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ff6b00;
+    transition: 0.3s;
+}
+
+.user-avatar:hover {
+    transform: scale(1.1);
+}
+
+/* DROPDOWN */
+.user-dropdown {
+    position: relative;
+}
+
+.user-dropdown .dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 120%;
+    background: #1a1a1a;
+    border-radius: 12px;
+    min-width: 230px;
+    padding: 10px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* SHOW HOVER */
+.user-dropdown:hover .dropdown-menu {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* USER INFO */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+}
+
+.user-info img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+}
+
+.user-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* ITEM */
+.dropdown-item {
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.dropdown-item:hover {
+    background: #ff6b00;
+    color: #fff;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
         /* === COFFEE FOOTER STYLES === */
         .coffee-footer {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -1522,6 +1681,51 @@
                 window.location.href = "{{ url('/login') }}";
             }, 1200);
         }
+
+        // ===== USER DROPDOWN MENU =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdownMenu = document.getElementById('userDropdownMenu');
+            const dropdownContainer = document.querySelector('.user-dropdown-container');
+
+            if (userMenuBtn && userDropdownMenu) {
+                // Show dropdown on click
+                userMenuBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    userDropdownMenu.classList.toggle('active');
+                    userMenuBtn.classList.toggle('active');
+                });
+
+                // Keep dropdown open when hovering
+                dropdownContainer.addEventListener('mouseenter', function() {
+                    userDropdownMenu.classList.add('active');
+                    userMenuBtn.classList.add('active');
+                });
+
+                dropdownContainer.addEventListener('mouseleave', function() {
+                    userDropdownMenu.classList.remove('active');
+                    userMenuBtn.classList.remove('active');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!dropdownContainer.contains(e.target)) {
+                        userDropdownMenu.classList.remove('active');
+                        userMenuBtn.classList.remove('active');
+                    }
+                });
+
+                // Close dropdown when clicking on a link
+                const links = userDropdownMenu.querySelectorAll('.dropdown-link:not(.logout-link)');
+                links.forEach(link => {
+                    link.addEventListener('click', function() {
+                        userDropdownMenu.classList.remove('active');
+                        userMenuBtn.classList.remove('active');
+                    });
+                });
+            }
+        });
     </script>
     <script src="js/footer.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
