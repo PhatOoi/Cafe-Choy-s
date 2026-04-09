@@ -187,7 +187,6 @@
                                                             <div class="font-weight-bold mb-2" style="font-size:16px;">Cách 2: Chuyển khoản <b>thủ công</b> theo thông tin</div>
                                                             <div class="card p-3" style="background:#fff;border:1px solid #e0e0e0;">
                                                                     <div class="d-flex align-items-center mb-2">
-                                                                        <img src="https://seeklogo.com/images/V/vietcombank-logo-5E3C0B6A2C-seeklogo.com.png" alt="Vietcombank" style="height:32px;margin-right:8px;">
                                                                         <span style="font-weight:bold;font-size:18px;">Vietcombank</span>
                                                                     </div>
                                                                     <div style="font-size:15px;">
@@ -210,6 +209,89 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Modal Bill Thanh Toán Tiền Mặt -->
+                                    <div class="modal fade" id="billModal" tabindex="-1" role="dialog" aria-labelledby="billModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document" style="max-width: 370px;">
+                                            <div class="modal-content" style="font-family: Arial, sans-serif;">
+                                                <div class="modal-body p-3" style="color:#111;">
+                                                    <div class="text-center" style="margin-bottom:4px;">
+                                                        <img src="/images/logo.png" alt="Choy's Cafe Logo" style="height:90px; object-fit:contain;" />
+                                                    </div>
+                                                    <div class="text-center" style="font-size:13px;color:#111;">toà JOVE, Trung Mỹ Tây, Quận 12<br>0904xxxxxx</div>
+                                                    <div class="text-center mt-2 mb-2" style="font-size:16px;font-weight:bold; color:#111;">HÓA ĐƠN <span id="bill-code"></span></div>
+                                                    <div class="d-flex justify-content-between mb-1" style="font-size:13px;color:#111;">
+                                                        <span style="color:#111;">Thời gian</span>
+                                                        <span style="color:#111;"><span id="bill-time"></span> <span id="bill-date"></span></span>
+                                                    </div>
+                                                    <div style="display:flex; font-size:13px; font-weight:bold; margin-bottom:2px; margin-top:6px; text-align:left;color:#111;">
+                                                        <div style="width:160px; padding:0 2px 0 0;">Tên sản phẩm</div>
+                                                        <div style="width:60px; text-align:left; padding:0 0 0 2px;">Giá tiền</div>
+                                                        <div style="width:40px; text-align:left; padding:0 0 0 2px;">SL</div>
+                                                        <div style="width:70px; text-align:left; padding:0 0 0 2px;">Tổng cộng</div>
+                                                    </div>
+                                                    <div style="display:flex;color:#111;">
+                                                        <div style="width:160px;">
+                                                            @foreach($cart as $item)
+                                                                <div style="margin-bottom:1px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                                                    <div style="font-size:12px;">{{ $item['name'] }}</div>
+                                                                    <div style="font-size:10px; color:#888; font-style:italic; margin-top:-2px; line-height:1.4;">
+                                                                        <div>- Size: {{ $item['size'] ?? '-' }}</div>
+                                                                        <div>- Đường: {{ $item['sugar'] ?? '-' }}</div>
+                                                                        <div>- Đá: {{ $item['ice'] ?? '-' }}</div>
+                                                                        @if(!empty($item['toppings']) && count($item['toppings']) > 0)
+                                                                            <div>- Topping: {{ implode(', ', $item['toppings']) }}</div>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                        <div style="width:60px; text-align:left; padding-left:0;">
+                                                            @foreach($cart as $item)
+                                                                <div style="font-size:12px; margin-bottom:1px; text-align:left;">{{ number_format($item['price']) }}</div>
+                                                            @endforeach
+                                                        </div>
+                                                        <div style="width:40px; text-align:left; padding-left:0;">
+                                                            @foreach($cart as $item)
+                                                                <div style="font-size:12px; margin-bottom:1px; text-align:left;">{{ $item['qty'] }}</div>
+                                                            @endforeach
+                                                        </div>
+                                                        <div style="width:70px; text-align:left; padding-left:0;">
+                                                            @foreach($cart as $item)
+                                                                <div style="font-size:12px; margin-bottom:1px; text-align:left;">{{ number_format($item['price'] * $item['qty']) }}</div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                    <!-- Đã xóa phần bảng tên sản phẩm phía dưới theo yêu cầu -->
+                                                    <div class="d-flex justify-content-between" style="font-size:13px;color:#111;">
+                                                        <span style="color:#111;">Tổng dịch vụ</span>
+                                                        <span style="color:#111;">{{ number_format($total) }}</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mt-1 mb-1" style="font-size:16px;font-weight:bold;color:#111;">
+                                                        <span style="color:#111;">Thanh toán</span>
+                                                        <span style="font-size:20px;color:#111;">{{ number_format($total) }}</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between" style="font-size:13px;color:#111;">
+                                                        <span style="color:#111;">Mã hóa đơn</span>
+                                                        <span id="bill-code-2" style="color:#111;"></span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between" style="font-size:13px;color:#111;">
+                                                        <span style="color:#111;">Tên khách hàng</span>
+                                                        <span style="color:#111;">{{ Auth::user()->name ?? '-' }}</span>
+                                                    </div>
+                                                    <div class="text-center mt-2" style="font-size:13px;color:#111;">
+                                                        Quý khách vui lòng kiểm tra lại hóa đơn trước khi thanh toán<br>
+                                                        Xin cảm ơn quý khách.<br>
+                                                        Hẹn gặp lại quý khách lần sau
+                                                    </div>
+                                                    <div class="text-center mt-2" style="color:#111;">
+                                                        <button type="button" class="btn btn-secondary btn-sm px-4" data-dismiss="modal">Đóng</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Đặt toàn bộ JS ở cuối file, sau tất cả HTML -->
                                     <script>
                                     function confirmPayment() {
                                         $('#qrPaymentModal').modal('hide');
@@ -219,7 +301,7 @@
                                     }
                                     function handleCashPayment() {
                                         $('#paymentMethodModal').modal('hide');
-                                        alert('Bạn đã chọn thanh toán bằng tiền mặt.');
+                                        setTimeout(function() { $('#billModal').modal('show'); }, 400);
                                     }
                                     function showQRModal() {
                                         $('#paymentMethodModal').modal('hide');
@@ -234,24 +316,24 @@
                                         document.body.removeChild(temp);
                                         alert('Đã sao chép: ' + text);
                                     }
-                                    </script>
-                                    </div>
-                                    </div>
-                                    </body>
-                                    <script>
-                                    // Hiển thị ngày giờ và mã hóa đơn trong modal bill
+                                    // Hiển thị ngày giờ và mã hóa đơn trong bill
                                     document.addEventListener('DOMContentLoaded', function() {
                                         $('#billModal').on('show.bs.modal', function () {
                                             var now = new Date();
                                             var date = now.toLocaleDateString('vi-VN');
                                             var time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                                            var code = Math.floor(1000 + Math.random() * 9000);
                                             document.getElementById('bill-date').textContent = date;
                                             document.getElementById('bill-time').textContent = time;
-                                            // Random mã hóa đơn 4 số
-                                            document.getElementById('bill-code').textContent = Math.floor(1000 + Math.random() * 9000);
+                                            document.getElementById('bill-code').textContent = code;
+                                            document.getElementById('bill-code-2').textContent = code;
                                         });
                                     });
                                     </script>
+                                    </div>
+                                    </div>
+                                    </body>
+                                    <!-- Đã loại bỏ đoạn script gán bill-code không tồn tại để tránh lỗi JS. -->
 									</div>
 								</div>
 							</div>
