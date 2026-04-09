@@ -135,7 +135,7 @@
 									<div class="card-body">
 										<h5 class="card-title">Tổng Cộng</h5>
 										<h3 class="text-danger">{{ number_format($total) }} đ</h3>
-										<button class="btn btn-primary btn-block mt-3">Thanh Toán</button>
+										<button class="btn btn-primary btn-block mt-3"><a href="/payment" style="color: white; text-decoration: none;">Thanh Toán</a></button>
 									</div>
 								</div>
 							</div>

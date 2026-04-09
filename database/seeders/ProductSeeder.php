@@ -31,18 +31,12 @@ class ProductSeeder extends Seeder
             // ===== TRÀ SỮA (2) =====
             ['category_id' => 2, 'name' => 'Trà Sữa Trân Châu', 'description' => 'Trà sữa truyền thống', 'price' => 45000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tstranchau.jpg', 'created_at' => now()],
             ['category_id' => 2, 'name' => 'Trà Sữa Matcha', 'description' => 'Matcha Nhật', 'price' => 50000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tsmatcha.jpg', 'created_at' => now()],
-            ['category_id' => 2, 'name' => 'Trà Sữa Socola', 'description' => 'Vị socola', 'price' => 48000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tssocola.jpg', 'created_at' => now()],
-            ['category_id' => 2, 'name' => 'Trà Sữa Dâu', 'description' => 'Vị dâu', 'price' => 48000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tsdau.jpg', 'created_at' => now()],
-            ['category_id' => 2, 'name' => 'Trà Sữa Khoai Môn', 'description' => 'Khoai môn béo', 'price' => 50000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tskhoaimon.jpg', 'created_at' => now()],
             ['category_id' => 2, 'name' => 'Trà Sữa Caramel', 'description' => 'Caramel thơm', 'price' => 52000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tscaramel.jpg', 'created_at' => now()],
 
             // ===== ĐÁ XAY (3) =====
             ['category_id' => 3, 'name' => 'Frappuccino Caramel', 'description' => 'Caramel đá xay', 'price' => 55000, 'stock' => 50, 'status' => 'available', 'image_url' => 'frappe_caramel.jpg', 'created_at' => now()],
-            ['category_id' => 3, 'name' => 'Đá Xay Chocolate', 'description' => 'Chocolate mát lạnh', 'price' => 50000, 'stock' => 50, 'status' => 'available', 'image_url' => 'daxay_choco.jpg', 'created_at' => now()],
             ['category_id' => 3, 'name' => 'Đá Xay Matcha', 'description' => 'Matcha đá xay', 'price' => 52000, 'stock' => 50, 'status' => 'available', 'image_url' => 'daxay_matcha.jpg', 'created_at' => now()],
-            ['category_id' => 3, 'name' => 'Đá Xay Dâu', 'description' => 'Dâu tươi', 'price' => 52000, 'stock' => 50, 'status' => 'available', 'image_url' => 'daxay_dau.jpg', 'created_at' => now()],
             ['category_id' => 3, 'name' => 'Đá Xay Oreo', 'description' => 'Bánh Oreo', 'price' => 55000, 'stock' => 50, 'status' => 'available', 'image_url' => 'daxay_oreo.jpg', 'created_at' => now()],
-            ['category_id' => 3, 'name' => 'Đá Xay Việt Quất', 'description' => 'Blueberry', 'price' => 53000, 'stock' => 50, 'status' => 'available', 'image_url' => 'daxay_vietquat.jpg', 'created_at' => now()],
 
             // ===== NƯỚC ÉP (4) =====
             ['category_id' => 4, 'name' => 'Nước Ép Cam', 'description' => 'Cam tươi', 'price' => 35000, 'stock' => 40, 'status' => 'available', 'image_url' => 'epcam.jpg', 'created_at' => now()],
