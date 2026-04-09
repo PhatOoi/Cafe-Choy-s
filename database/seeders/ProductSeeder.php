@@ -48,7 +48,7 @@ class ProductSeeder extends Seeder
 
             // ===== BÁNH (5) =====
             ['category_id' => 5, 'name' => 'Bánh Sừng Bò', 'description' => 'Croissant', 'price' => 35000, 'stock' => 20, 'status' => 'available', 'image_url' => 'croissant.jpg', 'created_at' => now()],
-            ['category_id' => 5, 'name' => 'Cookie Socola', 'description' => 'Cookie mềm', 'price' => 25000, 'stock' => 30, 'status' => 'available', 'image_url' => 'cookie.jpg', 'created_at' => now()],
+            ['category_id' => 5, 'name' => 'Cookie Chocolate', 'description' => 'Cookie mềm', 'price' => 7000, 'stock' => 30, 'status' => 'available', 'image_url' => 'cookie.jpg', 'created_at' => now()],
             ['category_id' => 5, 'name' => 'Bánh Mì Bơ Tỏi', 'description' => 'Giòn thơm', 'price' => 20000, 'stock' => 30, 'status' => 'available', 'image_url' => 'banhmi.jpg', 'created_at' => now()],
             ['category_id' => 5, 'name' => 'Tiramisu', 'description' => 'Bánh Ý', 'price' => 45000, 'stock' => 20, 'status' => 'available', 'image_url' => 'tiramisu.jpg', 'created_at' => now()],
             ['category_id' => 5, 'name' => 'Cheesecake', 'description' => 'Bánh phô mai', 'price' => 45000, 'stock' => 20, 'status' => 'available', 'image_url' => 'cheesecake.jpg', 'created_at' => now()],
@@ -58,7 +58,7 @@ class ProductSeeder extends Seeder
         // Extras
         DB::table('extras')->insert([
             ['name' => 'Trân Châu Đen', 'price' => 5000, 'type' => 'topping'],
-            ['name' => 'Trân Châu Trắng', 'price' => 5000, 'type' => 'topping'],
+            ['name' => 'Trân Châu Hoàng Kim', 'price' => 5000, 'type' => 'topping'],
             ['name' => 'Thạch Cà Phê', 'price' => 5000, 'type' => 'topping'],
             ['name' => 'Kem Trứng', 'price' => 12000, 'type' => 'topping'],
             ['name' => 'Nhiều Sữa', 'price' => 0, 'type' => 'sugar'],
@@ -70,8 +70,8 @@ class ProductSeeder extends Seeder
             ['name' => 'Nhiều Đá', 'price' => 0, 'type' => 'ice'],
             ['name' => 'Ít Đá', 'price' => 0, 'type' => 'ice'],
             ['name' => 'Đá Riêng', 'price' => 0, 'type' => 'ice'],
-            ['name' => 'Thạch', 'price' => 10000, 'type' => 'topping'],
-            ['name' => 'Trân châu Hoàng Kim', 'price' => 5000, 'type' => 'topping'],
+            ['name' => 'Phô Mai Tươi', 'price' => 10000, 'type' => 'topping'],
+            ['name' => 'Kem Macchiato', 'price' => 10000, 'type' => 'topping'],
         ]);
 
         // Product extras (product_id => [extra_ids])

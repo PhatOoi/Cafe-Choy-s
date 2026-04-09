@@ -407,40 +407,40 @@
 					</iframe>
 				</div>
 				<div class="col-md-6 appointment ftco-animate">
-					<h3 class="mb-3">Book a Table</h3>
+					   <h3 class="mb-3">Đặt bàn</h3>
 					<form action="#" class="appointment-form">
 						<div class="d-md-flex">
 							<div class="form-group">
-								<input type="text" class="form-control" placeholder="First Name">
+								   <input type="text" class="form-control" placeholder="Họ">
 							</div>
 							<div class="form-group ml-md-4">
-								<input type="text" class="form-control" placeholder="Last Name">
+								   <input type="text" class="form-control" placeholder="Tên">
 							</div>
 						</div>
 						<div class="d-md-flex">
 							<div class="form-group">
 								<div class="input-wrap">
 									<div class="icon"><span class="ion-md-calendar"></span></div>
-									<input type="text" class="form-control appointment_date" placeholder="Date">
+									   <input type="text" class="form-control appointment_date" placeholder="Ngày">
 								</div>
 							</div>
 							<div class="form-group ml-md-4">
 								<div class="input-wrap">
 									<div class="icon"><span class="ion-ios-clock"></span></div>
-									<input type="text" class="form-control appointment_time" placeholder="Time">
+									   <input type="text" class="form-control appointment_time" placeholder="Giờ">
 								</div>
 							</div>
 							<div class="form-group ml-md-4">
-								<input type="text" class="form-control" placeholder="Phone">
+								   <input type="text" class="form-control" placeholder="Số điện thoại">
 							</div>
 						</div>
 						<div class="d-md-flex">
 							<div class="form-group">
-								<textarea name="" id="" cols="30" rows="2" class="form-control"
-									placeholder="Message"></textarea>
+								   <textarea name="" id="" cols="30" rows="2" class="form-control"
+									   placeholder="Lời nhắn"></textarea>
 							</div>
 							<div class="form-group ml-md-4">
-								<input type="submit" value="Appointment" class="btn btn-primary py-3 px-4">
+								   <input type="submit" value="Đặt bàn" class="btn btn-primary py-3 px-4">
 							</div>
 						</div>
 					</form>
