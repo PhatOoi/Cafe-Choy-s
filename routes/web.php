@@ -1,4 +1,8 @@
+
 <?php
+use App\Http\Controllers\SearchController;
+// Tìm kiếm sản phẩm
+Route::get('/search', [SearchController::class, 'index'])->name('search');
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MenuController;

@@ -29,7 +29,10 @@
 <body>
 	<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
 		<div class="container">
-            <a class="navbar-brand" href="/">Choy's Cafe</a>
+            <a class="navbar-brand mr-3" href="/">
+                <img src="/images/logo.png" alt="Choy's Cafe" style="height:72px;width:auto;max-width:none;object-fit:contain;display:block;padding:0;margin:0;background:transparent;">
+            </a>
+            @include('components.search-bar')
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav" aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="oi oi-menu"></span> Menu
 			</button>

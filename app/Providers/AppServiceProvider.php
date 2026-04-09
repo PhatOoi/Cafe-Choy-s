@@ -19,6 +19,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Chia sẻ số lượng sản phẩm trong giỏ hàng cho tất cả view
+        \Illuminate\Support\Facades\View::composer('*', function ($view) {
+            $cart = session('cart', []);
+            $cartCount = array_sum(array_column($cart, 'qty'));
+            $view->with('cartCount', $cartCount);
+        });
     }
 }
