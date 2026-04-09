@@ -134,9 +134,54 @@
 							<div class="col-md-6 offset-md-6">
 								<div class="card">
 									<div class="card-body">
-										<h5 class="card-title">Tổng Cộng</h5>
-										<h3 class="text-danger">{{ number_format($total) }} đ</h3>
-										<button class="btn btn-primary btn-block mt-3">Thanh Toán</button>
+                                           <h5 class="card-title">Tổng Cộng</h5>
+                                           <h3 class="text-danger">{{ number_format($total) }} đ</h3>
+                                           <button class="btn btn-primary btn-block mt-3" type="button" data-toggle="modal" data-target="#paymentMethodModal">Thanh Toán</button>
+                                    </div>
+                                    <!-- Modal chọn hình thức thanh toán -->
+                                    <div class="modal fade" id="paymentMethodModal" tabindex="-1" role="dialog" aria-labelledby="paymentMethodModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header border-0" style="display:block;">
+                                                    <div class="w-100 text-center font-weight-bold" style="font-size:18px; margin-bottom:12px;">Vui lòng lựa chọn hình thức thanh toán</div>
+                                                    <button type="button" class="close position-absolute" style="right:16px;top:16px;" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body d-flex flex-column align-items-center gap-3" style="gap: 16px;">
+                                                    <button class="btn btn-primary w-100 mb-2" type="button" onclick="handleCashPayment()">Thanh toán bằng tiền mặt</button>
+                                                    <button class="btn btn-primary w-100" type="button" onclick="handleQRPayment()">Thanh toán QR code</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <script>
+                                    function handleCashPayment() {
+                                        $('#paymentMethodModal').modal('hide');
+                                        alert('Bạn đã chọn thanh toán bằng tiền mặt.');
+                                    }
+                                    function handleQRPayment() {
+                                        $('#paymentMethodModal').modal('hide');
+                                        alert('Bạn đã chọn thanh toán bằng QR code.');
+                                    }
+                                    </script>
+                                    </div>
+                                    </div>
+                                    </body>
+                                    <script>
+                                    // Hiển thị ngày giờ và mã hóa đơn trong modal bill
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        $('#billModal').on('show.bs.modal', function () {
+                                            var now = new Date();
+                                            var date = now.toLocaleDateString('vi-VN');
+                                            var time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                                            document.getElementById('bill-date').textContent = date;
+                                            document.getElementById('bill-time').textContent = time;
+                                            // Random mã hóa đơn 4 số
+                                            document.getElementById('bill-code').textContent = Math.floor(1000 + Math.random() * 9000);
+                                        });
+                                    });
+                                    </script>
 									</div>
 								</div>
 							</div>
