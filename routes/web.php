@@ -21,8 +21,7 @@ Route::get('/', function () {
 // Trang menu
 Route::get('/menu', [MenuController::class, 'index']);
 
-// Trang about
-Route::get('/about',[AboutController::class,'index']);
+
 
 Route::get('/login',[LoginController::class,'index']);
 Route::post('/login', [LoginController::class, 'login'])->name('login');
