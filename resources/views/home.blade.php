@@ -218,7 +218,7 @@
 							<div class="icon"><span class="icon-phone"></span></div>
 							<div class="text">
 								<h3>190099</h3>
-								<p>Liên hệ với chúng tôi để được hỗ trợ.</p>
+
 							</div>
 						</div>
 						<div class="col-md-4 d-flex ftco-animate">
@@ -501,7 +501,7 @@
 
                 <!-- Contact -->
                 <div class="footer-contact">
-                    <h4>Liên hệ</h4>
+					<!-- Liên hệ đã bị xóa theo yêu cầu -->
                     <div class="contact-item">
                         <i class="fas fa-phone"></i>
                         <span>+190099</span>

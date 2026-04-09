@@ -202,9 +202,124 @@
 							<div class="col-md-6 offset-md-6">
 								<div class="card">
 									<div class="card-body">
-										<h5 class="card-title">Tổng Cộng</h5>
-										<h3 class="text-danger">{{ number_format($total) }} đ</h3>
-										<button class="btn btn-primary btn-block mt-3"><a href="/payment" style="color: white; text-decoration: none;">Thanh Toán</a></button>
+                                           <h5 class="card-title">Tổng Cộng</h5>
+                                           <h3 class="text-danger">{{ number_format($total) }} đ</h3>
+                                           <button class="btn btn-primary btn-block mt-3" type="button" data-toggle="modal" data-target="#paymentMethodModal">Thanh Toán</button>
+                                    </div>
+                                    <!-- Modal chọn hình thức thanh toán -->
+                                    <div class="modal fade" id="paymentMethodModal" tabindex="-1" role="dialog" aria-labelledby="paymentMethodModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header border-0" style="display:block;">
+                                                    <div class="w-100 text-center font-weight-bold" style="font-size:18px; margin-bottom:12px;">Vui lòng lựa chọn hình thức thanh toán</div>
+                                                    <button type="button" class="close position-absolute" style="right:16px;top:16px;" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body d-flex flex-column align-items-center gap-3" style="gap: 16px;">
+                                                    <button class="btn btn-primary w-100 mb-2" type="button" onclick="handleCashPayment()">Thanh toán bằng tiền mặt</button>
+                                                    <button class="btn btn-primary w-100" type="button" onclick="showQRModal()">Thanh toán QR code</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal QR Code Payment -->
+                                    <div class="modal fade" id="qrPaymentModal" tabindex="-1" role="dialog" aria-labelledby="qrPaymentModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title w-100 text-center font-weight-bold" id="qrPaymentModalLabel">Thanh toán qua chuyển khoản ngân hàng</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body" style="background:#fafbfc;">
+                                                    <div class="row">
+                                                        <div class="col-md-6 text-center border-right">
+                                                            <div class="font-weight-bold mb-2" style="font-size:16px;">Cách 1: Mở app ngân hàng/ Ví và <b>quét mã QR</b></div>
+                                                            @php
+                                                                $qrBank = 'Vietcombank';
+                                                                $qrName = 'TRAN QUOC LONG';
+                                                                $qrAccount = '1042131375';
+                                                                $qrAmount = $total ?? 0;
+                                                                $qrNote = 'DH' . (isset($cart) ? rand(1000,9999) : 'XXXX');
+                                                                $qrApi = 'https://img.vietqr.io/image/' . 'vietcombank' . '-' . $qrAccount . '-print.png?amount=' . $qrAmount . '&addInfo=' . $qrNote . '&accountName=' . urlencode($qrName);
+                                                            @endphp
+                                                            <img src="{{ $qrApi }}" alt="QR code" style="width:220px;max-width:100%;border:2px solid #eee;padding:8px;background:#fff;">
+                                                            <div class="mt-2">
+                                                                <a class="btn btn-primary btn-sm" href="{{ $qrApi }}" download="qr-vietcombank.png">Tải ảnh QR</a>
+                                                            </div>
+                                                            <div class="mt-2" style="font-size:13px;color:#888;">Trạng thái: <span>Chờ thanh toán...</span></div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="font-weight-bold mb-2" style="font-size:16px;">Cách 2: Chuyển khoản <b>thủ công</b> theo thông tin</div>
+                                                            <div class="card p-3" style="background:#fff;border:1px solid #e0e0e0;">
+                                                                    <div class="d-flex align-items-center mb-2">
+                                                                        <img src="https://seeklogo.com/images/V/vietcombank-logo-5E3C0B6A2C-seeklogo.com.png" alt="Vietcombank" style="height:32px;margin-right:8px;">
+                                                                        <span style="font-weight:bold;font-size:18px;">Vietcombank</span>
+                                                                    </div>
+                                                                    <div style="font-size:15px;">
+                                                                        <div><b>Ngân hàng:</b> Vietcombank</div>
+                                                                        <div><b>Thụ hưởng:</b> TRAN QUOC LONG</div>
+                                                                        <div><b>Số tài khoản:</b> 1042131375 <button class="btn btn-link btn-sm py-0 px-1" onclick="copyToClipboard('1042131375')">📋</button></div>
+                                                                        <div><b>Số tiền:</b> <span id="qr-amount">{{ number_format($qrAmount) }} đ</span> <button class="btn btn-link btn-sm py-0 px-1" onclick="copyToClipboard('{{ $qrAmount }}')">📋</button></div>
+                                                                        <div><b>Nội dung CK:</b> <span id="qr-note">{{ $qrNote }}</span> <button class="btn btn-link btn-sm py-0 px-1" onclick="copyToClipboard('{{ $qrNote }}')">📋</button></div>
+                                                                    </div>
+                                                                    <div class="alert alert-warning mt-2 mb-0 p-2" style="font-size:13px;">
+                                                                        <b>Lưu ý:</b> Vui lòng giữ nguyên nội dung chuyển khoản <b>{{ $qrNote }}</b> để xác nhận thanh toán tự động.
+                                                                    </div>
+                                                                    <div class="text-center mt-3 mb-2">
+                                                                        <button class="btn btn-success" onclick="confirmPayment()">Xác nhận thanh toán</button>
+                                                                    </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <script>
+                                    function confirmPayment() {
+                                        $('#qrPaymentModal').modal('hide');
+                                        setTimeout(function() {
+                                            alert('Cảm ơn bạn! Đơn hàng sẽ được xác nhận sau khi thanh toán thành công.');
+                                        }, 400);
+                                    }
+                                    function handleCashPayment() {
+                                        $('#paymentMethodModal').modal('hide');
+                                        alert('Bạn đã chọn thanh toán bằng tiền mặt.');
+                                    }
+                                    function showQRModal() {
+                                        $('#paymentMethodModal').modal('hide');
+                                        setTimeout(function() { $('#qrPaymentModal').modal('show'); }, 400);
+                                    }
+                                    function copyToClipboard(text) {
+                                        var temp = document.createElement('input');
+                                        document.body.appendChild(temp);
+                                        temp.value = text;
+                                        temp.select();
+                                        document.execCommand('copy');
+                                        document.body.removeChild(temp);
+                                        alert('Đã sao chép: ' + text);
+                                    }
+                                    </script>
+                                    </div>
+                                    </div>
+                                    </body>
+                                    <script>
+                                    // Hiển thị ngày giờ và mã hóa đơn trong modal bill
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        $('#billModal').on('show.bs.modal', function () {
+                                            var now = new Date();
+                                            var date = now.toLocaleDateString('vi-VN');
+                                            var time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                                            document.getElementById('bill-date').textContent = date;
+                                            document.getElementById('bill-time').textContent = time;
+                                            // Random mã hóa đơn 4 số
+                                            document.getElementById('bill-code').textContent = Math.floor(1000 + Math.random() * 9000);
+                                        });
+                                    });
+                                    </script>
 									</div>
 								</div>
 							</div>
@@ -251,7 +366,7 @@
 
                 <!-- Contact -->
                 <div class="footer-contact">
-                    <h4>Liên hệ</h4>
+                    <!-- Liên hệ đã bị xóa theo yêu cầu -->
                     <div class="contact-item">
                         <i class="fas fa-phone"></i>
                         <span>+190099</span>
