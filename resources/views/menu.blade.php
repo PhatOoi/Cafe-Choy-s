@@ -177,7 +177,7 @@
                                 @endif
                             </div>
                             <div class="card-body">
-                                <p class="card-cat">{{ $category->name }}</p>
+                              
                                 <h3 class="card-name">{{ $product->name }}</h3>
                                 @if($product->description ?? false)
                                     <p class="card-desc">{{ Str::limit($product->description, 65) }}</p>
@@ -810,9 +810,7 @@
                 font-size: 1.8rem;
             }
         }
-    </style>
-    {{-- style menu --}}
-    <style>
+
         /* ===== BASE ===== */
         *,
         *::before,
@@ -987,7 +985,7 @@
 
         .card-name {
             font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
+            font-size: 1.5rem;
             font-weight: 500;
             color: #1a110d;
             margin: 0 0 6px;
@@ -996,8 +994,8 @@
 
         .card-desc {
             font-family: 'DM Sans', sans-serif;
-            font-size: .8rem;
-            color: #a09080;
+            font-size: 1.1rem;
+            color: #7d6348;
             margin: 0 0 12px;
             line-height: 1.5;
         }
@@ -1008,20 +1006,21 @@
             justify-content: space-between;
             gap: 10px;
             padding-top: 12px;
-            border-top: 1px solid rgba(201, 169, 110, .2);
+            border-top: 1px solid rgba(134, 107, 58, 0.2);
         }
 
         .card-price {
             font-family: 'Playfair Display', serif;
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 500;
-            color: #6b3a2a;
+            color: #111111;
         }
 
         .price-unit {
-            font-size: .8rem;
-            font-weight: 400;
+            font-size: 1.1rem;
+            font-weight: 900;
             margin-left: 1px;
+            color: #111110;
         }
 
         .btn-add-cart {
