@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Size;
 use App\Models\Extra;
 use App\Models\Category;
+use Illuminate\Http\Request;
 
 // Controller hiển thị menu sản phẩm
 class MenuController extends Controller
@@ -25,4 +26,12 @@ class MenuController extends Controller
         // Trả về view menu với dữ liệu đã lấy
         return view('menu', compact('categories', 'toppings', 'sugars', 'ices', 'sizes'));
     }
+    public function search(Request $request)
+{
+    $q = $request->input('q');
+
+    $products = Product::where('name', 'LIKE', "%{$q}%")->get();
+
+    return view('search-result', compact('products', 'q'));
+}
 }

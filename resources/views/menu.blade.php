@@ -33,129 +33,104 @@
     <!-- END nav -->
 
     {{-- ===== NAVBAR GIỮ NGUYÊN ===== --}}
-    <div>
-        <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
-    <div class="container">
+     <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
+        <div class="container">
 
-        <!-- LOGO -->
-        <a class="navbar-brand mr-3" href="{{ url('/') }}">
-            <img src="/images/logo.png"
-                 style="height:72px;width:auto;object-fit:contain;">
-        </a>
+            <!-- LOGO -->
+            <a class="navbar-brand mr-3" href="{{ url('/') }}">
+                <img src="/images/logo.png" style="height:72px;width:auto;object-fit:contain;">
+            </a>
 
-        @include('components.search-bar')
+            @include('components.search-bar')
 
-        <!-- MOBILE BUTTON -->
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav">
-            <span class="oi oi-menu"></span> Menu
-        </button>
+            <!-- MOBILE BUTTON -->
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav">
+                <span class="oi oi-menu"></span> Menu
+            </button>
 
-        <div class="collapse navbar-collapse" id="ftco-nav">
-            <ul class="navbar-nav ml-auto">
+            <div class="collapse navbar-collapse" id="ftco-nav">
+                <ul class="navbar-nav ml-auto">
 
-                <!-- MENU ITEMS -->
-                <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
-                
-                <!-- SPACER -->
-                <li class="nav-item flex-spacer"></li>
+                    <!-- MENU ITEMS -->
+                    <li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
+                    <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @guest
+                        <li class="nav-item">
+                            <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>
+                        </li>
+                    @endguest
+                    <!-- SPACER -->
+                    <li class="nav-item flex-spacer"></li>
 
-                <!-- CART -->
-                <li class="nav-item cart">
-                    <a href="/cart" class="nav-link">
-                        <span class="icon icon-shopping_cart"></span>
-                        <span class="bag">
-                            <small id="cart-count">{{ $cartCount ?? 0 }}</small>
-                        </span>
-                    </a>
-                </li>
+                    <!-- CART -->
+                    <li class="nav-item cart">
+                        <a href="/cart" class="nav-link">
+                            <span class="icon icon-shopping_cart"></span>
+                            <span class="bag">
+                                <small id="cart-count">{{ $cartCount ?? 0 }}</small>
+                            </span>
+                        </a>
+                    </li>
 
-				<!-- USER DROPDOWN -->
-				@if(Auth::check())
-                <li class="nav-item user-dropdown-wrapper">
-                    <div class="user-dropdown-container">
-                        <!-- USER AVATAR BUTTON -->
-                        <button class="user-avatar-btn" type="button" id="userMenuBtn">
-                            @if(Auth::user()->avatar && file_exists(public_path('storage/' . Auth::user()->avatar)))
-                                <img src="{{ asset('storage/' . Auth::user()->avatar) }}" 
-                                     alt="{{ Auth::user()->name }}"
-                                     class="user-avatar">
-                            @else
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=ff6b00&color=fff&size=48"
-                                     alt="{{ Auth::user()->name }}"
-                                     class="user-avatar">
-                            @endif
-                        </button>
+                    <!-- USER DROPDOWN -->
+                    @if(Auth::check())
+                                    <li class="nav-item user-dropdown-wrapper">
+                                        <div class="user-dropdown-container">
 
-                        <!-- USER DROPDOWN MENU -->
-                        <div class="user-dropdown-menu" id="userDropdownMenu">
-                            <!-- Header Info -->
-                            <div class="dropdown-header-info">
-                                @if(Auth::user()->avatar && file_exists(public_path('storage/' . Auth::user()->avatar)))
-                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" 
-                                         alt="{{ Auth::user()->name }}"
-                                         class="dropdown-avatar">
-                                @else
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=ff6b00&color=fff&size=60"
-                                         alt="{{ Auth::user()->name }}"
-                                         class="dropdown-avatar">
-                                @endif
-                                <div class="user-details">
-                                    <p class="user-name">{{ Auth::user()->name }}</p>
-                                    <p class="user-role">
-                                        @if(Auth::user()->role === 'admin')
-                                            <span class="badge-admin">Admin</span>
-                                        @else
-                                            <span class="badge-customer">Khách hàng</span>
-                                        @endif
-                                    </p>
-                                </div>
-                            </div>
+                                            <button class="user-avatar-btn" type="button" id="userMenuBtn">
+                                                @if(Auth::user()->avatar)
+                                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
+                                                @else
+                                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}"
+                                                        class="user-avatar">
+                                                @endif
+                                            </button>
 
-                            <!-- Divider -->
-                            <div class="dropdown-divider"></div>
+                                            <div class="user-dropdown-menu" id="userDropdownMenu">
+                                                <div class="dropdown-header-info">
+                                                    <img src="{{ Auth::user()->avatar
+                        ? asset('storage/' . Auth::user()->avatar)
+                        : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) }}" class="dropdown-avatar">
 
-                            <!-- Menu Items -->
-                            <a href="/profile" class="dropdown-link">
-                                <i class="fas fa-user"></i>
-                                <span>Hồ sơ cá nhân</span>
-                            </a>
+                                                    <div class="user-details">
+                                                        <p class="user-name">{{ Auth::user()->name }}</p>
+                                                        <p class="user-role">
+                                                            @if(Auth::user()->role === 'admin')
+                                                                <span class="badge-admin">Admin</span>
+                                                            @else
+                                                                <span class="badge-customer">Khách hàng</span>
+                                                            @endif
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                            @if(Auth::user()->role === 'admin')
-                            <a href="/admin" class="dropdown-link">
-                                <i class="fas fa-cog"></i>
-                                <span>Quản trị</span>
-                            </a>
-                            @endif
+                                                <div class="dropdown-divider"></div>
 
-                            <!-- Divider -->
-                            <div class="dropdown-divider"></div>
+                                                <a href="/profile" class="dropdown-link">Hồ sơ</a>
 
-                            <!-- Logout -->
-                            <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none;">
-                                @csrf
-                            </form>
-                            <a href="#" class="dropdown-link logout-link" 
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Đăng xuất</span>
-                            </a>
-                        </div>
-                    </div>
-                </li>
-				@else
-                <li class="nav-item">
-                    <a href="{{ url('/login') }}" class="nav-link btn-login">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Đăng nhập
-                    </a>
-                </li>
-				@endif
+                                                @if(Auth::user()->role === 'admin')
+                                                    <a href="/admin" class="dropdown-link">Quản trị</a>
+                                                @endif
 
-            </ul>
+                                                <div class="dropdown-divider"></div>
+
+                                                <form id="logout-form" action="{{ url('/logout') }}" method="POST">
+                                                    @csrf
+                                                </form>
+
+                                                <a href="#" class="dropdown-link logout-link"
+                                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                                    Đăng xuất
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </li>
+                    @endif
+
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
-    </div>
+    </nav>
 
     {{-- ===== HERO ===== --}}
     <section class="menu-hero">
@@ -401,65 +376,139 @@
         </div>
         <span id="toastMsg"></span>
     </div>
-    <div class="main-footer">
-        <div class="container">
-            <div class="footer-grid">
-                <!-- Brand -->
-                <div class="footer-brand">
-                    <h2>Choy's Cafe</h2>
-                    <p>Hân hạnh đồng hành cùng quý khách!.</p>
-                    <div class="social-links">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+    <footer class="coffee-footer">
+        <!-- Newsletter Section -->
+
+        <!-- Main Footer -->
+        <div class="main-footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <!-- Brand -->
+                    <div class="footer-brand">
+                        <div class="brand-header"></div>
+                        <h2 class="footer-logo">
+                            <img src="/images/logo.png" alt="logo">Choy's Cafe
+                        </h2>
+                        <p> Hân hạnh đồng hành cùng quý khách!.</p>
+                        <div class="social-links">
+                            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Quick Links -->
-                <div class="footer-links">
-                    <h4>Khám phá</h4>
-                    <ul>
-                        <li><a href="#">Menu</a></li>
-                        <li><a href="#">Cửa hàng</a></li>
-                        <li><a href="#">Đặt hàng online</a></li>
-                    </ul>
-                </div>
-
-                <!-- Services -->
-                <div class="footer-links">
-                    <h4>Dịch vụ</h4>
-                    <ul>
-                        <li><a href="#">Ship tận nơi</a></li>
-                        <li><a href="#">Catering</a></li>
-                        <li><a href="#">Thẻ thành viên</a></li>
-                    </ul>
-                </div>
-
-                <!-- Contact -->
-                <div class="footer-contact">
-                    <h4>Liên hệ</h4>
-                    <div class="contact-item">
-                        <i class="fas fa-phone"></i>
-                        <span>+190099</span>
+                    <!-- Quick Links -->
+                    <div class="footer-links">
+                        <h4>Khám phá</h4>
+                        <ul>
+                            <li><a href="#">Menu</a></li>
+                            <li><a href="#">Cửa hàng</a></li>
+                            <li><a href="#">Đặt hàng online</a></li>
+                        </ul>
                     </div>
-                    <div class="contact-item">
-                        <i class="fas fa-clock"></i>
-                        <span>8:00 - 21:00</span>
+
+                    <!-- Services -->
+                    <div class="footer-links">
+                        <h4>Dịch vụ</h4>
+                        <ul>
+                            <li><a href="#">Ship tận nơi</a></li>
+                            <li><a href="#">Catering</a></li>
+                            <li><a href="#">Thẻ thành viên</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="footer-contact">
+                        <h4>Liên hệ</h4>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>+190099</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-clock"></i>
+                            <span>8:00 - 21:00</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Copyright -->
-    <div class="copyright">
-        <div class="container">
-            <p>&copy; 2026 Choy's Cafe. Tất cả quyền được bảo lưu.</p>
+        <!-- Copyright -->
+        <div class="copyright">
+            <div class="container">
+                <p>&copy; 2026 Choy's Cafe. Tất cả quyền được bảo lưu.</p>
+            </div>
         </div>
-    </div>
     </footer>
 
     <style>
+        /* GRID ĐỀU HƠN */
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .brand-header img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .footer-brand h2 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        
+        .footer-links,
+        .footer-contact {
+            padding-top: 10px;
+        }
+
+       
+        .footer-links ul li {
+            line-height: 1.8;
+        }
+
+        
+        .social-links {
+            margin-top: 10px;
+        }
+
+      
+        @media (max-width: 768px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .brand-header {
+                justify-content: center;
+            }
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo img {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+        }
+
         .user-avatar {
     width: 40px;
     height: 40px;

@@ -207,7 +207,8 @@
   border-radius: 8px;
   background: transparent !important;
   padding: 6px 10px !important;
-  margin-top: 16px;
+  
+  margin: 16px 16px 16px 16px;
  
 }
 
