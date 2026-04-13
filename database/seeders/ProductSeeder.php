@@ -31,7 +31,7 @@ class ProductSeeder extends Seeder
             // ===== TRÀ SỮA (2) =====
             ['category_id' => 2, 'name' => 'Trà Sữa Trân Châu', 'description' => 'Trà sữa truyền thống', 'price' => 45000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tstranchau.jpg', 'created_at' => now()],
             ['category_id' => 2, 'name' => 'Trà Sữa Matcha', 'description' => 'Matcha Nhật', 'price' => 50000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tsmatcha.jpg', 'created_at' => now()],
-            ['category_id' => 2, 'name' => 'Trà Sữa Caramel', 'description' => 'Caramel thơm', 'price' => 52000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tscaramel.jpg', 'created_at' => now()],
+            ['category_id' => 2, 'name' => 'Trà Sữa Thái Đỏ', 'description' => 'Thái đỏ đặc trưng', 'price' => 52000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tsthaido.jpg', 'created_at' => now()],
 
             // ===== ĐÁ XAY (3) =====
             ['category_id' => 3, 'name' => 'Frappuccino Caramel', 'description' => 'Caramel đá xay', 'price' => 55000, 'stock' => 50, 'status' => 'available', 'image_url' => 'frappe_caramel.jpg', 'created_at' => now()],
