@@ -3,6 +3,7 @@
 
 <head>
     <title>Giỏ Hàng - Choy's Cafe</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -75,8 +76,7 @@
                                                 @if(Auth::user()->avatar)
                                                     <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
                                                 @else
-                                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}"
-                                                        class="user-avatar">
+                                                    <img src="{{ asset('images/user.jpg') }}" class="user-avatar">
                                                 @endif
                                             </button>
 
@@ -134,13 +134,13 @@
 					<div class="table-responsive">
 						<table class="table table-striped">
 							<thead>
-								<tr>
-									<th>Sản Phẩm</th>
-									<th>Giá</th>
-									<th>Số Lượng</th>
-									<th>Tổng Cộng</th>
-									<th></th>
-								</tr>
+                                <tr style="font-size:15px;">
+                                    <th style="font-size:15px; font-weight:600;">Sản Phẩm</th>
+                                    <th style="font-size:15px; font-weight:600;">Giá</th>
+                                    <th style="font-size:15px; font-weight:600;">Số Lượng</th>
+                                    <th style="font-size:15px; font-weight:600;">Tổng Cộng</th>
+                                    <th style="font-size:15px; font-weight:600;"></th>
+                                </tr>
 							</thead>
 							<tbody>
 								@if(count($cart) > 0)
@@ -149,27 +149,41 @@
 											$itemTotal = $item['price'] * $item['qty'];
 										@endphp
 										<tr>
-											<td>
-												<strong>{{ $item['name'] }}</strong>
-												<br>
-												<small class="text-muted">
-													Kích cỡ: {{ $item['size'] }}<br>
-													Đường: {{ $item['sugar'] }}<br>
-													Đá: {{ $item['ice'] }}
-													@if(!empty($item['toppings']) && count($item['toppings']) > 0)
-														<br>Topping: {{ implode(', ', $item['toppings']) }}
-													@endif
-													@if(!empty($item['note']))
-														<br>Ghi chú: {{ $item['note'] }}
-													@endif
-												</small>
-											</td>
+                                            <td>
+                                                <div style="display:flex;align-items:flex-start;gap:10px;">
+                                                    <img src="{{ isset($item['image_url']) ? asset('images/' . $item['image_url']) : asset('images/no-image.png') }}" alt="{{ $item['name'] }}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid #eee;">
+                                                    <div>
+                                                        <strong>{{ $item['name'] }}</strong><br>
+                                                        <small class="text-muted">
+                                                            Kích cỡ: {{ $item['size'] }}<br>
+                                                            Đường: {{ $item['sugar'] }}<br>
+                                                            Đá: {{ $item['ice'] }}
+                                                            @if(!empty($item['toppings']) && count($item['toppings']) > 0)
+                                                                <br>Topping: {{ implode(', ', $item['toppings']) }}
+                                                            @endif
+                                                            @if(!empty($item['note']))
+                                                                <br>Ghi chú: {{ $item['note'] }}
+                                                            @endif
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </td>
 											<td>{{ number_format($item['price']) }} đ</td>
-											<td>{{ $item['qty'] }}</td>
-											<td>{{ number_format($itemTotal) }} đ</td>
-											<td>
-												<a href="/cart/remove/{{ $key }}" class="btn btn-sm btn-danger">Xóa</a>
-											</td>
+                                            <td>
+                                                <div class="input-group input-group-sm" style="max-width:120px;">
+                                                    <div class="input-group-prepend">
+                                                        <button class="btn btn-outline-secondary btn-qty" data-action="decrease" data-key="{{ $key }}" type="button">-</button>
+                                                    </div>
+                                                    <input type="text" class="form-control text-center cart-qty-input" value="{{ $item['qty'] }}" data-key="{{ $key }}" style="width:40px;" readonly>
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-outline-secondary btn-qty" data-action="increase" data-key="{{ $key }}" type="button">+</button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="item-total" data-key="{{ $key }}">{{ number_format($itemTotal) }} đ</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger btn-remove-item" data-key="{{ $key }}">Xóa</button>
+                                            </td>
 										</tr>
 									@endforeach
 								@else
@@ -177,23 +191,23 @@
 										<td colspan="5" class="text-center">Giỏ hàng của bạn đang trống</td>
 									</tr>
 								@endif
-							</tbody>
+                                    </tbody>
 						</table>
 					</div>
 					
 					@if(count($cart) > 0)
-						@php
-											$total = 0;
-											foreach($cart as $item) {
-												$total += $item['price'] * $item['qty'];
-											}
-										@endphp
+                        @php
+                            $total = 0;
+                            foreach($cart as $item) {
+                                $total += $item['price'] * $item['qty'];
+                            }
+                        @endphp
 						<div class="row mt-5">
 							<div class="col-md-6 offset-md-6">
 								<div class="card">
 									<div class="card-body">
                                            <h5 class="card-title">Tổng Cộng</h5>
-                                           <h3 class="text-danger">{{ number_format($total) }} đ</h3>
+                                           <h3 class="text-danger" id="cart-total">{{ number_format($total) }} đ</h3>
                                            <button class="btn btn-primary btn-block mt-3" type="button" data-toggle="modal" data-target="#paymentMethodModal">Thanh Toán</button>
                                     </div>
                                     <!-- Modal chọn hình thức thanh toán -->
@@ -351,6 +365,75 @@
 
                                     <!-- Đặt toàn bộ JS ở cuối file, sau tất cả HTML -->
                                     <script>
+                                    // Ajax cập nhật số lượng
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        document.querySelectorAll('.btn-qty').forEach(function(btn) {
+                                            btn.addEventListener('click', function() {
+                                                var key = this.getAttribute('data-key');
+                                                var action = this.getAttribute('data-action');
+                                                var input = document.querySelector('.cart-qty-input[data-key="' + key + '"]');
+                                                var currentQty = parseInt(input.value);
+                                                var newQty = action === 'increase' ? currentQty + 1 : currentQty - 1;
+                                                if (newQty < 0) return;
+                                                fetch('/cart/update/' + key, {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                                    },
+                                                    body: JSON.stringify({ qty: newQty })
+                                                })
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        // Nếu sản phẩm đã bị xóa khỏi cart (qty=0), ẩn dòng đó
+                                                        if (!data.cart || !data.cart[key]) {
+                                                            var row = input.closest('tr');
+                                                            if (row) row.remove();
+                                                        } else {
+                                                            // Cập nhật số lượng
+                                                            input.value = newQty;
+                                                            // Cập nhật tổng từng dòng
+                                                            var item = data.cart[key];
+                                                            var itemTotal = item.price * item.qty;
+                                                            var itemTotalCell = document.querySelector('.item-total[data-key="' + key + '"]');
+                                                            if (itemTotalCell) {
+                                                                itemTotalCell.textContent = itemTotal.toLocaleString('vi-VN') + ' đ';
+                                                            }
+                                                        }
+                                                        // Cập nhật tổng cộng
+                                                        if (typeof data.total !== 'undefined') {
+                                                            document.getElementById('cart-total').textContent = data.total.toLocaleString('vi-VN') + ' đ';
+                                                        }
+                                                    }
+                                                });
+                                            });
+                                        });
+                                    });
+                                    // Ajax xóa sản phẩm khỏi giỏ hàng
+                                    document.querySelectorAll('.btn-remove-item').forEach(function(btn) {
+                                        btn.addEventListener('click', function() {
+                                            var key = this.getAttribute('data-key');
+                                            var row = this.closest('tr');
+                                            fetch('/cart/update/' + key, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                                },
+                                                body: JSON.stringify({ qty: 0 })
+                                            })
+                                            .then(res => res.json())
+                                            .then(data => {
+                                                if (data.success) {
+                                                    if (row) row.remove();
+                                                    if (typeof data.total !== 'undefined') {
+                                                        document.getElementById('cart-total').textContent = data.total.toLocaleString('vi-VN') + ' đ';
+                                                    }
+                                                }
+                                            });
+                                        });
+                                    });
                                     function confirmPayment() {
                                         $('#qrPaymentModal').modal('hide');
                                         setTimeout(function() {

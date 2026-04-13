@@ -301,8 +301,11 @@
                         <!-- Header -->
                         <div class="profile-header">
                             <div class="avatar-wrapper">
-                                <img src="https://ui-avatars.com/api/?name={{ $user->name }}&size=100&background=1e293b&color=f8fafc&font-size=0.6&bold=true" 
-                                     alt="{{ $user->name }}" class="avatar">
+                                @if($user->avatar)
+                                    <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="avatar">
+                                @else
+                                    <img src="{{ asset('images/user.jpg') }}" alt="{{ $user->name }}" class="avatar">
+                                @endif
                                 <div class="status-indicator"></div>
                             </div>
                             <h1 class="display-name">{{ $user->name }}</h1>

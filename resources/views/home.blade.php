@@ -81,8 +81,7 @@
                                                 @if(Auth::user()->avatar)
                                                     <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
                                                 @else
-                                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}"
-                                                        class="user-avatar">
+                                                    <img src="{{ asset('images/user.jpg') }}" class="user-avatar">
                                                 @endif
                                             </button>
 
@@ -90,7 +89,7 @@
                                                 <div class="dropdown-header-info">
                                                     <img src="{{ Auth::user()->avatar
                         ? asset('storage/' . Auth::user()->avatar)
-                        : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) }}"
+                        : asset('images/user.jpg') }}"
                                                         class="dropdown-avatar">
 
                                                     <div class="user-details">
@@ -369,13 +368,10 @@
 
                 <!-- QUẢNG CÁO -->
                 <div class="col-md-6 d-flex align-items-center intro-ad">
-                    <div class="ad-content">
-                        <h2>Choy's Cafe</h2>
-                        <h4>Lựa chọn tốt nhất của bạn</h4>
-                        <p>
-                            Không chỉ là nơi thưởng thức cà phê, chúng tôi mang đến không gian thư giãn,
-                            hương vị tuyệt hảo và trải nghiệm đáng nhớ cho mọi khách hàng.
-                        </p>
+                    <div class="ad-content" style="text-align:center;">
+                        <span style="display:block;font-family:'Great Vibes',cursive;font-size:clamp(3rem,8vw,5.5rem);color:#c9a96e;font-weight:400;line-height:1.1;">Choy's Cafe</span>
+                        <div style="font-family:'Inter',sans-serif;font-size:2.2rem;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:-10px;margin-bottom:18px;">Lựa chọn tốt nhất</div>
+                        <div style="font-family:'Inter',sans-serif;font-size:0.98rem;color:#bdbdbd;opacity:0.65;max-width:600px;margin:0 auto 0;">Không chỉ là nơi thưởng thức cà phê, chúng tôi mang đến không gian thư giãn, hương vị tuyệt hảo và trải nghiệm đáng nhớ cho mọi khách hàng.</div>
                     </div>
                 </div>
 
@@ -390,7 +386,7 @@
                     <h3>Nhận ưu đãi đặc biệt</h3>
                     <p>Đăng ký để nhận thông tin về cà phê mới và ưu đãi độc quyền</p>
                     <div class="newsletter-form">
-                        <input type="email" placeholder="Nhập email của bạn" id="emailInput">
+                        <input type="text" placeholder="Nhập tên người dùng" id="emailInput">
                         <button onclick="subscribeNewsletter()">Đăng ký</button>
                     </div>
                 </div>
@@ -866,20 +862,18 @@
     <script>
         function subscribeNewsletter() {
             const emailInput = document.getElementById('emailInput');
-            const email = emailInput.value.trim();
+            if (!emailInput) return;
+            const username = emailInput.value.trim();
             const button = emailInput.nextElementSibling;
-
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (!button) return;
+            if (!username || username.length < 3) {
                 button.style.background = '#ef4444';
                 setTimeout(() => button.style.background = '', 500);
                 return;
             }
-
             button.textContent = 'Đã đăng ký!';
-
             button.style.background = '#10b981';
             emailInput.value = '';
-
             setTimeout(() => {
                 button.textContent = 'Đăng ký';
                 button.style.background = 'linear-gradient(45deg, #ff6b00, #ff8c42)';
