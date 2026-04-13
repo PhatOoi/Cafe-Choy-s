@@ -31,6 +31,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/cart/add', [CartController::class, 'add'])->middleware('auth');
 Route::get('/cart', [CartController::class, 'index'])->middleware('auth');
 Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->middleware('auth');
+Route::post('/cart/update/{key}', [CartController::class, 'update'])->middleware('auth');
 
 Route::get('/test-db', function () {
     $users = DB::table('users')->get();

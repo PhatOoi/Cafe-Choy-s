@@ -8717,12 +8717,18 @@ h1, h2, h3, h4, h5,
 .cart-list {
   overflow-x: scroll; }
 
+/* Tăng kích thước bảng giỏ hàng */
 .table {
-  min-width: 1000px !important;
+  min-width: 1200px !important;
   width: 100%;
-  text-align: center; }
+  text-align: center;
+  font-size: 20px;
+}
   .table th {
-    font-weight: 500; }
+    font-weight: 600;
+    font-size: 22px;
+    padding: 24px 12px;
+  }
   .table .thead-primary {
     background: #c49b63; }
     .table .thead-primary tr th {
@@ -8732,9 +8738,11 @@ h1, h2, h3, h4, h5,
   .table tbody tr td {
     text-align: center !important;
     vertical-align: middle;
-    padding: 40px 10px;
+    padding: 32px 12px;
     border: 1px solid transparent !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    font-size: 20px;
+  }
     .table tbody tr td.product-remove a {
       bordeR: 1px solid rgba(255, 255, 255, 0.1);
       padding: 5px 10px; }
