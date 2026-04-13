@@ -96,10 +96,16 @@
                                                     <div class="user-details">
                                                         <p class="user-name">{{ Auth::user()->name }}</p>
                                                         <p class="user-role">
-                                                            @if(Auth::user()->role === 'admin')
-                                                                <span class="badge-admin">Admin</span>
-                                                            @else
-                                                                <span class="badge-customer">Khách hàng</span>
+                                                            @if(Auth::user()->role_id == 1)
+                                                            <a href="/admin" class="dropdown-link">
+                                                                <i class="fas fa-cog"></i><span>Quản trị</span>
+                                                            </a>
+                                                            @endif
+
+                                                            @if(in_array(Auth::user()->role_id, [1, 2]))
+                                                            <a href="{{ route('staff.dashboard') }}" class="dropdown-link">
+                                                                <i class="fas fa-clipboard-list"></i><span>Trang nhân viên</span>
+                                                            </a>
                                                             @endif
                                                         </p>
                                                     </div>
@@ -109,7 +115,7 @@
 
                                                 <a href="/profile" class="dropdown-link">Hồ sơ</a>
 
-                                                @if(Auth::user()->role === 'admin')
+                                                @if(Auth::user()->role_id == 1)
                                                     <a href="/admin" class="dropdown-link">Quản trị</a>
                                                 @endif
 
@@ -190,38 +196,7 @@
         </div>
     </section>
 
-    {{-- <section class="ftco-intro">
-        <div class="container-wrap">
-            <div class="wrap d-md-flex align-items-xl-end">
-                <div class="info">
-                    <div class="row no-gutters">
-                        <div class="col-md-4 d-flex ftco-animate">
-                            <div class="icon"><span class="icon-phone"></span></div>
-                            <div class="text">
-                                <h3>190099</h3>
-                                <p>Liên hệ với chúng tôi để được hỗ trợ.</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 d-flex ftco-animate">
-                            <div class="icon"><span class="icon-my_location"></span></div>
-                            <div class="text">
-                                <h3>Tòa nhà JOVE</h3>
-                                <p> Quốc lộ 1A,Trung Mỹ Tây,TP. HCM</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 d-flex ftco-animate">
-                            <div class="icon"><span class="icon-clock-o"></span></div>
-                            <div class="text">
-                                <h3>Thứ Ba - Chủ Nhật</h3>
-                                <p>8:00am - 9:00pm</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section> --}}
+    
 
     <section class="ftco-about d-md-flex">
         <div class="one-half img" style="background-image: url(images/about.jpg);"></div>

@@ -46,7 +46,7 @@
                 <ul class="navbar-nav ml-auto">
 
                     <!-- MENU ITEMS -->
-                    <li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
+                    <li class="nav-item "><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
                     <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
                     @guest
                         <li class="nav-item">
@@ -275,7 +275,7 @@
                                                     <div class="text-center" style="margin-bottom:4px;">
                                                         <img src="/images/logo.png" alt="Choy's Cafe Logo" style="height:90px; object-fit:contain;" />
                                                     </div>
-                                                    <div class="text-center" style="font-size:13px;color:#111;">toà JOVE, Trung Mỹ Tây, Quận 12<br>0904xxxxxx</div>
+                                                    <div class="text-center" style="font-size:13px;color:#111;">Toà JOVE, Trung Mỹ Tây, Quận 12<br>0904xxxxxx</div>
                                                     <div class="text-center mt-2 mb-2" style="font-size:16px;font-weight:bold; color:#111;">HÓA ĐƠN <span id="bill-code"></span></div>
                                                     <div class="d-flex justify-content-between mb-1" style="font-size:13px;color:#111;">
                                                         <span style="color:#111;">Thời gian</span>

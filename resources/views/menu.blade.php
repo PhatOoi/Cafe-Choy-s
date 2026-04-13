@@ -52,8 +52,8 @@
                 <ul class="navbar-nav ml-auto">
 
                     <!-- MENU ITEMS -->
-                    <li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                    <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
+                    <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
                     @guest
                         <li class="nav-item">
                             <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>

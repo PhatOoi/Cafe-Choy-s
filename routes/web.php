@@ -6,13 +6,13 @@ Route::get('/search', [SearchController::class, 'index'])->name('search');
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MenuController;
-use App\Http\Controllers\AboutController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StaffController;
 
 // Trang chủ
 Route::get('/', function () {
@@ -50,3 +50,13 @@ Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPa
 
 // Đăng ký người dùng mới
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
+
+// phan quyen nhan vien
+Route::prefix('staff')->middleware(['auth', 'staff'])->group(function () {
+    Route::get('/',        [StaffController::class, 'dashboard'])->name('staff.dashboard');
+    Route::get('/orders',  [StaffController::class, 'orders'])->name('staff.orders');
+    Route::get('/orders/{id}', [StaffController::class, 'orderDetail'])->name('staff.order.detail');
+    Route::post('/orders/{id}/status', [StaffController::class, 'updateStatus'])->name('staff.order.status');
+    Route::get('/create-order',  [StaffController::class, 'createInStoreOrder'])->name('staff.create-order');
+    Route::post('/create-order', [StaffController::class, 'storeInStoreOrder'])->name('staff.create-order.store');
+});

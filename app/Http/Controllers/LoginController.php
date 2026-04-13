@@ -34,6 +34,21 @@ class LoginController extends Controller
         }
 
         // Đăng nhập thất bại, quay lại với thông báo lỗi
+        
+
+        if (Auth::attempt($credentials, $remember)) {
+            $request->session()->regenerate();
+            
+            $user = Auth::user();
+            
+            if ($user->role_id == 1) {
+                return redirect('/admin');
+            }
+            if ($user->role_id == 2) {
+                return redirect()->route('staff.dashboard');
+            }
+            return redirect('/');
+        }
         return back()->with('error', 'Email hoặc mật khẩu không đúng!');
     }
 
@@ -45,4 +60,5 @@ class LoginController extends Controller
         $request->session()->regenerateToken(); // Tạo lại CSRF token
         return redirect('/'); // Chuyển về trang chủ
     }
+    
 }
