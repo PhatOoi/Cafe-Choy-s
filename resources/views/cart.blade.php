@@ -76,8 +76,7 @@
                                                 @if(Auth::user()->avatar)
                                                     <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
                                                 @else
-                                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}"
-                                                        class="user-avatar">
+                                                    <img src="{{ asset('images/user.jpg') }}" class="user-avatar">
                                                 @endif
                                             </button>
 
