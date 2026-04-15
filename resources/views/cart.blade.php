@@ -30,9 +30,12 @@
 <body>
     @php
         $hasPendingQrOrder = session()->has('pending_qr_order_id');
+        $initialCartTotal = collect($cart)->sum(fn ($item) => ((float) ($item['price'] ?? 0)) * ((int) ($item['qty'] ?? 0)));
     @endphp
     <script>
         window.hasPendingQrOrder = {{ $hasPendingQrOrder ? 'true' : 'false' }};
+        window.initialCartState = @json($cart);
+        window.initialCartTotal = {{ json_encode($initialCartTotal) }};
     </script>
 	 <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
         <div class="container">
@@ -170,11 +173,18 @@
                                     <th style="font-size:15px; font-weight:600;"></th>
                                 </tr>
 							</thead>
-							<tbody>
+                            <tbody id="cart-table-body">
 								@if(count($cart) > 0)
 									@foreach($cart as $key => $item)
 										@php
 											$itemTotal = $item['price'] * $item['qty'];
+											$itemMeta = array_values(array_filter([
+												!empty($item['size']) ? 'Kích cỡ: ' . $item['size'] : null,
+												!empty($item['sugar']) ? 'Đường: ' . $item['sugar'] : null,
+												!empty($item['ice']) ? 'Đá: ' . $item['ice'] : null,
+												!empty($item['toppings']) && count($item['toppings']) > 0 ? 'Topping: ' . implode(', ', $item['toppings']) : null,
+												!empty($item['note']) ? 'Ghi chú: ' . $item['note'] : null,
+											]));
 										@endphp
 										<tr>
                                             <td class="cart-image-cell">
@@ -183,17 +193,13 @@
                                             <td class="cart-product-cell">
                                                 <div class="cart-product-details">
                                                     <strong class="cart-product-name">{{ $item['name'] }}</strong><br>
-                                                    <small class="text-muted cart-product-meta">
-                                                        Kích cỡ: {{ $item['size'] }}<br>
-                                                        Đường: {{ $item['sugar'] }}<br>
-                                                        Đá: {{ $item['ice'] }}
-                                                        @if(!empty($item['toppings']) && count($item['toppings']) > 0)
-                                                            <br>Topping: {{ implode(', ', $item['toppings']) }}
-                                                        @endif
-                                                        @if(!empty($item['note']))
-                                                            <br>Ghi chú: {{ $item['note'] }}
-                                                        @endif
-                                                    </small>
+                                                    @if(!empty($itemMeta))
+                                                        <small class="text-muted cart-product-meta">
+                                                            @foreach($itemMeta as $index => $metaLine)
+                                                                @if($index > 0)<br>@endif{{ $metaLine }}
+                                                            @endforeach
+                                                        </small>
+                                                    @endif
                                                 </div>
                                             </td>
 											<td>{{ number_format($item['price']) }} đ</td>
@@ -215,7 +221,7 @@
 										</tr>
 									@endforeach
 								@else
-									<tr>
+                                    <tr id="cart-empty-row">
                                         <td colspan="6" class="text-center">Giỏ hàng của bạn đang trống</td>
 									</tr>
 								@endif
@@ -230,7 +236,7 @@
                                 $total += $item['price'] * $item['qty'];
                             }
                         @endphp
-						<div class="row mt-5">
+                        <div class="row mt-5" id="cart-summary-section">
 							<div class="col-md-6 offset-md-6">
 								<div class="card">
 									<div class="card-body">
@@ -277,7 +283,7 @@
                                                                 $qrNote = 'DH' . (isset($cart) ? rand(1000,9999) : 'XXXX');
                                                                 $qrApi = 'https://img.vietqr.io/image/' . 'vietcombank' . '-' . $qrAccount . '-print.png?amount=' . $qrAmount . '&addInfo=' . $qrNote . '&accountName=' . urlencode($qrName);
                                                             @endphp
-                                                            <img src="{{ $qrApi }}" alt="QR code" style="width:220px;max-width:100%;border:2px solid #eee;padding:8px;background:#fff;">
+                                                                <img id="qr-code-image" src="{{ $qrApi }}" alt="QR code" style="width:220px;max-width:100%;border:2px solid #eee;padding:8px;background:#fff;">
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="font-weight-bold mb-2" style="font-size:16px;">Cách 2: Chuyển khoản <b>thủ công</b> theo thông tin</div>
@@ -325,20 +331,27 @@
                                                         <div style="width:10%; text-align:center;">SL</div>
                                                         <div style="width:26%; text-align:right;">Tổng cộng</div>
                                                     </div>
-                                                    <div style="color:#111;">
+                                                        <div id="bill-items" style="color:#111;">
                                                         @foreach($cart as $item)
+                                                            @php
+                                                                $billMeta = array_values(array_filter([
+                                                                    !empty($item['size']) ? '- Size: ' . $item['size'] : null,
+                                                                    !empty($item['sugar']) ? '- Đường: ' . $item['sugar'] : null,
+                                                                    !empty($item['ice']) ? '- Đá: ' . $item['ice'] : null,
+                                                                    !empty($item['toppings']) && count($item['toppings']) > 0 ? '- Topping: ' . implode(', ', $item['toppings']) : null,
+                                                                ]));
+                                                            @endphp
                                                             <div style="padding:6px 0 8px; border-bottom:1px dashed #efefef;">
                                                                 <div style="display:flex; align-items:flex-start; font-size:12px; color:#111;">
                                                                     <div style="width:46%; padding-right:8px; text-align:left;">
                                                                         <div style="font-size:12px; font-weight:600; line-height:1.35; word-break:break-word;">{{ $item['name'] }}</div>
-                                                                        <div style="font-size:10px; color:#888; font-style:italic; margin-top:2px; line-height:1.4;">
-                                                                            <div>- Size: {{ $item['size'] ?? '-' }}</div>
-                                                                            <div>- Đường: {{ $item['sugar'] ?? '-' }}</div>
-                                                                            <div>- Đá: {{ $item['ice'] ?? '-' }}</div>
-                                                                            @if(!empty($item['toppings']) && count($item['toppings']) > 0)
-                                                                                <div>- Topping: {{ implode(', ', $item['toppings']) }}</div>
-                                                                            @endif
-                                                                        </div>
+                                                                        @if(!empty($billMeta))
+                                                                            <div style="font-size:10px; color:#888; font-style:italic; margin-top:2px; line-height:1.4;">
+                                                                                @foreach($billMeta as $metaLine)
+                                                                                    <div>{{ $metaLine }}</div>
+                                                                                @endforeach
+                                                                            </div>
+                                                                        @endif
                                                                     </div>
                                                                     <div style="width:18%; text-align:right; white-space:nowrap;">{{ number_format($item['price']) }}</div>
                                                                     <div style="width:10%; text-align:center; white-space:nowrap;">{{ $item['qty'] }}</div>
@@ -350,11 +363,11 @@
                                                     <!-- Đã xóa phần bảng tên sản phẩm phía dưới theo yêu cầu -->
                                                     <div class="d-flex justify-content-between" style="font-size:13px;color:#111;">
                                                         <span style="color:#111;">Tổng dịch vụ</span>
-                                                        <span style="color:#111;">{{ number_format($total) }}</span>
+                                                            <span id="bill-service-total" style="color:#111;">{{ number_format($total) }}</span>
                                                     </div>
                                                     <div class="d-flex justify-content-between align-items-center mt-1 mb-1" style="font-size:16px;font-weight:bold;color:#111;">
                                                         <span style="color:#111;">Thanh toán</span>
-                                                        <span style="font-size:20px;color:#111;">{{ number_format($total) }}</span>
+                                                            <span id="bill-grand-total" style="font-size:20px;color:#111;">{{ number_format($total) }}</span>
                                                     </div>
                                                     <div class="d-flex justify-content-between" style="font-size:13px;color:#111;">
                                                         <span style="color:#111;">Mã hóa đơn</span>
@@ -461,8 +474,182 @@
                                         }, 2800);
                                     }
 
+                                    function escapeHtml(value) {
+                                        return String(value ?? '')
+                                            .replace(/&/g, '&amp;')
+                                            .replace(/</g, '&lt;')
+                                            .replace(/>/g, '&gt;')
+                                            .replace(/"/g, '&quot;')
+                                            .replace(/'/g, '&#39;');
+                                    }
+
+                                    function formatMoney(value, withCurrency) {
+                                        var amount = Number(value || 0);
+                                        var formatted = amount.toLocaleString('vi-VN');
+                                        return withCurrency === false ? formatted : formatted + ' đ';
+                                    }
+
+                                    function getCartEntries(cart) {
+                                        return Object.entries(cart || {});
+                                    }
+
+                                    function getCartMetaLines(item, prefix) {
+                                        var lines = [];
+
+                                        if (item.size) {
+                                            lines.push((prefix || '') + 'Size: ' + item.size);
+                                        }
+
+                                        if (item.sugar) {
+                                            lines.push((prefix || '') + 'Đường: ' + item.sugar);
+                                        }
+
+                                        if (item.ice) {
+                                            lines.push((prefix || '') + 'Đá: ' + item.ice);
+                                        }
+
+                                        if (Array.isArray(item.toppings) && item.toppings.length > 0) {
+                                            lines.push((prefix || '') + 'Topping: ' + item.toppings.join(', '));
+                                        }
+
+                                        if (item.note) {
+                                            lines.push((prefix || '') + 'Ghi chú: ' + item.note);
+                                        }
+
+                                        return lines;
+                                    }
+
+                                    function calculateCartTotalFromState(cart) {
+                                        return getCartEntries(cart).reduce(function(sum, entry) {
+                                            var item = entry[1] || {};
+                                            return sum + (Number(item.price || 0) * Number(item.qty || 0));
+                                        }, 0);
+                                    }
+
+                                    function syncCartTableEmptyState(cart) {
+                                        var tbody = document.getElementById('cart-table-body');
+                                        if (!tbody) {
+                                            return;
+                                        }
+
+                                        var hasItems = getCartEntries(cart).length > 0;
+                                        var emptyRow = document.getElementById('cart-empty-row');
+
+                                        if (hasItems) {
+                                            if (emptyRow) {
+                                                emptyRow.remove();
+                                            }
+                                            return;
+                                        }
+
+                                        if (!emptyRow) {
+                                            emptyRow = document.createElement('tr');
+                                            emptyRow.id = 'cart-empty-row';
+                                            emptyRow.innerHTML = '<td colspan="6" class="text-center">Giỏ hàng của bạn đang trống</td>';
+                                            tbody.appendChild(emptyRow);
+                                        }
+                                    }
+
+                                    function syncSummaryVisibility(cart) {
+                                        var hasItems = getCartEntries(cart).length > 0;
+                                        var summarySection = document.getElementById('cart-summary-section');
+
+                                        if (summarySection) {
+                                            summarySection.style.display = hasItems ? '' : 'none';
+                                        }
+
+                                        if (!hasItems && window.jQuery) {
+                                            $('#paymentMethodModal').modal('hide');
+                                            $('#billModal').modal('hide');
+                                            $('#qrPaymentModal').modal('hide');
+                                        }
+                                    }
+
+                                    function syncBillItems(cart) {
+                                        var billItems = document.getElementById('bill-items');
+                                        if (!billItems) {
+                                            return;
+                                        }
+
+                                        var entries = getCartEntries(cart);
+
+                                        if (entries.length === 0) {
+                                            billItems.innerHTML = '<div style="padding:10px 0; text-align:center; font-size:12px; color:#666;">Giỏ hàng của bạn đang trống</div>';
+                                            return;
+                                        }
+
+                                        billItems.innerHTML = entries.map(function(entry) {
+                                            var item = entry[1] || {};
+                                            var metaLines = getCartMetaLines(item, '- ');
+                                            var metaHtml = metaLines.length > 0
+                                                ? '<div style="font-size:10px; color:#888; font-style:italic; margin-top:2px; line-height:1.4;">' + metaLines.map(function(line) {
+                                                    return '<div>' + escapeHtml(line) + '</div>';
+                                                }).join('') + '</div>'
+                                                : '';
+                                            var itemTotal = Number(item.price || 0) * Number(item.qty || 0);
+
+                                            return '<div style="padding:6px 0 8px; border-bottom:1px dashed #efefef;">'
+                                                + '<div style="display:flex; align-items:flex-start; font-size:12px; color:#111;">'
+                                                + '<div style="width:46%; padding-right:8px; text-align:left;">'
+                                                + '<div style="font-size:12px; font-weight:600; line-height:1.35; word-break:break-word;">' + escapeHtml(item.name || '') + '</div>'
+                                                + metaHtml
+                                                + '</div>'
+                                                + '<div style="width:18%; text-align:right; white-space:nowrap;">' + formatMoney(item.price, false) + '</div>'
+                                                + '<div style="width:10%; text-align:center; white-space:nowrap;">' + escapeHtml(item.qty || 0) + '</div>'
+                                                + '<div style="width:26%; text-align:right; white-space:nowrap;">' + formatMoney(itemTotal, false) + '</div>'
+                                                + '</div>'
+                                                + '</div>';
+                                        }).join('');
+                                    }
+
+                                    function syncPaymentSummary(cart, total) {
+                                        var resolvedTotal = typeof total === 'number' ? total : calculateCartTotalFromState(cart);
+                                        var serviceTotal = document.getElementById('bill-service-total');
+                                        var grandTotal = document.getElementById('bill-grand-total');
+                                        var cartTotal = document.getElementById('cart-total');
+                                        var qrAmount = document.getElementById('qr-amount');
+                                        var qrNote = document.getElementById('qr-note');
+                                        var qrImage = document.getElementById('qr-code-image');
+
+                                        syncBillItems(cart);
+
+                                        if (serviceTotal) {
+                                            serviceTotal.textContent = formatMoney(resolvedTotal, false);
+                                        }
+
+                                        if (grandTotal) {
+                                            grandTotal.textContent = formatMoney(resolvedTotal, false);
+                                        }
+
+                                        if (cartTotal) {
+                                            cartTotal.textContent = formatMoney(resolvedTotal, true);
+                                        }
+
+                                        if (qrAmount) {
+                                            qrAmount.textContent = formatMoney(resolvedTotal, true);
+                                        }
+
+                                        if (qrImage) {
+                                            var noteText = qrNote ? qrNote.textContent : '';
+                                            qrImage.src = 'https://img.vietqr.io/image/vietcombank-1042131375-print.png?amount=' + Math.round(resolvedTotal) + '&addInfo=' + encodeURIComponent(noteText) + '&accountName=' + encodeURIComponent('TRAN QUOC LONG');
+                                        }
+                                    }
+
+                                    function syncCartState(cart, total) {
+                                        window.currentCartState = cart || {};
+                                        window.currentCartTotal = typeof total === 'number' ? total : calculateCartTotalFromState(window.currentCartState);
+
+                                        syncCartTableEmptyState(window.currentCartState);
+                                        syncSummaryVisibility(window.currentCartState);
+                                        syncPaymentSummary(window.currentCartState, window.currentCartTotal);
+                                    }
+
                                     // Ajax cập nhật số lượng
                                     document.addEventListener('DOMContentLoaded', function() {
+                                        window.currentCartState = window.initialCartState || {};
+                                        window.currentCartTotal = Number(window.initialCartTotal || 0);
+                                        syncCartState(window.currentCartState, window.currentCartTotal);
+
                                         document.querySelectorAll('.btn-qty').forEach(function(btn) {
                                             btn.addEventListener('click', function() {
                                                 var key = this.getAttribute('data-key');
@@ -497,10 +684,8 @@
                                                                 itemTotalCell.textContent = itemTotal.toLocaleString('vi-VN') + ' đ';
                                                             }
                                                         }
-                                                        // Cập nhật tổng cộng
-                                                        if (typeof data.total !== 'undefined') {
-                                                            document.getElementById('cart-total').textContent = data.total.toLocaleString('vi-VN') + ' đ';
-                                                        }
+
+                                                        syncCartState(data.cart || {}, Number(data.total || 0));
 
                                                         syncCartCount(data.cart_count);
                                                     }
@@ -525,9 +710,8 @@
                                             .then(data => {
                                                 if (data.success) {
                                                     if (row) row.remove();
-                                                    if (typeof data.total !== 'undefined') {
-                                                        document.getElementById('cart-total').textContent = data.total.toLocaleString('vi-VN') + ' đ';
-                                                    }
+
+                                                        syncCartState(data.cart || {}, Number(data.total || 0));
 
                                                     syncCartCount(data.cart_count);
                                                 }
@@ -616,6 +800,11 @@
                                         });
                                     }
                                     function handleCashPayment() {
+                                        if (getCartEntries(window.currentCartState).length === 0) {
+                                            showToast('Giỏ hàng đang trống.');
+                                            return;
+                                        }
+
                                         $('#paymentMethodModal').modal('hide');
                                         setTimeout(function() { $('#billModal').modal('show'); }, 400);
                                     }
@@ -654,6 +843,11 @@
                                         });
                                     }
                                     function showQRModal() {
+                                        if (getCartEntries(window.currentCartState).length === 0) {
+                                            showToast('Giỏ hàng đang trống.');
+                                            return;
+                                        }
+
                                         $('#paymentMethodModal').modal('hide');
                                         setTimeout(function() { $('#qrPaymentModal').modal('show'); }, 400);
                                     }
@@ -672,6 +866,7 @@
                                             document.getElementById('bill-time').textContent = time;
                                             document.getElementById('bill-code').textContent = code;
                                             document.getElementById('bill-code-2').textContent = code;
+                                            syncPaymentSummary(window.currentCartState || {}, window.currentCartTotal || 0);
                                         });
                                     });
                                     </script>
