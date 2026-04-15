@@ -75,6 +75,7 @@ class ProductSeeder extends Seeder
             ['category_id' => $categoryIds['banh-snack'], 'name' => 'Cheesecake', 'description' => 'Bánh phô mai', 'price' => 45000, 'stock' => 20, 'status' => 'available', 'image_url' => 'cheesecake.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['banh-snack'], 'name' => 'Donut', 'description' => 'Bánh vòng', 'price' => 20000, 'stock' => 30, 'status' => 'available', 'image_url' => 'donut.jpg', 'created_at' => now()],
         ];
+//tét
 
         foreach ($products as $product) {
             DB::table('products')->updateOrInsert(
