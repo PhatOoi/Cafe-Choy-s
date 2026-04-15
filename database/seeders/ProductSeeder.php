@@ -19,12 +19,20 @@ class ProductSeeder extends Seeder
             ['name' => 'Bánh & Snack', 'slug' => 'banh-snack', 'sort_order' => 6],
         ];
 
-        DB::table('categories')->insert($categories);
+        foreach ($categories as $category) {
+            DB::table('categories')->updateOrInsert(
+                ['slug' => $category['slug']],
+                [
+                    'name' => $category['name'],
+                    'sort_order' => $category['sort_order'],
+                ]
+            );
+        }
 
         $categoryIds = DB::table('categories')->pluck('id', 'slug');
 
         // Products
-        DB::table('products')->insert([
+        $products = [
             // ===== CÀ PHÊ (1) =====
             ['category_id' => $categoryIds['ca-phe'], 'name' => 'Cà Phê Đen', 'description' => 'Cà phê nguyên chất', 'price' => 25000, 'stock' => 100, 'status' => 'available', 'image_url' => 'cafe_den.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['ca-phe'], 'name' => 'Cà Phê Sữa', 'description' => 'Cà phê sữa truyền thống', 'price' => 30000, 'stock' => 100, 'status' => 'available', 'image_url' => 'cafe_sua.jpg', 'created_at' => now()],
@@ -66,10 +74,27 @@ class ProductSeeder extends Seeder
             ['category_id' => $categoryIds['banh-snack'], 'name' => 'Tiramisu', 'description' => 'Bánh Ý', 'price' => 45000, 'stock' => 20, 'status' => 'available', 'image_url' => 'tiramisu.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['banh-snack'], 'name' => 'Cheesecake', 'description' => 'Bánh phô mai', 'price' => 45000, 'stock' => 20, 'status' => 'available', 'image_url' => 'cheesecake.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['banh-snack'], 'name' => 'Donut', 'description' => 'Bánh vòng', 'price' => 20000, 'stock' => 30, 'status' => 'available', 'image_url' => 'donut.jpg', 'created_at' => now()],
-        ]);
+        ];
+
+        foreach ($products as $product) {
+            DB::table('products')->updateOrInsert(
+                [
+                    'category_id' => $product['category_id'],
+                    'name' => $product['name'],
+                ],
+                [
+                    'description' => $product['description'],
+                    'price' => $product['price'],
+                    'stock' => $product['stock'],
+                    'status' => $product['status'],
+                    'image_url' => $product['image_url'],
+                    'created_at' => $product['created_at'],
+                ]
+            );
+        }
 
         // Extras
-        DB::table('extras')->insert([
+        $extras = [
             ['name' => 'Trân Châu Đen', 'price' => 5000, 'type' => 'topping'],
             ['name' => 'Trân Châu Hoàng Kim', 'price' => 5000, 'type' => 'topping'],
             ['name' => 'Thạch Cà Phê', 'price' => 5000, 'type' => 'topping'],
@@ -85,7 +110,17 @@ class ProductSeeder extends Seeder
             ['name' => 'Đá Riêng', 'price' => 0, 'type' => 'ice'],
             ['name' => 'Phô Mai Tươi', 'price' => 10000, 'type' => 'topping'],
             ['name' => 'Kem Macchiato', 'price' => 10000, 'type' => 'topping'],
-        ]);
+        ];
+
+        foreach ($extras as $extra) {
+            DB::table('extras')->updateOrInsert(
+                [
+                    'name' => $extra['name'],
+                    'type' => $extra['type'],
+                ],
+                ['price' => $extra['price']]
+            );
+        }
 
         // Product extras (product_id => [extra_ids])
         $products = DB::table('products')
@@ -103,6 +138,6 @@ class ProductSeeder extends Seeder
             }
         }
 
-        DB::table('product_extras')->insert($rows);
+        DB::table('product_extras')->insertOrIgnore($rows);
     }
 }
