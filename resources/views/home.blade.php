@@ -777,20 +777,20 @@
 
         .newsletter-form button {
             padding: 16px 28px;
-            background: linear-gradient(45deg, #c57b57, #d89b7a);
+            background: linear-gradient(135deg, #a56a49, #c18a68);
             border: none;
             border-radius: 50px;
-            color: white;
+            color: #fffaf5;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(197, 123, 87, 0.3);
+            box-shadow: 0 6px 20px rgba(165, 106, 73, 0.22);
         }
 
         .newsletter-form button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(197, 123, 87, 0.4);
-            background: linear-gradient(45deg, #b06a48, #c57b57);
+            box-shadow: 0 10px 24px rgba(165, 106, 73, 0.28);
+            background: linear-gradient(135deg, #965d40, #b97b58);
         }
 
         /* Main Footer */
@@ -947,16 +947,16 @@
             const button = emailInput.nextElementSibling;
             if (!button) return;
             if (!username || username.length < 3) {
-                button.style.background = '#ef4444';
+                button.style.background = '#c46d62';
                 setTimeout(() => button.style.background = '', 500);
                 return;
             }
             button.textContent = 'Đã đăng ký!';
-            button.style.background = '#10b981';
+            button.style.background = '#6f9a78';
             emailInput.value = '';
             setTimeout(() => {
                 button.textContent = 'Đăng ký';
-                button.style.background = 'linear-gradient(45deg, #ff6b00, #ff8c42)';
+                button.style.background = 'linear-gradient(135deg, #a56a49, #c18a68)';
             }, 2000);
         }
 

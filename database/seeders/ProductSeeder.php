@@ -9,6 +9,19 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
+        $sizes = [
+            ['name' => 'S', 'extra_price' => 0],
+            ['name' => 'M', 'extra_price' => 10000],
+            ['name' => 'L', 'extra_price' => 15000],
+        ];
+
+        foreach ($sizes as $size) {
+            DB::table('sizes')->updateOrInsert(
+                ['name' => $size['name']],
+                ['extra_price' => $size['extra_price']]
+            );
+        }
+
         // Categories
         $categories = [
             ['name' => 'Cà Phê', 'slug' => 'ca-phe', 'sort_order' => 1],
@@ -31,6 +44,13 @@ class ProductSeeder extends Seeder
 
         $categoryIds = DB::table('categories')->pluck('id', 'slug');
 
+        DB::table('products')
+            ->where('category_id', $categoryIds['tra-sua'])
+            ->where('image_url', 'tsmatcha.jpg')
+            ->update([
+                'name' => 'Trà Sữa Thái Xanh',
+            ]);
+
         // Products
         $products = [
             // ===== CÀ PHÊ (1) =====
@@ -43,7 +63,7 @@ class ProductSeeder extends Seeder
 
             // ===== TRÀ SỮA (2) =====
             ['category_id' => $categoryIds['tra-sua'], 'name' => 'Trà Sữa Trân Châu', 'description' => 'Trà sữa truyền thống', 'price' => 45000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tstranchau.jpg', 'created_at' => now()],
-            ['category_id' => $categoryIds['tra-sua'], 'name' => 'Trà Sữa Matcha', 'description' => 'Matcha Nhật', 'price' => 50000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tsmatcha.jpg', 'created_at' => now()],
+            ['category_id' => $categoryIds['tra-sua'], 'name' => 'Trà Sữa Thái Xanh', 'description' => 'Matcha Nhật', 'price' => 50000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tsmatcha.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['tra-sua'], 'name' => 'Trà Sữa Thái Đỏ', 'description' => 'Thái đỏ đặc trưng', 'price' => 52000, 'stock' => 60, 'status' => 'available', 'image_url' => 'tsthaido.jpg', 'created_at' => now()],
 
             // ===== ĐÁ XAY (3) =====
@@ -75,7 +95,6 @@ class ProductSeeder extends Seeder
             ['category_id' => $categoryIds['banh-snack'], 'name' => 'Cheesecake', 'description' => 'Bánh phô mai', 'price' => 45000, 'stock' => 20, 'status' => 'available', 'image_url' => 'cheesecake.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['banh-snack'], 'name' => 'Donut', 'description' => 'Bánh vòng', 'price' => 20000, 'stock' => 30, 'status' => 'available', 'image_url' => 'donut.jpg', 'created_at' => now()],
         ];
-//tét
 
         foreach ($products as $product) {
             DB::table('products')->updateOrInsert(

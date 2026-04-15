@@ -9,10 +9,17 @@ class UserRoleSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('user_roles')->insert([
-            ['name' => 'admin',    'description' => 'Quản lý — toàn quyền hệ thống'],
-            ['name' => 'staff',    'description' => 'Nhân viên — vận hành và xử lý đơn hàng'],
+        $roles = [
+            ['name' => 'admin', 'description' => 'Quản lý — toàn quyền hệ thống'],
+            ['name' => 'staff', 'description' => 'Nhân viên — vận hành và xử lý đơn hàng'],
             ['name' => 'customer', 'description' => 'Khách hàng — đặt hàng và thanh toán'],
-        ]);
+        ];
+
+        foreach ($roles as $role) {
+            DB::table('user_roles')->updateOrInsert(
+                ['name' => $role['name']],
+                ['description' => $role['description']]
+            );
+        }
     }
 }

@@ -304,49 +304,39 @@
                                                     <div class="text-center" style="margin-bottom:4px;">
                                                         <img src="/images/logo.png" alt="Choy's Cafe Logo" style="height:90px; object-fit:contain;" />
                                                     </div>
-                                                    <div class="text-center" style="font-size:13px;color:#111;">Toà JOVE, Trung Mỹ Tây, Quận 12<br>0904xxxxxx</div>
+                                                    <div class="text-center" style="font-size:13px;color:#111;">Tòa JOVE, Trung Mỹ Tây, Quận 12<br>0904xxxxxx</div>
                                                     <div class="text-center mt-2 mb-2" style="font-size:16px;font-weight:bold; color:#111;">HÓA ĐƠN <span id="bill-code"></span></div>
                                                     <div class="d-flex justify-content-between mb-1" style="font-size:13px;color:#111;">
                                                         <span style="color:#111;">Thời gian</span>
                                                         <span style="color:#111;"><span id="bill-time"></span> <span id="bill-date"></span></span>
                                                     </div>
-                                                    <div style="display:flex; font-size:13px; font-weight:bold; margin-bottom:2px; margin-top:6px; text-align:left;color:#111;">
-                                                        <div style="width:160px; padding:0 2px 0 0;">Tên sản phẩm</div>
-                                                        <div style="width:60px; text-align:left; padding:0 0 0 2px;">Giá tiền</div>
-                                                        <div style="width:40px; text-align:left; padding:0 0 0 2px;">SL</div>
-                                                        <div style="width:70px; text-align:left; padding:0 0 0 2px;">Tổng cộng</div>
+                                                    <div style="display:flex; font-size:13px; font-weight:bold; margin-bottom:4px; margin-top:6px; text-align:left; color:#111; border-bottom:1px dashed #ddd; padding-bottom:6px;">
+                                                        <div style="width:46%; padding-right:8px;">Tên sản phẩm</div>
+                                                        <div style="width:18%; text-align:right;">Giá tiền</div>
+                                                        <div style="width:10%; text-align:center;">SL</div>
+                                                        <div style="width:26%; text-align:right;">Tổng cộng</div>
                                                     </div>
-                                                    <div style="display:flex;color:#111;">
-                                                        <div style="width:160px;">
-                                                            @foreach($cart as $item)
-                                                                <div style="margin-bottom:1px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                                                    <div style="font-size:12px;">{{ $item['name'] }}</div>
-                                                                    <div style="font-size:10px; color:#888; font-style:italic; margin-top:-2px; line-height:1.4;">
-                                                                        <div>- Size: {{ $item['size'] ?? '-' }}</div>
-                                                                        <div>- Đường: {{ $item['sugar'] ?? '-' }}</div>
-                                                                        <div>- Đá: {{ $item['ice'] ?? '-' }}</div>
-                                                                        @if(!empty($item['toppings']) && count($item['toppings']) > 0)
-                                                                            <div>- Topping: {{ implode(', ', $item['toppings']) }}</div>
-                                                                        @endif
+                                                    <div style="color:#111;">
+                                                        @foreach($cart as $item)
+                                                            <div style="padding:6px 0 8px; border-bottom:1px dashed #efefef;">
+                                                                <div style="display:flex; align-items:flex-start; font-size:12px; color:#111;">
+                                                                    <div style="width:46%; padding-right:8px; text-align:left;">
+                                                                        <div style="font-size:12px; font-weight:600; line-height:1.35; word-break:break-word;">{{ $item['name'] }}</div>
+                                                                        <div style="font-size:10px; color:#888; font-style:italic; margin-top:2px; line-height:1.4;">
+                                                                            <div>- Size: {{ $item['size'] ?? '-' }}</div>
+                                                                            <div>- Đường: {{ $item['sugar'] ?? '-' }}</div>
+                                                                            <div>- Đá: {{ $item['ice'] ?? '-' }}</div>
+                                                                            @if(!empty($item['toppings']) && count($item['toppings']) > 0)
+                                                                                <div>- Topping: {{ implode(', ', $item['toppings']) }}</div>
+                                                                            @endif
+                                                                        </div>
                                                                     </div>
+                                                                    <div style="width:18%; text-align:right; white-space:nowrap;">{{ number_format($item['price']) }}</div>
+                                                                    <div style="width:10%; text-align:center; white-space:nowrap;">{{ $item['qty'] }}</div>
+                                                                    <div style="width:26%; text-align:right; white-space:nowrap;">{{ number_format($item['price'] * $item['qty']) }}</div>
                                                                 </div>
-                                                            @endforeach
-                                                        </div>
-                                                        <div style="width:60px; text-align:left; padding-left:0;">
-                                                            @foreach($cart as $item)
-                                                                <div style="font-size:12px; margin-bottom:1px; text-align:left;">{{ number_format($item['price']) }}</div>
-                                                            @endforeach
-                                                        </div>
-                                                        <div style="width:40px; text-align:left; padding-left:0;">
-                                                            @foreach($cart as $item)
-                                                                <div style="font-size:12px; margin-bottom:1px; text-align:left;">{{ $item['qty'] }}</div>
-                                                            @endforeach
-                                                        </div>
-                                                        <div style="width:70px; text-align:left; padding-left:0;">
-                                                            @foreach($cart as $item)
-                                                                <div style="font-size:12px; margin-bottom:1px; text-align:left;">{{ number_format($item['price'] * $item['qty']) }}</div>
-                                                            @endforeach
-                                                        </div>
+                                                            </div>
+                                                        @endforeach
                                                     </div>
                                                     <!-- Đã xóa phần bảng tên sản phẩm phía dưới theo yêu cầu -->
                                                     <div class="d-flex justify-content-between" style="font-size:13px;color:#111;">

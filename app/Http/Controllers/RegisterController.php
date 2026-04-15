@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 // Controller xử lý đăng ký tài khoản mới
@@ -33,20 +34,40 @@ class RegisterController extends Controller
         ]);
 
         try {
-            // Tạo user mới và lưu vào database
-            $user = new User();
-            $user->name = $request->username;
-            $user->email = $request->email;
-            $user->password = Hash::make($request->password);
-            $user->phone = $request->phone;
-            $user->role_id = 3; // Mặc định là khách hàng
-            $user->is_active = true;
-            $user->save();
+            $user = DB::transaction(function () use ($request) {
+                $customerRoleId = DB::table('user_roles')
+                    ->where('name', 'customer')
+                    ->value('id');
+
+                if (!$customerRoleId) {
+                    $customerRoleId = DB::table('user_roles')->insertGetId([
+                        'name' => 'customer',
+                        'description' => 'Khách hàng — đặt hàng và thanh toán',
+                    ]);
+                }
+
+                $user = new User();
+                $user->name = $request->username;
+                $user->email = $request->email;
+                $user->password = Hash::make($request->password);
+                $user->phone = $request->phone;
+                $user->role_id = $customerRoleId;
+                $user->is_active = true;
+                $user->save();
+
+                return $user;
+            });
+
             \Log::info('Đã lưu user thành công', ['user' => $user]);
         } catch (\Exception $e) {
-            // Ghi log lỗi và trả về thông báo lỗi
-            \Log::error('Lỗi đăng ký: ' . $e->getMessage());
-            return back()->withInput()->withErrors(['register_error' => 'Đăng ký thất bại: ' . $e->getMessage()]);
+            \Log::error('Lỗi đăng ký', [
+                'message' => $e->getMessage(),
+                'email' => $request->email,
+            ]);
+
+            return back()->withInput()->withErrors([
+                'register_error' => 'Đăng ký thất bại. Vui lòng thử lại sau.',
+            ]);
         }
 
         // Đăng ký thành công, chuyển hướng về trang đăng nhập
