@@ -41,9 +41,13 @@
             <div class="collapse navbar-collapse" id="ftco-nav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                    <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @if(!(auth()->check() && auth()->user()->isStaff()))
+                        <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @endif
                     @auth
-                        <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @if(!auth()->user()->isStaff())
+                            <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @endif
                     @endauth
                     @guest
                         <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
@@ -151,10 +155,12 @@
                             <i class="fas fa-mug-hot"></i>
                             Quay lại menu
                         </a>
-                        <a href="{{ route('orders.history') }}" class="profile-action-btn secondary-btn">
-                            <i class="fas fa-receipt"></i>
-                            Lịch sử đơn hàng
-                        </a>
+                        @if(!auth()->user()->isStaff())
+                            <a href="{{ route('orders.history') }}" class="profile-action-btn secondary-btn">
+                                <i class="fas fa-receipt"></i>
+                                Lịch sử đơn hàng
+                            </a>
+                        @endif
                     </div>
                 </aside>
 

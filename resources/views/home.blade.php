@@ -54,9 +54,13 @@
 
                     <!-- MENU ITEMS -->
                     <li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                    <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @if(!(auth()->check() && auth()->user()->isStaff()))
+                        <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @endif
                     @auth
-                        <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @if(!auth()->user()->isStaff())
+                            <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @endif
                     @endauth
                     @guest
                         <li class="nav-item">

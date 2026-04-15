@@ -24,14 +24,13 @@ class StaffController extends Controller
         $stats = [
             'pending'    => Order::where('status', 'pending')->count(),
             'processing' => Order::whereIn('status', ['confirmed', 'processing', 'ready'])->count(),
-            'delivering' => Order::where('status', 'delivering')->count(),
             'today'      => Order::whereDate('created_at', today())
                                  ->where('assigned_staff_id', $staffId)->count(),
         ];
 
         $recentOrders = Order::with(['user', 'items.product', 'payment'])
             ->whereNotIn('status', ['delivered', 'cancelled', 'failed'])
-            ->orderByRaw("FIELD(status,'delivering','processing','confirmed','ready','pending')")
+            ->orderByRaw("FIELD(status,'processing','confirmed','ready','pending')")
             ->orderBy('created_at', 'asc')
             ->take(10)
             ->get();
@@ -95,6 +94,15 @@ class StaffController extends Controller
     {
         $order = Order::findOrFail($id);
 
+        if (
+            $request->status === 'confirmed' &&
+            $order->payment &&
+            $order->payment->method === 'bank_transfer' &&
+            $order->payment->status !== 'paid'
+        ) {
+            return back()->with('error', 'Cần xác nhận thanh toán chuyển khoản trước khi xác nhận đơn hàng.');
+        }
+
         $validNext = $order->next_statuses;
 
         if (!in_array($request->status, $validNext)) {
@@ -119,6 +127,40 @@ class StaffController extends Controller
         }
 
         return back()->with('success', 'Cập nhật trạng thái thành công!');
+    }
+
+    public function confirmPayment($id)
+    {
+        $order = Order::with('payment')->findOrFail($id);
+
+        if (!$order->payment || $order->payment->method !== 'bank_transfer') {
+            return back()->with('error', 'Đơn hàng này không sử dụng thanh toán QR/chuyển khoản.');
+        }
+
+        if ($order->payment->status === 'paid') {
+            return back()->with('success', 'Đơn hàng này đã được xác nhận khách thanh toán QR trước đó.');
+        }
+
+        DB::transaction(function () use ($order) {
+            $order->payment->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+
+            if (in_array($order->status, ['pending', 'confirmed'], true)) {
+                $order->status = 'processing';
+            }
+
+            if (!$order->assigned_staff_id) {
+                $order->assigned_staff_id = Auth::id();
+            }
+
+            $order->save();
+
+            DB::table('carts')->where('user_id', $order->user_id)->delete();
+        });
+
+        return back()->with('success', 'Đã xác nhận khách hàng chuyển khoản thành công và chuyển đơn sang pha chế.');
     }
 
     // ─── Tạo đơn tại quán ────────────────────────────────────────────────────

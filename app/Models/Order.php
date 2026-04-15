@@ -67,10 +67,10 @@ class Order extends Model
         return match($this->status) {
             'pending'    => 'Chờ xác nhận',
             'confirmed'  => 'Đã xác nhận',
-            'processing' => 'Đang pha chế',
+            'processing' => 'Đang chuẩn bị',
             'ready'      => 'Sẵn sàng',
-            'delivering' => 'Đang giao',
-            'delivered'  => 'Đã giao',
+            'delivering' => $this->order_type === 'delivery' ? 'Đã giao' : 'Hoàn thành đơn hàng',
+            'delivered'  => $this->order_type === 'delivery' ? 'Đã giao' : 'Hoàn thành đơn hàng',
             'failed'     => 'Thất bại',
             'cancelled'  => 'Đã hủy',
             default      => $this->status,
@@ -84,7 +84,7 @@ class Order extends Model
             'confirmed'  => 'info',
             'processing' => 'primary',
             'ready'      => 'success',
-            'delivering' => 'info',
+            'delivering' => 'success',
             'delivered'  => 'success',
             'failed'     => 'danger',
             'cancelled'  => 'secondary',
@@ -95,12 +95,21 @@ class Order extends Model
     // Các trạng thái tiếp theo hợp lệ cho nhân viên
     public function getNextStatusesAttribute()
     {
+        if ($this->order_type !== 'delivery') {
+            return match($this->status) {
+                'pending'    => ['confirmed', 'cancelled'],
+                'confirmed'  => ['processing', 'cancelled'],
+                'processing' => ['ready'],
+                'ready'      => ['delivered'],
+                default      => [],
+            };
+        }
+
         return match($this->status) {
             'pending'    => ['confirmed', 'cancelled'],
             'confirmed'  => ['processing', 'cancelled'],
             'processing' => ['ready'],
-            'ready'      => ['delivering', 'delivered'],
-            'delivering' => ['delivered', 'failed'],
+            'ready'      => ['delivered'],
             default      => [],
         };
     }

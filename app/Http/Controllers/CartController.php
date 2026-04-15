@@ -9,10 +9,112 @@ use App\Models\Size;
 use App\Models\Extra;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Payment;
 
 // Controller xử lý giỏ hàng
 class CartController extends Controller
 {
+    private function syncPendingQrOrderCart(): void
+    {
+        $pendingOrderId = session('pending_qr_order_id');
+
+        if (!$pendingOrderId || !auth()->check()) {
+            return;
+        }
+
+        $payment = Payment::where('order_id', $pendingOrderId)->first();
+
+        if ($payment && $payment->status === 'paid') {
+            session()->forget(['cart', 'pending_qr_order_id']);
+        }
+    }
+
+    private function calculateCartTotal(array $cart): float
+    {
+        $total = 0;
+        foreach ($cart as $item) {
+            $total += $item['price'] * $item['qty'];
+        }
+
+        return $total;
+    }
+
+    private function createOrderFromCart(array $cart, float $total, array $orderData, ?array $paymentData = null): Order
+    {
+        return DB::transaction(function () use ($cart, $total, $orderData, $paymentData) {
+            $order = Order::create(array_merge([
+                'user_id' => auth()->id(),
+                'address_id' => null,
+                'assigned_staff_id' => null,
+                'voucher_id' => null,
+                'order_type' => 'in_store',
+                'status' => 'pending',
+                'total_price' => $total,
+                'discount_amount' => 0,
+                'shipping_fee' => 0,
+                'final_price' => $total,
+                'note' => null,
+            ], $orderData));
+
+            foreach ($cart as $item) {
+                $itemNoteParts = [
+                    'Size: ' . ($item['size'] ?? '-'),
+                    'Đường: ' . ($item['sugar'] ?? '-'),
+                    'Đá: ' . ($item['ice'] ?? '-'),
+                ];
+
+                if (!empty($item['note'])) {
+                    $itemNoteParts[] = 'Ghi chú: ' . $item['note'];
+                }
+
+                $orderItem = OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['qty'],
+                    'unit_price' => $item['price'],
+                    'note' => implode(' | ', $itemNoteParts),
+                ]);
+
+                $toppings = is_array($item['toppings'] ?? null) ? $item['toppings'] : [];
+                if (!empty($toppings)) {
+                    $extras = Extra::whereIn('name', $toppings)->get()->keyBy('name');
+                    $extraRows = [];
+
+                    foreach ($toppings as $toppingName) {
+                        $extra = $extras->get($toppingName);
+                        if (!$extra) {
+                            continue;
+                        }
+
+                        $extraRows[] = [
+                            'order_item_id' => $orderItem->id,
+                            'extra_id' => $extra->id,
+                            'extra_name' => $extra->name,
+                            'extra_price' => $extra->price,
+                        ];
+                    }
+
+                    if (!empty($extraRows)) {
+                        DB::table('order_item_extras')->insert($extraRows);
+                    }
+                }
+            }
+
+            if ($paymentData) {
+                Payment::create(array_merge([
+                    'order_id' => $order->id,
+                    'method' => 'bank_transfer',
+                    'status' => 'pending',
+                    'amount' => $total,
+                    'paid_at' => null,
+                    'ref_code' => null,
+                ], $paymentData));
+            }
+
+            return $order;
+        });
+    }
+
     // Thêm sản phẩm vào giỏ hàng
     public function add(Request $request)
     {
@@ -103,8 +205,12 @@ class CartController extends Controller
     }
     public function index()
     {
+        $this->syncPendingQrOrderCart();
+
         $cart = session()->get('cart', []);
-        return view('cart', compact('cart'));
+        $cartCount = array_sum(array_column($cart, 'qty'));
+
+        return view('cart', compact('cart', 'cartCount'));
     }
 
     public function remove($id)
@@ -198,74 +304,19 @@ class CartController extends Controller
             ], 422);
         }
 
-        $total = 0;
-        foreach ($cart as $item) {
-            $total += $item['price'] * $item['qty'];
-        }
+        $total = $this->calculateCartTotal($cart);
 
-        $order = DB::transaction(function () use ($cart, $total) {
-            $order = Order::create([
-                'user_id' => auth()->id(),
-                'address_id' => null,
-                'assigned_staff_id' => null,
-                'voucher_id' => null,
-                'order_type' => 'in_store',
-                'status' => 'confirmed',
-                'total_price' => $total,
-                'discount_amount' => 0,
-                'shipping_fee' => 0,
-                'final_price' => $total,
-                'note' => 'Thanh toán tiền mặt tại quầy',
-            ]);
+        $order = $this->createOrderFromCart($cart, $total, [
+            'status' => 'processing',
+            'note' => 'Thanh toán tiền mặt tại quầy - đơn hàng đã chuyển sang chuẩn bị',
+        ], [
+            'method' => 'cash',
+            'status' => 'paid',
+            'amount' => $total,
+            'paid_at' => now(),
+        ]);
 
-            foreach ($cart as $item) {
-                $itemNoteParts = [
-                    'Size: ' . ($item['size'] ?? '-'),
-                    'Đường: ' . ($item['sugar'] ?? '-'),
-                    'Đá: ' . ($item['ice'] ?? '-'),
-                ];
-
-                if (!empty($item['note'])) {
-                    $itemNoteParts[] = 'Ghi chú: ' . $item['note'];
-                }
-
-                $orderItem = OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['qty'],
-                    'unit_price' => $item['price'],
-                    'note' => implode(' | ', $itemNoteParts),
-                ]);
-
-                $toppings = is_array($item['toppings'] ?? null) ? $item['toppings'] : [];
-                if (!empty($toppings)) {
-                    $extras = Extra::whereIn('name', $toppings)->get()->keyBy('name');
-                    $extraRows = [];
-
-                    foreach ($toppings as $toppingName) {
-                        $extra = $extras->get($toppingName);
-                        if (!$extra) {
-                            continue;
-                        }
-
-                        $extraRows[] = [
-                            'order_item_id' => $orderItem->id,
-                            'extra_id' => $extra->id,
-                            'extra_name' => $extra->name,
-                            'extra_price' => $extra->price,
-                        ];
-                    }
-
-                    if (!empty($extraRows)) {
-                        DB::table('order_item_extras')->insert($extraRows);
-                    }
-                }
-            }
-
-            return $order;
-        });
-
-        session()->forget('cart');
+        session()->forget(['cart', 'pending_qr_order_id']);
 
         return response()->json([
             'success' => true,
@@ -273,6 +324,119 @@ class CartController extends Controller
             'order_id' => $order->id,
             'cart_count' => 0,
             'redirect_url' => route('orders.history')
+        ]);
+    }
+
+    public function confirmQrPayment(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $cart = session()->get('cart', []);
+
+        if (empty($cart)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Giỏ hàng đang trống.'
+            ], 422);
+        }
+
+        $pendingOrderId = session('pending_qr_order_id');
+        if ($pendingOrderId) {
+            $existingPayment = Payment::where('order_id', $pendingOrderId)
+                ->where('method', 'bank_transfer')
+                ->where('status', 'pending')
+                ->first();
+
+            if ($existingPayment) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đơn QR của bạn đang chờ nhân viên xác nhận thanh toán.',
+                    'cart_count' => array_sum(array_column($cart, 'qty')),
+                ]);
+            }
+        }
+
+        $total = $this->calculateCartTotal($cart);
+        $qrNote = trim((string) $request->input('qr_note', ''));
+
+        $order = $this->createOrderFromCart($cart, $total, [
+            'status' => 'pending',
+            'note' => $qrNote !== ''
+                ? 'Khách đã gửi xác nhận chuyển khoản QR. Mã tham chiếu: ' . $qrNote
+                : 'Khách đã gửi xác nhận chuyển khoản QR.',
+        ], [
+            'method' => 'bank_transfer',
+            'status' => 'pending',
+            'amount' => $total,
+            'ref_code' => $qrNote !== '' ? $qrNote : null,
+        ]);
+
+        session()->put('pending_qr_order_id', $order->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã gửi yêu cầu xác nhận. Nhân viên sẽ kiểm tra và xác nhận sau khi đối chiếu thanh toán QR của bạn.',
+            'order_id' => $order->id,
+            'cart_count' => array_sum(array_column($cart, 'qty')),
+        ]);
+    }
+
+    public function qrPaymentStatus(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $pendingOrderId = session('pending_qr_order_id');
+
+        if (!$pendingOrderId) {
+            return response()->json([
+                'success' => true,
+                'has_pending_qr' => false,
+                'paid' => false,
+                'cart_count' => array_sum(array_column(session()->get('cart', []), 'qty')),
+            ]);
+        }
+
+        $payment = Payment::where('order_id', $pendingOrderId)->first();
+
+        if (!$payment) {
+            session()->forget('pending_qr_order_id');
+
+            return response()->json([
+                'success' => true,
+                'has_pending_qr' => false,
+                'paid' => false,
+                'cart_count' => array_sum(array_column(session()->get('cart', []), 'qty')),
+            ]);
+        }
+
+        if ($payment->status === 'paid') {
+            session()->forget(['cart', 'pending_qr_order_id']);
+
+            return response()->json([
+                'success' => true,
+                'has_pending_qr' => false,
+                'paid' => true,
+                'cart_count' => 0,
+                'redirect_url' => route('orders.history'),
+                'message' => 'Đơn hàng của bạn đã được nhân viên xác nhận thanh toán.',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'has_pending_qr' => true,
+            'paid' => false,
+            'cart_count' => array_sum(array_column(session()->get('cart', []), 'qty')),
         ]);
     }
 }

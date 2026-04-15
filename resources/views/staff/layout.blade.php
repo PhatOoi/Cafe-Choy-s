@@ -323,22 +323,11 @@
            class="sidebar-link {{ request()->is('staff/orders') && request('status') === 'pending' ? 'active' : '' }}">
             <i class="fas fa-clock"></i> Chờ xác nhận
         </a>
-        <a href="{{ route('staff.orders', ['status' => 'delivering']) }}"
-           class="sidebar-link">
-            <i class="fas fa-motorcycle"></i> Đang giao
-        </a>
         <a href="{{ route('staff.create-order') }}"
            class="sidebar-link {{ request()->routeIs('staff.create-order') ? 'active' : '' }}">
             <i class="fas fa-plus-circle"></i> Tạo đơn tại quán
         </a>
 
-        <div class="nav-section-label">Tài khoản</div>
-        <a href="{{ url('/profile') }}" class="sidebar-link">
-            <i class="fas fa-user"></i> Hồ sơ cá nhân
-        </a>
-        <a href="{{ url('/') }}" class="sidebar-link">
-            <i class="fas fa-store"></i> Về trang chủ
-        </a>
     </nav>
 
     <div class="sidebar-footer">

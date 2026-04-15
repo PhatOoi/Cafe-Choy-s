@@ -126,10 +126,9 @@
     @foreach([
         'pending'    => 'Chờ xác nhận',
         'confirmed'  => 'Đã xác nhận',
-        'processing' => 'Đang pha chế',
+        'processing' => 'Đang chuẩn bị',
         'ready'      => 'Sẵn sàng',
-        'delivering' => 'Đang giao',
-        'delivered'  => 'Đã giao',
+        'delivered'  => 'Hoàn thành',
         'cancelled'  => 'Đã hủy',
         'failed'     => 'Thất bại',
     ] as $key => $label)
@@ -258,7 +257,15 @@
                                 <i class="fas fa-eye"></i> Xem
                             </a>
                             {{-- Next status button --}}
-                            @if(count($order->next_statuses) > 0)
+                            @if($order->payment && $order->payment->method === 'bank_transfer' && $order->payment->status !== 'paid')
+                            <form action="{{ route('staff.order.payment.confirm', $order->id) }}" method="POST" style="margin:0;">
+                                @csrf
+                                <button type="submit" class="action-btn btn-next">
+                                    <i class="fas fa-money-check-alt"></i>
+                                    Chuyển khoản thành công
+                                </button>
+                            </form>
+                            @elseif(count($order->next_statuses) > 0)
                             <form action="{{ route('staff.order.status', $order->id) }}" method="POST" style="margin:0;">
                                 @csrf
                                 <input type="hidden" name="status" value="{{ $order->next_statuses[0] }}">
@@ -266,10 +273,9 @@
                                     <i class="fas fa-arrow-right"></i>
                                     {{ match($order->next_statuses[0]) {
                                         'confirmed'  => 'Xác nhận',
-                                        'processing' => 'Pha chế',
+                                        'processing' => 'Chuẩn bị',
                                         'ready'      => 'Sẵn sàng',
-                                        'delivering' => 'Giao hàng',
-                                        'delivered'  => 'Đã giao',
+                                        'delivered'  => 'Hoàn thành',
                                         default      => 'Tiếp theo',
                                     } }}
                                 </button>

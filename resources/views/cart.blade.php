@@ -28,6 +28,12 @@
 </head>
 
 <body>
+    @php
+        $hasPendingQrOrder = session()->has('pending_qr_order_id');
+    @endphp
+    <script>
+        window.hasPendingQrOrder = {{ $hasPendingQrOrder ? 'true' : 'false' }};
+    </script>
 	 <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
         <div class="container">
 
@@ -48,9 +54,13 @@
 
                     <!-- MENU ITEMS -->
                     <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                    <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @if(!(auth()->check() && auth()->user()->isStaff()))
+                        <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @endif
                     @auth
-                        <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @if(!auth()->user()->isStaff())
+                            <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @endif
                     @endauth
                     @guest
                         <li class="nav-item">
@@ -268,7 +278,6 @@
                                                                 $qrApi = 'https://img.vietqr.io/image/' . 'vietcombank' . '-' . $qrAccount . '-print.png?amount=' . $qrAmount . '&addInfo=' . $qrNote . '&accountName=' . urlencode($qrName);
                                                             @endphp
                                                             <img src="{{ $qrApi }}" alt="QR code" style="width:220px;max-width:100%;border:2px solid #eee;padding:8px;background:#fff;">
-                                                            <div class="mt-2" style="font-size:13px;color:#888;">Trạng thái: <span>Chờ thanh toán...</span></div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="font-weight-bold mb-2" style="font-size:16px;">Cách 2: Chuyển khoản <b>thủ công</b> theo thông tin</div>
@@ -525,13 +534,86 @@
                                             });
                                         });
                                     });
+                                    var qrStatusPoller = null;
+
+                                    function stopQrStatusPolling() {
+                                        if (qrStatusPoller) {
+                                            window.clearInterval(qrStatusPoller);
+                                            qrStatusPoller = null;
+                                        }
+                                    }
+
+                                    function startQrStatusPolling() {
+                                        stopQrStatusPolling();
+
+                                        qrStatusPoller = window.setInterval(function() {
+                                            fetch('{{ route('cart.qr-status') }}', {
+                                                headers: {
+                                                    'Accept': 'application/json',
+                                                    'X-Requested-With': 'XMLHttpRequest'
+                                                },
+                                                credentials: 'same-origin'
+                                            })
+                                            .then(function(res) {
+                                                return res.json();
+                                            })
+                                            .then(function(data) {
+                                                if (!data.success) {
+                                                    return;
+                                                }
+
+                                                syncCartCount(data.cart_count || 0);
+
+                                                if (data.paid) {
+                                                    stopQrStatusPolling();
+                                                    showToast(data.message || 'Đơn hàng đã được xác nhận thanh toán.');
+
+                                                    window.setTimeout(function() {
+                                                        window.location.href = data.redirect_url || '{{ route('orders.history') }}';
+                                                    }, 900);
+                                                } else if (!data.has_pending_qr) {
+                                                    stopQrStatusPolling();
+                                                }
+                                            })
+                                            .catch(function() {});
+                                        }, 3000);
+                                    }
+
                                     function confirmPayment() {
                                         primePaymentAudio();
-                                        $('#qrPaymentModal').modal('hide');
-                                        setTimeout(function() {
-                                            playPaymentSuccessSound();
-                                            alert('Cảm ơn bạn! Đơn hàng sẽ được xác nhận sau khi thanh toán thành công.');
-                                        }, 400);
+
+                                        fetch('/cart/checkout/qr', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                            },
+                                            body: JSON.stringify({
+                                                qr_note: (document.getElementById('qr-note') || {}).textContent || ''
+                                            })
+                                        })
+                                        .then(function(res) {
+                                            return res.json();
+                                        })
+                                        .then(function(data) {
+                                            if (!data.success) {
+                                                showToast(data.message || 'Không thể gửi xác nhận thanh toán.');
+                                                return;
+                                            }
+
+                                            $('#qrPaymentModal').modal('hide');
+                                            syncCartCount(data.cart_count);
+                                            window.hasPendingQrOrder = true;
+                                            startQrStatusPolling();
+
+                                            setTimeout(function() {
+                                                playPaymentSuccessSound();
+                                                showToast(data.message || 'Đã gửi xác nhận thanh toán.');
+                                            }, 400);
+                                        })
+                                        .catch(function() {
+                                            showToast('Không thể gửi xác nhận thanh toán. Vui lòng thử lại.');
+                                        });
                                     }
                                     function handleCashPayment() {
                                         $('#paymentMethodModal').modal('hide');
@@ -577,6 +659,10 @@
                                     }
                                     // Hiển thị ngày giờ và mã hóa đơn trong bill
                                     document.addEventListener('DOMContentLoaded', function() {
+                                        if (window.hasPendingQrOrder) {
+                                            startQrStatusPolling();
+                                        }
+
                                         $('#billModal').on('show.bs.modal', function () {
                                             var now = new Date();
                                             var date = now.toLocaleDateString('vi-VN');
