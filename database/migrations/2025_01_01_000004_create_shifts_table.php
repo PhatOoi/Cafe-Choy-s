@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Tạo bảng ca làm để lưu thời gian trực của nhân viên.
     public function up(): void
     {
         Schema::create('shifts', function (Blueprint $table) {
@@ -20,6 +21,7 @@ return new class extends Migration
         });
     }
 
+    // Xóa bảng shifts khi rollback.
     public function down(): void
     {
         Schema::dropIfExists('shifts');

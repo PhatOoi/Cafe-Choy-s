@@ -13,7 +13,9 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\OrderHistoryController;
 
 // ── PUBLIC ────────────────────────────────────────────────────
+// Các route mở cho khách chưa đăng nhập hoặc mọi người dùng truy cập.
 Route::get('/', function () {
+    // Nếu là nhân viên đã đăng nhập thì bỏ qua trang chủ khách và vào dashboard staff.
     if (auth()->check() && auth()->user()->isStaff()) {
         return redirect()->route('staff.dashboard');
     }
@@ -29,7 +31,7 @@ Route::get('/login',[LoginController::class,'index']);
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Trang giỏ hàng
+// Nhóm route giỏ hàng và checkout của khách hàng.
 Route::post('/cart/add', [CartController::class, 'add'])->middleware('auth');
 Route::get('/cart', [CartController::class, 'index'])->middleware('auth');
 Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->middleware('auth');
@@ -38,21 +40,24 @@ Route::post('/cart/checkout/cash', [CartController::class, 'confirmCashPayment']
 Route::post('/cart/checkout/qr', [CartController::class, 'confirmQrPayment'])->middleware('auth');
 Route::get('/cart/qr-status', [CartController::class, 'qrPaymentStatus'])->middleware('auth')->name('cart.qr-status');
 Route::get('/orders/history', [OrderHistoryController::class, 'index'])->middleware('auth')->name('orders.history');
+Route::post('/orders/{id}/cancel', [OrderHistoryController::class, 'cancel'])->middleware('auth')->name('orders.cancel');
 
 Route::get('/test-db', function () {
     $users = DB::table('users')->get();
     return $users;
 });
+
+// Hồ sơ cá nhân của người dùng đã đăng nhập.
 Route::get('/profile', [ProfileController::class, 'index'])->middleware('auth');
 
-// Auth
+// Auth truyền thống cho form login/register.
 Route::get('/login',  [LoginController::class, 'index'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout',[LoginController::class, 'logout'])->name('logout');
 Route::get('/register', fn() => view('login'))->name('register.form');
 Route::post('/register',[RegisterController::class, 'register'])->name('register');
 
-// Quên mật khẩu
+// Luồng quên mật khẩu theo các bước: email -> mã xác minh -> đặt lại mật khẩu.
 Route::prefix('forgot-password')->name('forgot-password.')->group(function () {
     Route::get('/',        [ForgotPasswordController::class, 'showEmailForm'])->name('email-form');
     Route::post('/send',   [ForgotPasswordController::class, 'sendCode'])->name('send-code');
@@ -63,6 +68,7 @@ Route::prefix('forgot-password')->name('forgot-password.')->group(function () {
 });
 
 // ── CUSTOMER (auth) ───────────────────────────────────────────
+// Các route khách hàng chỉ dùng khi đã đăng nhập.
 Route::middleware(['auth'])->group(function () {
     Route::get('/cart',               [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add',          [CartController::class, 'add'])->name('cart.add');
@@ -78,9 +84,15 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ── STAFF ─────────────────────────────────────────────────────
+// Khu vực vận hành cho staff/admin: xử lý đơn, tạo đơn tại quán, doanh thu, nhắc việc.
 Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(function () {
     Route::get('/',        [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/orders',  [StaffController::class, 'orders'])->name('orders');
+    Route::get('/orders/confirmed-reminder-ids', [StaffController::class, 'confirmedOrderReminderIds'])->name('orders.confirmed-reminder-ids');
+    Route::get('/orders/reminder-statuses', [StaffController::class, 'orderReminderStatuses'])->name('orders.reminder-statuses');
+    Route::get('/orders/created-history', [StaffController::class, 'createdOrderHistory'])->name('orders.created-history');
+    Route::get('/revenue/daily', [StaffController::class, 'dailyRevenueReport'])->name('revenue.daily');
+    Route::get('/revenue/monthly', [StaffController::class, 'monthlyRevenueReport'])->name('revenue.monthly');
     Route::get('/orders/create',        [StaffController::class, 'createOrder'])->name('create-order');
     Route::post('/orders',              [StaffController::class, 'storeOrder'])->name('store-order');
     Route::get('/orders/{id}',          [StaffController::class, 'orderDetail'])->name('order.detail');
@@ -96,6 +108,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
 });
 
 // ── ADMIN ──────────────────────────────────────────────────────
+// Khu vực quản trị tổng thể: dashboard, sản phẩm, danh mục, user và báo cáo.
 Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(function () {
     Route::get('/',          fn() => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -131,7 +144,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
 
 Route::post('/subscribe', [App\Http\Controllers\NewsletterController::class, 'subscribe']);
 
-// Debug (local only)
+// Route debug chỉ bật ở local để tránh lộ dữ liệu môi trường production.
 if (app()->environment('local')) {
     Route::get('/test-db', fn() => DB::table('users')->get());
 }

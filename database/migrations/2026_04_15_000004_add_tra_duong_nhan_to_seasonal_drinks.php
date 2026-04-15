@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    // Thêm hoặc cập nhật món Trà Dưỡng Nhan trong category seasonal.
     public function up(): void
     {
         $categoryId = DB::table('categories')
@@ -30,6 +31,7 @@ return new class extends Migration
             'image_url' => 'tradn.jpg',
         ];
 
+        // Nếu món đã có thì update, chưa có thì insert mới.
         if ($existingId) {
             DB::table('products')
                 ->where('id', $existingId)
@@ -43,6 +45,7 @@ return new class extends Migration
         ]);
     }
 
+    // Xóa món seasonal này khi rollback migration.
     public function down(): void
     {
         $categoryId = DB::table('categories')

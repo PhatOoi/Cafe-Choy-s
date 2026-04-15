@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    // Chuyển món seasonal cũ thành Trà Dâu để khớp với menu/ảnh thực tế mới.
     public function up(): void
     {
         DB::table('products')
@@ -19,6 +20,7 @@ return new class extends Migration
             ]);
     }
 
+    // Khôi phục lại tên và ảnh cũ của món seasonal nếu rollback.
     public function down(): void
     {
         DB::table('products')

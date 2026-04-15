@@ -6,19 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    // Bổ sung cột remember_token để hỗ trợ tính năng ghi nhớ đăng nhập.
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->rememberToken()->after('password');
+            $table->unique('phone', 'uq_users_phone');
         });
     }
 
-    // Xóa remember_token nếu rollback migration.
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('remember_token');
+            $table->dropUnique('uq_users_phone');
         });
     }
 };

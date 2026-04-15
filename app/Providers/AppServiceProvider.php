@@ -6,17 +6,13 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
+    // Đăng ký service/container binding dùng chung cho toàn ứng dụng nếu cần.
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
+    // Boot các hook dùng chung sau khi ứng dụng đã sẵn sàng.
     public function boot(): void
     {
         // Chia sẻ số lượng sản phẩm trong giỏ hàng cho tất cả view

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Tạo bảng pivot extra/topping cho từng order item.
     public function up(): void
     {
         Schema::create('order_item_extras', function (Blueprint $table) {
@@ -17,6 +18,7 @@ return new class extends Migration
         });
     }
 
+    // Xóa bảng order_item_extras khi rollback.
     public function down(): void
     {
         Schema::dropIfExists('order_item_extras');

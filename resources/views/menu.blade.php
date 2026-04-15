@@ -398,8 +398,8 @@
                             <div class="topping-item" data-price="{{ $tp->price }}" data-id="{{ $tp->id }}"
                                 onclick="toggleTopping(this)">
                                 <div class="tp-check">
-                                    <svg width="10" height="10">
-                                        <polyline points="2 6 5 9 10 3" />
+                                    <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                                        <polyline points="2 6.5 5 9 10 3" />
                                     </svg>
                                 </div>
                                 <div class="tp-info">
@@ -1704,8 +1704,17 @@
         }
 
         .tp-check svg {
-            display: none;
+            width: 12px;
+            height: 12px;
+            display: block;
+            fill: none;
             stroke: #fff;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0;
+            transform: scale(.7);
+            transition: opacity .18s ease, transform .18s ease;
         }
 
         .topping-item.active .tp-check {
@@ -1714,7 +1723,8 @@
         }
 
         .topping-item.active .tp-check svg {
-            display: block;
+            opacity: 1;
+            transform: scale(1);
         }
 
         .tp-name {

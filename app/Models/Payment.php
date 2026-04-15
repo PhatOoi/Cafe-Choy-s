@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    // Payment được quản lý timestamp thủ công theo logic đơn hàng.
     public $timestamps = false;
 
+    // Các trường cho phép tạo/cập nhật payment bằng mass assignment.
     protected $fillable = [
         'order_id', 'method', 'status', 'amount', 'paid_at', 'ref_code',
     ];
 
+    // Accessor đổi payment method sang nhãn dễ hiểu cho giao diện.
     public function getMethodLabelAttribute()
     {
         return match($this->method) {
@@ -25,6 +28,7 @@ class Payment extends Model
         };
     }
 
+    // Accessor đổi trạng thái thanh toán sang nhãn tiếng Việt.
     public function getStatusLabelAttribute()
     {
         return match($this->status) {

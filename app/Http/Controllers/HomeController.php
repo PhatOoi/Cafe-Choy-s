@@ -8,6 +8,7 @@ class HomeController extends Controller
     // Hiển thị trang chủ
     public function index()
     {
+        // Trang này chỉ render view landing page, không cần nạp thêm dữ liệu động.
         return view('home');
     }
 }

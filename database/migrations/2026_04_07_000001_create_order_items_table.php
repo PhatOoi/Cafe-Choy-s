@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Tạo bảng lưu từng dòng sản phẩm thuộc một đơn hàng.
     public function up(): void
     {
         Schema::create('order_items', function (Blueprint $table) {
@@ -21,6 +22,7 @@ return new class extends Migration
         });
     }
 
+    // Xóa bảng order_items khi rollback migration.
     public function down(): void
     {
         Schema::dropIfExists('order_items');

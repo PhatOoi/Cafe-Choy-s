@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class ProductSeeder extends Seeder
 {
+    // Seed toàn bộ menu mẫu: sizes, categories, products, extras và liên kết product_extras.
     public function run(): void
     {
+        // Đảm bảo bảng sizes có đủ ba mức kích cỡ chuẩn.
         $sizes = [
             ['name' => 'S', 'extra_price' => 0],
             ['name' => 'M', 'extra_price' => 10000],
@@ -22,7 +24,7 @@ class ProductSeeder extends Seeder
             );
         }
 
-        // Categories
+        // Seed các category chính của menu theo thứ tự hiển thị.
         $categories = [
             ['name' => 'Cà Phê', 'slug' => 'ca-phe', 'sort_order' => 1],
             ['name' => 'Trà Sữa', 'slug' => 'tra-sua', 'sort_order' => 2],
@@ -44,6 +46,7 @@ class ProductSeeder extends Seeder
 
         $categoryIds = DB::table('categories')->pluck('id', 'slug');
 
+        // Chỉnh lại một vài record cũ theo bộ tên/menu mới nếu chúng đã tồn tại từ lần seed trước.
         DB::table('products')
             ->where('category_id', $categoryIds['tra-sua'])
             ->where('image_url', 'tsmatcha.jpg')
@@ -59,7 +62,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Trà Olong thiết quan âm tốt cho sức khỏe',
             ]);
 
-        // Products
+        // Seed toàn bộ danh sách sản phẩm mẫu theo từng nhóm menu.
         $products = [
             // ===== CÀ PHÊ (1) =====
             ['category_id' => $categoryIds['ca-phe'], 'name' => 'Cà Phê Đen', 'description' => 'Cà phê nguyên chất', 'price' => 25000, 'stock' => 100, 'status' => 'available', 'image_url' => 'cafe_den.jpg', 'created_at' => now()],
@@ -121,7 +124,7 @@ class ProductSeeder extends Seeder
             );
         }
 
-        // Extras
+        // Seed extra/topping, đường và đá để các flow tùy chỉnh món sử dụng chung.
         $extras = [
             ['name' => 'Trân Châu Đen', 'price' => 5000, 'type' => 'topping'],
             ['name' => 'Trân Châu Hoàng Kim', 'price' => 5000, 'type' => 'topping'],
@@ -150,7 +153,7 @@ class ProductSeeder extends Seeder
             );
         }
 
-        // Product extras (product_id => [extra_ids])
+        // Gán tập extra mặc định cho toàn bộ sản phẩm đồ uống, bỏ qua bánh/snack.
         $products = DB::table('products')
             ->where('category_id', '!=', $categoryIds['banh-snack']) // bỏ bánh & snack
             ->pluck('id');

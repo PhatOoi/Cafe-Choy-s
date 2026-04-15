@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    // Thêm hoặc cập nhật món Trà Trái Cây Nhiệt Đới trong nhóm seasonal drinks.
     public function up(): void
     {
         $categoryId = DB::table('categories')
@@ -30,6 +31,7 @@ return new class extends Migration
             'image_url' => 'tratraicaynhietdoi.jpg',
         ];
 
+        // Nếu sản phẩm đã tồn tại thì chỉ cập nhật payload mới nhất.
         if ($existingId) {
             DB::table('products')
                 ->where('id', $existingId)
@@ -43,6 +45,7 @@ return new class extends Migration
         ]);
     }
 
+    // Xóa món này khỏi category seasonal nếu rollback.
     public function down(): void
     {
         $categoryId = DB::table('categories')

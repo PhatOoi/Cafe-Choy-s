@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Tạo bảng category để nhóm sản phẩm trên menu.
     public function up(): void
     {
         Schema::create('categories', function (Blueprint $table) {
@@ -17,6 +18,7 @@ return new class extends Migration
         });
     }
 
+    // Xóa bảng categories khi rollback migration.
     public function down(): void
     {
         Schema::dropIfExists('categories');

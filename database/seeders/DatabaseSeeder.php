@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
      *   8. OrderSeeder       — orders + order_items + order_item_extras + payments (→ tất cả)
      *   9. InventorySeeder   — inventory + inventory_logs (→ users)
      */
+    // Gọi toàn bộ seeder theo đúng thứ tự phụ thuộc khóa ngoại.
     public function run(): void
     {
         $this->call([

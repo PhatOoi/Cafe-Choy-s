@@ -14,18 +14,22 @@ class ProductController extends Controller
     // 🔍 SEARCH
     public function search(Request $request)
 {
+    // Nhận từ khóa tìm kiếm từ query string.
     $q = $request->q;
 
+    // Chỉ lấy category có sản phẩm khớp với từ khóa.
     $categories = Category::whereHas('products', function ($query) use ($q) {
         $query->where('name', 'like', '%' . $q . '%');
     })
     ->with(['products' => function ($query) use ($q) {
+        // Trong mỗi category, chỉ giữ lại các sản phẩm khớp và sắp xếp theo tên.
         $query->where('name', 'like', '%' . $q . '%')
               ->orderBy('name');
     }])
     ->orderBy('sort_order')
     ->get();
 
+    // Nạp đủ option để trang search có thể tái sử dụng modal chọn món giống trang menu.
     $toppings = Extra::topping()->get();
     $sugars   = Extra::sugar()->get();
     $ices     = Extra::ice()->get();
@@ -43,6 +47,7 @@ class ProductController extends Controller
     // ➕ CREATE
     public function store(Request $request)
     {
+        // Validate dữ liệu cơ bản và cho phép chọn 1 trong 2 cách ảnh: upload file hoặc nhập URL.
         $request->validate([
             'name' => 'required',
             'price' => 'required|numeric',
@@ -55,6 +60,7 @@ class ProductController extends Controller
 
         // ✅ Ưu tiên upload file
         if ($request->hasFile('image')) {
+            // Ảnh upload local sẽ được lưu vào public/images và chỉ lưu tên file trong database.
             $imageName = time() . '.' . $request->image->extension();
             $request->image->move(public_path('images'), $imageName);
 
@@ -63,9 +69,11 @@ class ProductController extends Controller
 
         // ✅ Nếu nhập URL
         elseif ($request->image_url) {
+            // Nếu dùng URL thì lưu nguyên chuỗi URL để frontend load ảnh từ nguồn ngoài.
             $imagePath = $request->image_url;
         }
 
+        // Tạo sản phẩm mới cho khu vực admin quản lý menu.
         Product::create([
             'name' => $request->name,
             'price' => $request->price,
@@ -82,6 +90,7 @@ class ProductController extends Controller
     // ✏️ UPDATE
     public function update(Request $request, $id)
     {
+        // Tìm sản phẩm cần sửa, nếu không có sẽ trả 404 tự động.
         $product = Product::findOrFail($id);
 
         $request->validate([
@@ -105,6 +114,7 @@ class ProductController extends Controller
                 }
             }
 
+            // Lưu ảnh local mới và thay lại image path cho sản phẩm.
             $imageName = time() . '.' . $request->image->extension();
             $request->image->move(public_path('images'), $imageName);
 
@@ -116,6 +126,7 @@ class ProductController extends Controller
             $imagePath = $request->image_url;
         }
 
+        // Cập nhật thông tin sản phẩm sau khi xử lý ảnh.
         $product->update([
             'name' => $request->name,
             'price' => $request->price,
@@ -132,6 +143,7 @@ class ProductController extends Controller
     // ❌ DELETE
     public function destroy($id)
     {
+        // Xóa sản phẩm theo id trong khu vực admin.
         $product = Product::findOrFail($id);
 
         // Xóa ảnh local
@@ -142,6 +154,7 @@ class ProductController extends Controller
             }
         }
 
+        // Sau cùng xóa record sản phẩm khỏi database.
         $product->delete();
 
         return redirect()->route('admin.products')
