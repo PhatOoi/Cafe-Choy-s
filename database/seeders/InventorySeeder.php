@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class InventorySeeder extends Seeder
 {
+    // Seed tồn kho ban đầu và một số log nhập/xuất mẫu cho chức năng inventory.
     public function run(): void
     {
+        // Danh sách nguyên liệu, vật tư và mức tồn tối thiểu để cảnh báo thiếu hàng.
         DB::table('inventory')->insert([
             ['name' => 'Cà phê hạt Arabica',   'quantity' => 15.5, 'unit' => 'kg',  'min_stock' => 5],
             ['name' => 'Sữa tươi không đường', 'quantity' => 20,   'unit' => 'lít', 'min_stock' => 5],
@@ -22,6 +24,7 @@ class InventorySeeder extends Seeder
             ['name' => 'Ống hút',              'quantity' => 1000, 'unit' => 'cái', 'min_stock' => 200],
         ]);
 
+        // Log mẫu ghi nhận các lần nhập hàng và xuất dùng trong ca.
         DB::table('inventory_logs')->insert([
             ['inventory_id' => 1, 'staff_id' => 2, 'type' => 'import', 'quantity' =>  5,    'note' => 'Nhập hàng tuần',        'created_at' => '2025-07-01 07:30:00'],
             ['inventory_id' => 2, 'staff_id' => 2, 'type' => 'import', 'quantity' =>  20,   'note' => 'Nhập sữa tươi',         'created_at' => '2025-07-01 07:30:00'],

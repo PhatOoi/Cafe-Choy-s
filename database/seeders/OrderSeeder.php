@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class OrderSeeder extends Seeder
 {
+    // Seed các đơn mẫu gồm delivery, tại quán, payment và sử dụng voucher.
     public function run(): void
     {
-        // Orders
+        // Tạo các đơn mẫu với nhiều trạng thái khác nhau để test dashboard và lịch sử đơn.
         DB::table('orders')->insert([
             [
                 'user_id'           => 4,
@@ -69,7 +70,7 @@ class OrderSeeder extends Seeder
             ],
         ]);
 
-        // Order items
+        // Thêm các dòng sản phẩm tương ứng cho từng đơn đã tạo phía trên.
         DB::table('order_items')->insert([
             ['order_id' => 1, 'product_id' => 1,  'quantity' => 2, 'unit_price' => 25000, 'note' => 'Ít đường'],
             ['order_id' => 1, 'product_id' => 11, 'quantity' => 1, 'unit_price' => 35000, 'note' => null],
@@ -82,13 +83,13 @@ class OrderSeeder extends Seeder
             ['order_id' => 4, 'product_id' => 12, 'quantity' => 1, 'unit_price' => 25000, 'note' => null],
         ]);
 
-        // Order item extras (snapshot)
+        // Lưu snapshot topping/extra của từng dòng đơn khi có chọn thêm.
         DB::table('order_item_extras')->insert([
             ['order_item_id' => 1, 'extra_id' => 5, 'extra_name' => 'Ít Đường',      'extra_price' => 0],
             ['order_item_id' => 3, 'extra_id' => 1, 'extra_name' => 'Trân Châu Đen', 'extra_price' => 5000],
         ]);
 
-        // Payments
+        // Gắn dữ liệu thanh toán mẫu để test nhiều phương thức và nhiều trạng thái payment.
         DB::table('payments')->insert([
             ['order_id' => 1, 'method' => 'momo',          'status' => 'paid',    'amount' => 87000,  'paid_at' => '2025-07-01 09:15:00', 'ref_code' => 'MM20250701001'],
             ['order_id' => 2, 'method' => 'bank_transfer', 'status' => 'pending', 'amount' => 110000, 'paid_at' => null,                  'ref_code' => null],
@@ -96,7 +97,7 @@ class OrderSeeder extends Seeder
             ['order_id' => 4, 'method' => 'cash',          'status' => 'paid',    'amount' => 55000,  'paid_at' => '2025-07-01 10:30:00', 'ref_code' => null],
         ]);
 
-        // Cập nhật voucher đã dùng
+        // Đánh dấu các voucher thực sự đã được dùng cho đúng order tương ứng.
         DB::table('user_vouchers')
             ->where('user_id', 4)->where('voucher_id', 1)
             ->update(['used_at' => '2025-07-01 09:10:00', 'order_id' => 1]);

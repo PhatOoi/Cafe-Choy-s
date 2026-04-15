@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    // Tạo bảng sessions để lưu session server-side khi dùng session driver dạng database.
     public function up(): void
     {
         Schema::create('sessions', function (Blueprint $table) {
@@ -21,9 +19,7 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
+    // Xóa bảng sessions khi rollback.
     public function down(): void
     {
         Schema::dropIfExists('sessions');

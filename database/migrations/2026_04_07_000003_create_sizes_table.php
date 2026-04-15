@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Tạo bảng kích cỡ đồ uống và phần phụ thu tương ứng.
     public function up(): void
     {
         Schema::create('sizes', function (Blueprint $table) {
@@ -15,6 +16,7 @@ return new class extends Migration
         });
     }
 
+    // Xóa bảng sizes khi rollback.
     public function down(): void
     {
         Schema::dropIfExists('sizes');

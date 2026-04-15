@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class ShiftSeeder extends Seeder
 {
+    // Seed dữ liệu mẫu ca làm để demo và test chức năng quản lý ca trực.
     public function run(): void
     {
+        // Tạo một vài ca sáng/chiều mẫu cho nhân viên id 2 và 3.
         DB::table('shifts')->insert([
             [
                 'staff_id'   => 2,

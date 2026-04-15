@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
+    // Seed các tài khoản mẫu cho admin, staff và customer để test toàn bộ hệ thống.
     public function run(): void
     {
         DB::table('users')->insert([
@@ -21,7 +22,7 @@ class UserSeeder extends Seeder
                 'is_active'  => true,
                 'created_at' => now(),
             ],
-            // Staff
+            // Staff vận hành nội bộ.
             [
                 'role_id'    => 2,
                 'name'       => 'Nguyễn Văn Nhân',
@@ -40,7 +41,7 @@ class UserSeeder extends Seeder
                 'is_active'  => true,
                 'created_at' => now(),
             ],
-            // Customers
+            // Các tài khoản khách hàng mẫu dùng cho cart, voucher và order history.
             [
                 'role_id'    => 3,
                 'name'       => 'Lê Minh Khách',

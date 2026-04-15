@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    // Đổi tên/mô tả sản phẩm seasonal để khớp với bộ ảnh đang dùng trên giao diện.
     public function up(): void
     {
         $renames = [
@@ -26,6 +27,7 @@ return new class extends Migration
             ],
         ];
 
+        // Cập nhật theo image_url để tránh phụ thuộc vào tên cũ có thể đã bị thay đổi.
         foreach ($renames as $imageUrl => $productData) {
             DB::table('products')
                 ->where('image_url', $imageUrl)
@@ -33,6 +35,7 @@ return new class extends Migration
         }
     }
 
+    // Khôi phục lại tên/mô tả seasonal ban đầu nếu rollback.
     public function down(): void
     {
         $renames = [

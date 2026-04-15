@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Tạo bảng snapshot doanh thu ngày để staff xem báo cáo nhanh mà không phải query lại toàn bộ đơn.
     public function up(): void
     {
         Schema::create('daily_revenues', function (Blueprint $table) {
@@ -21,6 +22,7 @@ return new class extends Migration
         });
     }
 
+    // Xóa bảng daily_revenues khi rollback migration.
     public function down(): void
     {
         Schema::dropIfExists('daily_revenues');

@@ -5,8 +5,10 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    // Tạo category đồ uống theo mùa và thêm các sản phẩm seasonal mặc định.
     public function up(): void
     {
+        // Đảm bảo category seasonal tồn tại, nếu có rồi thì cập nhật lại thông tin.
         DB::table('categories')->updateOrInsert(
             ['slug' => 'tra-va-thuc-uong-theo-mua'],
             [
@@ -16,10 +18,12 @@ return new class extends Migration
             ]
         );
 
+        // Đẩy nhóm bánh/snack xuống sau category seasonal mới.
         DB::table('categories')
             ->where('slug', 'banh-snack')
             ->update(['sort_order' => 6]);
 
+        // Lấy id category vừa tạo để gắn sản phẩm seasonal vào đúng nhóm.
         $categoryId = DB::table('categories')
             ->where('slug', 'tra-va-thuc-uong-theo-mua')
             ->value('id');
@@ -71,6 +75,7 @@ return new class extends Migration
             ],
         ];
 
+        // Chỉ insert sản phẩm seasonal khi chưa tồn tại để migration có thể chạy lặp lại an toàn.
         foreach ($products as $product) {
             $exists = DB::table('products')
                 ->where('category_id', $product['category_id'])
@@ -83,6 +88,7 @@ return new class extends Migration
         }
     }
 
+    // Gỡ các sản phẩm seasonal đã thêm và trả lại sort_order cũ cho nhóm bánh/snack.
     public function down(): void
     {
         $categoryId = DB::table('categories')

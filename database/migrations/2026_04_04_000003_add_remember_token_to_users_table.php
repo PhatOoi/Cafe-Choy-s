@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Bổ sung cột remember_token để hỗ trợ tính năng ghi nhớ đăng nhập.
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
@@ -13,6 +14,7 @@ return new class extends Migration
         });
     }
 
+    // Xóa remember_token nếu rollback migration.
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {

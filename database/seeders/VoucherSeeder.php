@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class VoucherSeeder extends Seeder
 {
+    // Seed các voucher mẫu và gán sẵn một số voucher cho user demo.
     public function run(): void
     {
+        // Tạo các voucher với cả 2 kiểu giảm giá: phần trăm và số tiền cố định.
         DB::table('vouchers')->insert([
             [
                 'code'            => 'WELCOME10',
@@ -45,6 +47,7 @@ class VoucherSeeder extends Seeder
             ],
         ]);
 
+        // Gán voucher cho một vài user mẫu để test luồng nhận và sử dụng voucher.
         DB::table('user_vouchers')->insert([
             ['user_id' => 4, 'voucher_id' => 1, 'used_at' => null, 'order_id' => null],
             ['user_id' => 4, 'voucher_id' => 2, 'used_at' => null, 'order_id' => null],

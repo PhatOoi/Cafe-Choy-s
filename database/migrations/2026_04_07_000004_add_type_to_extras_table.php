@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    // Thêm cột type để phân loại extra thành topping, đường, đá hoặc nhóm khác.
     public function up(): void
     {
         Schema::table('extras', function (Blueprint $table) {
@@ -16,9 +14,7 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
+    // Xóa cột type nếu rollback migration này.
     public function down(): void
     {
         Schema::table('extras', function (Blueprint $table) {

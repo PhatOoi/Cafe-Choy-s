@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class DailyRevenue extends Model
 {
+    // Bảng snapshot doanh thu ngày cho staff report.
     protected $table = 'daily_revenues';
 
+    // Các cột được phép ghi hàng loạt khi service đồng bộ snapshot.
     protected $fillable = [
         'revenue_date',
         'total_orders',
@@ -18,6 +20,7 @@ class DailyRevenue extends Model
         'transfer_revenue',
     ];
 
+    // Cast kiểu dữ liệu để số tiền/ngày tháng được dùng ổn định trong controller và view.
     protected $casts = [
         'revenue_date' => 'date',
         'total_orders' => 'integer',
