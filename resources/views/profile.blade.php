@@ -165,6 +165,21 @@
                 </aside>
 
                 <div class="profile-main-grid">
+                    @if(session('success'))
+                        <div class="profile-alert success-alert">{{ session('success') }}</div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="profile-alert error-alert">
+                            <strong>Không thể cập nhật mật khẩu.</strong>
+                            <ul class="profile-alert-list">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <section class="profile-panel panel-wide">
                         <div class="panel-heading">
                             <span class="panel-kicker">Thông tin chính</span>
@@ -225,6 +240,38 @@
                                 </div>
                             </div>
                         </div>
+                    </section>
+
+                    <section class="profile-panel panel-wide" id="password-panel">
+                        <div class="panel-heading">
+                            <span class="panel-kicker">Bảo mật</span>
+                            <h3>Đổi mật khẩu</h3>
+                        </div>
+                        <form action="{{ route('profile.update') }}" method="POST" class="password-form">
+                            @csrf
+                            @method('PUT')
+
+                            <div class="password-form-grid">
+                                <div class="form-field">
+                                    <label for="current_password">Mật khẩu hiện tại</label>
+                                    <input type="password" id="current_password" name="current_password" placeholder="Nhập mật khẩu hiện tại" required autocomplete="current-password">
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="password">Mật khẩu mới</label>
+                                    <input type="password" id="password" name="password" placeholder="Tạo mật khẩu mới" required autocomplete="new-password">
+                                </div>
+
+                                <div class="form-field form-field-full">
+                                    <label for="password_confirmation">Xác nhận mật khẩu mới</label>
+                                    <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password">
+                                </div>
+                            </div>
+
+                            <div class="password-form-actions">
+                                <button type="submit" class="profile-action-btn primary-btn">Cập nhật mật khẩu</button>
+                            </div>
+                        </form>
                     </section>
                 </div>
             </div>
@@ -481,9 +528,80 @@
             gap: 24px;
         }
 
+        .profile-alert {
+            border-radius: 18px;
+            padding: 16px 18px;
+            border: 1px solid transparent;
+        }
+
+        .success-alert {
+            background: rgba(83, 181, 118, 0.14);
+            border-color: rgba(83, 181, 118, 0.24);
+            color: #d2ffd8;
+        }
+
+        .error-alert {
+            background: rgba(220, 53, 69, 0.14);
+            border-color: rgba(220, 53, 69, 0.24);
+            color: #ffd9dd;
+        }
+
+        .profile-alert-list {
+            margin: 10px 0 0;
+            padding-left: 18px;
+        }
+
         .profile-panel {
             border-radius: 24px;
             padding: 28px;
+        }
+
+        .password-form {
+            display: grid;
+            gap: 18px;
+        }
+
+        .password-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .form-field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .form-field-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-field label {
+            margin: 0;
+            color: #f7efe5;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-field input {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            padding: 14px 16px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-field input:focus {
+            border-color: rgba(196, 155, 99, 0.7);
+            box-shadow: 0 0 0 3px rgba(196, 155, 99, 0.16);
+        }
+
+        .password-form-actions {
+            display: flex;
+            justify-content: flex-end;
         }
 
         .panel-wide {
@@ -842,7 +960,8 @@
             }
 
             .profile-info-grid,
-            .footer-grid {
+            .footer-grid,
+            .password-form-grid {
                 grid-template-columns: 1fr;
             }
 

@@ -27,12 +27,13 @@ class RegisterController extends Controller
                     $fail('Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.');
                 }
             }],
-            'phone' => 'required|numeric|digits_between:8,10',
+            'phone' => 'required|numeric|digits_between:8,10|unique:users,phone',
         ], [
             'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.',
             'password.required' => 'Bạn chưa nhập mật khẩu!',
             'password.confirmed' => 'Xác nhận mật khẩu không khớp!',
-            'email.unique' => 'Gmail đã được sử dụng!'
+            'email.unique' => 'Gmail đã được sử dụng!',
+            'phone.unique' => 'Số điện thoại đã được sử dụng!'
         ]);
 
         try {

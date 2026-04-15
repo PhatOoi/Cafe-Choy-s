@@ -27,6 +27,9 @@ class StaffController extends Controller
     private function getRevenueSnapshotData(): array
     {
         $historyStart = now()->subDays(29)->startOfDay();
+        $isStaffCreatedOrder = fn ($order) => in_array((int) optional($order->user)->role_id, [1, 2], true)
+            && $order->order_type === 'in_store';
+        $isWebAppOrder = fn ($order) => (int) optional($order->user)->role_id === 3;
 
         // Mỗi lần vào trang báo cáo sẽ sync lại snapshot để hạn chế lệch dữ liệu hiển thị.
         $this->syncDailyRevenueSnapshots();
@@ -57,8 +60,8 @@ class StaffController extends Controller
             ->whereHas('payment', fn ($query) => $query->where('status', 'paid'))
             ->where(function ($query) {
                 $query->where(function ($staffQuery) {
-                    $staffQuery->whereNotNull('assigned_staff_id')
-                        ->where('order_type', 'in_store');
+                    $staffQuery->where('order_type', 'in_store')
+                        ->whereHas('user', fn ($userQuery) => $userQuery->whereIn('role_id', [1, 2]));
                 })->orWhereHas('user', fn ($userQuery) => $userQuery->where('role_id', 3));
             })
             ->get();
@@ -67,10 +70,10 @@ class StaffController extends Controller
         $todayOrderBreakdown = [
             'total_orders' => (int) $todayOrders->count(),
             'staff_created_orders' => (int) $todayOrders
-                ->filter(fn ($order) => !is_null($order->assigned_staff_id) && $order->order_type === 'in_store')
+                ->filter($isStaffCreatedOrder)
                 ->count(),
             'web_app_orders' => (int) $todayOrders
-                ->filter(fn ($order) => optional($order->user)->role_id === 3)
+                ->filter($isWebAppOrder)
                 ->count(),
         ];
 

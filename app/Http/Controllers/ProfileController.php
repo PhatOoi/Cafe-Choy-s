@@ -39,4 +39,43 @@ class ProfileController extends Controller
 
         return view('profile', compact('user', 'orders', 'cartCount'));
     }
+
+    // Xử lý đổi mật khẩu cho người dùng ngay trên trang hồ sơ.
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'password' => ['required', 'min:6', 'confirmed', function ($attribute, $value, $fail) {
+                if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/', $value)) {
+                    $fail('Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.');
+                }
+            }],
+        ], [
+            'current_password.required' => 'Bạn chưa nhập mật khẩu hiện tại!',
+            'password.required' => 'Bạn chưa nhập mật khẩu mới!',
+            'password.confirmed' => 'Xác nhận mật khẩu không khớp!',
+            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.',
+        ]);
+
+        // Mật khẩu hiện tại phải đúng thì mới cho phép cập nhật.
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors([
+                'current_password' => 'Mật khẩu hiện tại không đúng.',
+            ]);
+        }
+
+        // Không cho đổi sang đúng mật khẩu đang dùng để tránh cập nhật giả.
+        if (Hash::check($validated['password'], $user->password)) {
+            return back()->withErrors([
+                'password' => 'Mật khẩu mới phải khác mật khẩu hiện tại.',
+            ]);
+        }
+
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+
+        return redirect()->route('profile.index')->with('success', 'Đổi mật khẩu thành công!');
+    }
 }
