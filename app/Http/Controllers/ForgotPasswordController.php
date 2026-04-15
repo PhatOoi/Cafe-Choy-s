@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use App\Models\User;
 
 class ForgotPasswordController extends Controller
@@ -66,5 +65,51 @@ class ForgotPasswordController extends Controller
 
     public function showResetForm(Request $request)
     {
+        $email = session('reset_email');
+
+        if (!$email) {
+            return redirect()->route('forgot-password.email-form')
+                ->withErrors(['email' => 'Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại.']);
+        }
+
+        return view('auth.forgot-password-reset', compact('email'));
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'password' => ['required', 'min:6', 'confirmed', function ($attribute, $value, $fail) {
+                if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/', $value)) {
+                    $fail('Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.');
+                }
+            }],
+        ], [
+            'password.required' => 'Bạn chưa nhập mật khẩu mới!',
+            'password.confirmed' => 'Xác nhận mật khẩu không khớp!',
+            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.',
+            'email.exists' => 'Email không tồn tại trong hệ thống!',
+        ]);
+
+        $sessionEmail = session('reset_email');
+
+        if (!$sessionEmail || $sessionEmail !== $request->email) {
+            return redirect()->route('forgot-password.email-form')
+                ->withErrors(['email' => 'Phiên đặt lại mật khẩu không hợp lệ. Vui lòng thực hiện lại.']);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'Không tìm thấy tài khoản để đặt lại mật khẩu.']);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        DB::table('password_resets')->where('email', $request->email)->delete();
+        session()->forget('reset_email');
+
+        return redirect('/login')->with('register_success', 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập.');
     }
 }
