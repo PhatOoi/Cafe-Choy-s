@@ -13,6 +13,10 @@ class Order extends Model
         'order_type', 'status', 'total_price', 'discount_amount',
         'shipping_fee', 'final_price', 'note',
     ];
+    protected $casts = [
+    'created_at' => 'datetime',
+    'updated_at' => 'datetime',
+    ];
 
     protected $dates = ['created_at'];
 

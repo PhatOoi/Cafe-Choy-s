@@ -27,4 +27,5 @@ class Product extends Model
             'extra_id'
         );
     }
+           
 }

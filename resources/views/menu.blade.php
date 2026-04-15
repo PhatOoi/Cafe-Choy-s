@@ -81,7 +81,7 @@
                                                 @if(Auth::user()->avatar)
                                                     <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
                                                 @else
-                                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}"
+                                                    <img img src="{{ asset('images/user.jpg') }}" 
                                                         class="user-avatar">
                                                 @endif
                                             </button>
@@ -89,13 +89,14 @@
                                             <div class="user-dropdown-menu" id="userDropdownMenu">
                                                 <div class="dropdown-header-info">
                                                     <img src="{{ Auth::user()->avatar
-                        ? asset('storage/' . Auth::user()->avatar)
-                        : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) }}" class="dropdown-avatar">
+                                                        ? asset('storage/' . Auth::user()->avatar)
+                                                        : asset('images/user.jpg') }}"
+                                                        class="dropdown-avatar">
 
                                                     <div class="user-details">
                                                         <p class="user-name">{{ Auth::user()->name }}</p>
                                                         <p class="user-role">
-                                                            @if(Auth::user()->role === 'admin')
+                                                            @if(Auth::user()->role_id === 1)
                                                                 <span class="badge-admin">Admin</span>
                                                             @else
                                                                 <span class="badge-customer">Khách hàng</span>
@@ -108,7 +109,7 @@
 
                                                 <a href="/profile" class="dropdown-link">Hồ sơ</a>
 
-                                                @if(Auth::user()->role === 'admin')
+                                                @if(Auth::user()->role_id === 1)
                                                     <a href="/admin" class="dropdown-link">Quản trị</a>
                                                 @endif
 

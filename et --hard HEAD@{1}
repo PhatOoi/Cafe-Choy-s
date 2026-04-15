@@ -1,0 +1,80 @@
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{0}: checkout: moving from main to main
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{1}: checkout: moving from phatstaff to main
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{2}: checkout: moving from main to phatstaff
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{3}: checkout: moving from phatstaff to main
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{4}: checkout: moving from main to phatstaff
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{5}: checkout: moving from phatstaff to main
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{6}: checkout: moving from Phat to phatstaff
+[33m3c7cecf[m[33m ([m[1;31morigin/Phat[m[33m, [m[1;32mPhat[m[33m)[m HEAD@{7}: checkout: moving from phatstaff to Phat
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{8}: checkout: moving from main to phatstaff
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{9}: checkout: moving from Phat to main
+[33m3c7cecf[m[33m ([m[1;31morigin/Phat[m[33m, [m[1;32mPhat[m[33m)[m HEAD@{10}: checkout: moving from main to Phat
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{11}: reset: moving to origin/main
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{12}: checkout: moving from main to main
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{13}: reset: moving to origin/main
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{14}: checkout: moving from Phat to main
+[33m3c7cecf[m[33m ([m[1;31morigin/Phat[m[33m, [m[1;32mPhat[m[33m)[m HEAD@{15}: pull origin Phat --rebase: Fast-forward
+[33m2ec6b6e[m[33m ([m[1;31morigin/chianhanh[m[33m, [m[1;32mchianhanh[m[33m)[m HEAD@{16}: checkout: moving from Phat to Phat
+[33m2ec6b6e[m[33m ([m[1;31morigin/chianhanh[m[33m, [m[1;32mchianhanh[m[33m)[m HEAD@{17}: checkout: moving from chianhanh to Phat
+[33m2ec6b6e[m[33m ([m[1;31morigin/chianhanh[m[33m, [m[1;32mchianhanh[m[33m)[m HEAD@{18}: checkout: moving from main to chianhanh
+[33mf836a62[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/phatstaff[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mphatstaff[m[33m)[m HEAD@{19}: commit (merge): wip: staff feature
+[33m0d2472d[m HEAD@{20}: commit: update local changes
+[33m1f2cd3e[m HEAD@{21}: commit: oki
+[33m30d225e[m HEAD@{22}: commit: đã làm lại
+[33m0d40ad5[m HEAD@{23}: commit: da cap nhat lai
+[33md660f4b[m HEAD@{24}: commit: da cap nhat
+[33mcd8ea3d[m HEAD@{25}: commit: cập nhật lại
+[33m310a8d9[m HEAD@{26}: commit (merge): update proflie user
+[33mcd2b881[m HEAD@{27}: checkout: moving from chianhanh to main
+[33m2ec6b6e[m[33m ([m[1;31morigin/chianhanh[m[33m, [m[1;32mchianhanh[m[33m)[m HEAD@{28}: checkout: moving from main to chianhanh
+[33mcd2b881[m HEAD@{29}: commit: save before switch branch
+[33me9e989a[m HEAD@{30}: pull origin chianhanh: updating HEAD
+[33me9e989a[m HEAD@{31}: pull origin chianhanh: updating HEAD
+[33me9e989a[m HEAD@{32}: pull origin chianhanh: updating HEAD
+[33me9e989a[m HEAD@{33}: checkout: moving from chianhanh to main
+[33m2ec6b6e[m[33m ([m[1;31morigin/chianhanh[m[33m, [m[1;32mchianhanh[m[33m)[m HEAD@{34}: commit: user update
+[33m22363fd[m HEAD@{35}: commit: cap nhat user
+[33m8dbfee3[m HEAD@{36}: reset: moving to origin/main
+[33maebfa0b[m HEAD@{37}: checkout: moving from main to chianhanh
+[33me9e989a[m HEAD@{38}: commit: save current work
+[33m5d64413[m HEAD@{39}: commit (merge): resolve merge
+[33m687e363[m HEAD@{40}: commit (merge): resolve merge conflict
+[33md09f4f8[m HEAD@{41}: reset: moving to HEAD
+[33md09f4f8[m HEAD@{42}: reset: moving to HEAD
+[33md09f4f8[m HEAD@{43}: reset: moving to HEAD
+[33md09f4f8[m HEAD@{44}: reset: moving to HEAD
+[33md09f4f8[m HEAD@{45}: reset: moving to HEAD
+[33md09f4f8[m HEAD@{46}: reset: moving to HEAD
+[33md09f4f8[m HEAD@{47}: commit: đã cập nhật user
+[33m2e4ac7e[m HEAD@{48}: commit (merge): Commit local changes before pull
+[33ma6b93ee[m HEAD@{49}: pull origin main: Merge made by the 'ort' strategy.
+[33mb770ff5[m HEAD@{50}: commit: Commit local changes before pull
+[33mfcadc3b[m HEAD@{51}: checkout: moving from main to main
+[33mfcadc3b[m HEAD@{52}: commit (merge): Merge from origin/main - using remote version
+[33mb1b64d8[m HEAD@{53}: checkout: moving from chianhanh to main
+[33maebfa0b[m HEAD@{54}: reset: moving to HEAD
+[33maebfa0b[m HEAD@{55}: reset: moving to origin/main
+[33mc51f73c[m HEAD@{56}: checkout: moving from main to chianhanh
+[33mb1b64d8[m HEAD@{57}: reset: moving to HEAD
+[33mb1b64d8[m HEAD@{58}: checkout: moving from chianhanh to main
+[33mc51f73c[m HEAD@{59}: commit (merge): Merge branch 'main' of https://github.com/PhatOoi/Cafe-Choy-s into chianhanh
+[33me7effbc[m HEAD@{60}: commit (merge): Merge branch 'main' of https://github.com/PhatOoi/Cafe-Choy-s into chianhanh
+[33mb1b64d8[m HEAD@{61}: merge main: Fast-forward
+[33me6e8390[m HEAD@{62}: checkout: moving from main to chianhanh
+[33mb1b64d8[m HEAD@{63}: commit: đã cập nhật
+[33m2f4428a[m HEAD@{64}: commit: bánh và snack đã oki
+[33m250f460[m HEAD@{65}: commit: đã cập nhật sản phẩm
+[33mb475379[m HEAD@{66}: pull origin main: Fast-forward
+[33m01a4c42[m HEAD@{67}: reset: moving to HEAD
+[33m01a4c42[m HEAD@{68}: commit: cập nhật database trước khi chạy
+[33m9509ae6[m HEAD@{69}: pull: Fast-forward
+[33m0543e26[m HEAD@{70}: commit: cập nhật database trước khi chạy
+[33me6e8390[m HEAD@{71}: commit: cập nhật database trước khi chạy
+[33m59b52b6[m HEAD@{72}: commit: update
+[33m68b5a1f[m HEAD@{73}: checkout: moving from main to main
+[33m68b5a1f[m HEAD@{74}: rebase (finish): returning to refs/heads/main
+[33m68b5a1f[m HEAD@{75}: commit: Lưu thay đổi trước khi pull
+[33m99e87e5[m HEAD@{76}: pull origin main --rebase (start): checkout 99e87e5b0c143b26884b21bed1c267b4dd8787aa
+[33m0dc9758[m HEAD@{77}: rebase (finish): returning to refs/heads/main
+[33m0dc9758[m HEAD@{78}: rebase (finish): refs/heads/main onto 99e87e5b0c143b26884b21bed1c267b4dd8787aa
+[
