@@ -136,6 +136,27 @@
         .topbar-title { font-size: 18px; font-weight: 600; color: #1a1a2e; margin: 0; }
         .topbar-right { display: flex; align-items: center; gap: 14px; }
 
+        .btn-audio-reminder {
+            border: 1px solid #e7c79a;
+            background: #fff8ef;
+            color: #9a5d1a;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .18s;
+        }
+        .btn-audio-reminder:hover {
+            background: #ffe9cd;
+            border-color: #d9a86a;
+        }
+        .btn-audio-reminder.active {
+            background: #edfbf3;
+            border-color: #9dd3ae;
+            color: #1c7c45;
+        }
+
         .btn-logout {
             background: transparent;
             border: 1px solid #e0e0e0;
@@ -327,6 +348,18 @@
            class="sidebar-link {{ request()->routeIs('staff.create-order') ? 'active' : '' }}">
             <i class="fas fa-plus-circle"></i> Tạo đơn tại quán
         </a>
+        <a href="{{ route('staff.orders.created-history') }}"
+           class="sidebar-link {{ request()->routeIs('staff.orders.created-history') ? 'active' : '' }}">
+            <i class="fas fa-receipt"></i> Lịch sử tạo đơn
+        </a>
+        <a href="{{ route('staff.revenue.daily') }}"
+           class="sidebar-link {{ request()->routeIs('staff.revenue.daily') ? 'active' : '' }}">
+                <i class="fas fa-calendar-day"></i> Doanh thu ngày
+          </a>
+          <a href="{{ route('staff.revenue.monthly') }}"
+              class="sidebar-link {{ request()->routeIs('staff.revenue.monthly') ? 'active' : '' }}">
+            <i class="fas fa-chart-line"></i> Doanh thu tháng
+        </a>
 
     </nav>
 
@@ -354,6 +387,9 @@
             <h1 class="topbar-title">@yield('page-title', 'Dashboard')</h1>
         </div>
         <div class="topbar-right">
+            <button type="button" class="btn-audio-reminder" id="enableReminderAudioButton">
+                <i class="fas fa-volume-up"></i> Bật âm thanh nhắc
+            </button>
             <span style="font-size:13px;color:#8a8fa8;">
                 {{ now()->format('d/m/Y H:i') }}
             </span>
@@ -384,7 +420,557 @@
 </div>
 
 <script src="{{ asset('js/jquery.min.js') }}"></script>
-<script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('js/popper.min.js') }}"></script>
+<script src="{{ asset('js/bootstrap.min.js') }}"></script>
+<script>
+(() => {
+    const storageKey = 'staffOrderStatusReminders';
+    const reminderDelay = 3000;
+    const confirmedIdsUrl = @json(route('staff.orders.confirmed-reminder-ids'));
+    const fetchUrl = @json(route('staff.orders.reminder-statuses'));
+    const soundUrl = @json(asset('audio/order-reminder.wav'));
+    const flashedStartReminderId = @json(session('start_order_reminder_id'));
+    const flashedClearReminderId = @json(session('clear_order_reminder_id'));
+    let audioContext = null;
+    let htmlAudio = null;
+    let pollInFlight = false;
+    let fallbackLoopTimer = null;
+    let audioUnlocked = sessionStorage.getItem('staffReminderAudioUnlocked') === '1';
+
+    function readReminders() {
+        try {
+            const raw = localStorage.getItem(storageKey);
+            if (!raw) {
+                return {};
+            }
+
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function writeReminders(reminders) {
+        localStorage.setItem(storageKey, JSON.stringify(reminders));
+    }
+
+    function markAudioUnlocked() {
+        audioUnlocked = true;
+        sessionStorage.setItem('staffReminderAudioUnlocked', '1');
+        updateReminderAudioButton();
+    }
+
+    function updateReminderAudioButton() {
+        const button = document.getElementById('enableReminderAudioButton');
+        if (!button) {
+            return;
+        }
+
+        if (audioUnlocked) {
+            button.classList.add('active');
+            button.innerHTML = '<i class="fas fa-check-circle"></i> Âm thanh đã bật';
+            return;
+        }
+
+        button.classList.remove('active');
+        button.innerHTML = '<i class="fas fa-volume-up"></i> Bật âm thanh nhắc';
+    }
+
+    function clearReminder(orderId) {
+        const reminders = readReminders();
+        delete reminders[String(orderId)];
+        writeReminders(reminders);
+    }
+
+    function setReminder(orderId) {
+        const reminders = readReminders();
+        reminders[String(orderId)] = {
+            dueAt: Date.now() + reminderDelay,
+            lastNotifiedAt: 0,
+        };
+        writeReminders(reminders);
+    }
+
+    function registerVisibleConfirmedOrders() {
+        const reminders = readReminders();
+        const forms = document.querySelectorAll('[data-status-reminder-form="true"][data-next-status="processing"]');
+
+        forms.forEach((form) => {
+            const orderId = form.dataset.orderId;
+            if (!orderId || reminders[String(orderId)]) {
+                return;
+            }
+
+            reminders[String(orderId)] = {
+                dueAt: Date.now() + reminderDelay,
+                lastNotifiedAt: 0,
+            };
+        });
+
+        writeReminders(reminders);
+    }
+
+    async function syncConfirmedOrdersFromServer() {
+        const response = await fetch(confirmedIdsUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            return readReminders();
+        }
+
+        const data = await response.json();
+        const confirmedIds = Array.isArray(data.ids) ? data.ids.map((id) => String(id)) : [];
+        const confirmedIdSet = new Set(confirmedIds);
+        const reminders = readReminders();
+
+        confirmedIds.forEach((id) => {
+            if (!reminders[id]) {
+                reminders[id] = {
+                    dueAt: Date.now() + reminderDelay,
+                    lastNotifiedAt: 0,
+                };
+            }
+        });
+
+        Object.keys(reminders).forEach((id) => {
+            if (!confirmedIdSet.has(id)) {
+                delete reminders[id];
+            }
+        });
+
+        writeReminders(reminders);
+        return reminders;
+    }
+
+    function acknowledgeReminders(orderIds) {
+        const reminders = readReminders();
+        orderIds.forEach((orderId) => {
+            if (reminders[String(orderId)]) {
+                reminders[String(orderId)].dueAt = Date.now() + reminderDelay;
+                reminders[String(orderId)].lastNotifiedAt = 0;
+            }
+        });
+        writeReminders(reminders);
+        stopReminderSound();
+        hideReminderBanner();
+    }
+
+    function getDueReminderOrderIds() {
+        const reminders = readReminders();
+        const nowAt = Date.now();
+
+        return Object.keys(reminders).filter((id) => {
+            const reminder = reminders[id];
+            return reminder && nowAt >= reminder.dueAt;
+        });
+    }
+
+    function getAudioContext() {
+        const AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtor) {
+            return null;
+        }
+
+        if (!audioContext) {
+            audioContext = new AudioCtor();
+        }
+
+        return audioContext;
+    }
+
+    function getHtmlAudio() {
+        if (!htmlAudio) {
+            htmlAudio = new Audio(soundUrl);
+            htmlAudio.preload = 'auto';
+        }
+
+        return htmlAudio;
+    }
+
+    async function primeAudio() {
+        const audio = getHtmlAudio();
+        try {
+            audio.muted = true;
+            audio.currentTime = 0;
+            await audio.play();
+            audio.pause();
+            audio.currentTime = 0;
+            audio.muted = false;
+            markAudioUnlocked();
+        } catch (error) {
+            audio.muted = false;
+        }
+
+        const context = getAudioContext();
+        if (!context) {
+            return;
+        }
+
+        try {
+            if (context.state === 'suspended') {
+                await context.resume();
+            }
+            markAudioUnlocked();
+        } catch (error) {
+            return;
+        }
+    }
+
+    async function playReminderSound() {
+        const audio = getHtmlAudio();
+        try {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.loop = false;
+            await audio.play();
+            return;
+        } catch (error) {
+            // Fall back to generated beep if file playback is blocked.
+        }
+
+        const context = getAudioContext();
+        if (!context) {
+            return;
+        }
+
+        try {
+            if (context.state === 'suspended') {
+                await context.resume();
+            }
+        } catch (error) {
+            return;
+        }
+
+        const startAt = context.currentTime;
+        [0, 0.32].forEach((offset) => {
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, startAt + offset);
+
+            gain.gain.setValueAtTime(0.0001, startAt + offset);
+            gain.gain.exponentialRampToValueAtTime(0.18, startAt + offset + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + 0.22);
+
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start(startAt + offset);
+            oscillator.stop(startAt + offset + 0.24);
+        });
+    }
+
+    async function startReminderSoundLoop() {
+        const audio = getHtmlAudio();
+        try {
+            audio.loop = true;
+            if (audio.paused) {
+                audio.currentTime = 0;
+                await audio.play();
+            }
+            markAudioUnlocked();
+            stopFallbackLoop();
+            return;
+        } catch (error) {
+            startFallbackLoop();
+        }
+    }
+
+    function stopReminderSound() {
+        const audio = getHtmlAudio();
+        audio.pause();
+        audio.currentTime = 0;
+        audio.loop = false;
+        stopFallbackLoop();
+    }
+
+    function startFallbackLoop() {
+        if (fallbackLoopTimer) {
+            return;
+        }
+
+        playReminderSound();
+        fallbackLoopTimer = window.setInterval(() => {
+            playReminderSound();
+        }, 1800);
+    }
+
+    function stopFallbackLoop() {
+        if (!fallbackLoopTimer) {
+            return;
+        }
+
+        window.clearInterval(fallbackLoopTimer);
+        fallbackLoopTimer = null;
+    }
+
+    function showBrowserNotification(orderIds) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') {
+            return;
+        }
+
+        const message = orderIds.length === 1
+            ? 'Đơn #' + orderIds[0] + ' vẫn chưa được chuyển sang chuẩn bị.'
+            : 'Các đơn #' + orderIds.join(', #') + ' vẫn chưa được chuyển sang chuẩn bị.';
+
+        const notification = new Notification('Nhắc chuẩn bị đơn', {
+            body: message,
+            tag: 'staff-order-reminder',
+            renotify: true,
+            requireInteraction: true,
+        });
+
+        notification.onclick = () => {
+            window.focus();
+            notification.close();
+        };
+    }
+
+    function showReminderBanner(orderIds) {
+        let banner = document.getElementById('staffReminderBanner');
+
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'staffReminderBanner';
+            banner.style.position = 'fixed';
+            banner.style.right = '24px';
+            banner.style.bottom = '24px';
+            banner.style.zIndex = '9999';
+            banner.style.width = 'min(360px, calc(100vw - 32px))';
+            banner.style.background = 'linear-gradient(135deg, #fff2d9, #ffffff)';
+            banner.style.color = '#6d4b00';
+            banner.style.border = '1px solid #efc87a';
+            banner.style.borderRadius = '16px';
+            banner.style.padding = '16px 18px';
+            banner.style.boxShadow = '0 14px 36px rgba(0,0,0,.16)';
+            banner.style.fontSize = '13px';
+            banner.style.fontWeight = '600';
+            banner.style.display = 'flex';
+            banner.style.gap = '12px';
+            banner.style.alignItems = 'flex-start';
+            banner.style.animation = 'staffReminderPulse 1s ease-in-out infinite alternate';
+            document.body.appendChild(banner);
+
+            if (!document.getElementById('staffReminderStyles')) {
+                const style = document.createElement('style');
+                style.id = 'staffReminderStyles';
+                style.textContent = '@keyframes staffReminderPulse { from { transform: translateY(0); box-shadow: 0 14px 36px rgba(0,0,0,.16); } to { transform: translateY(-3px); box-shadow: 0 18px 42px rgba(212,129,58,.28); } }';
+                document.head.appendChild(style);
+            }
+        }
+
+        banner.innerHTML = '';
+
+        const icon = document.createElement('div');
+        icon.textContent = '🔔';
+        icon.style.fontSize = '24px';
+        icon.style.lineHeight = '1';
+        icon.style.marginTop = '2px';
+
+        const content = document.createElement('div');
+        content.style.flex = '1';
+
+        const title = document.createElement('div');
+        title.textContent = 'Nhắc chuẩn bị đơn';
+        title.style.fontSize = '15px';
+        title.style.fontWeight = '700';
+        title.style.marginBottom = '4px';
+
+        const body = document.createElement('div');
+        body.textContent = 'Đơn #' + orderIds.join(', #') + ' vẫn chưa được chuyển sang mục Đang chuẩn bị.';
+        body.style.lineHeight = '1.45';
+
+        const note = document.createElement('div');
+        note.textContent = 'Hãy cập nhật trạng thái nếu bạn đã bắt đầu làm đơn.';
+        note.style.marginTop = '8px';
+        note.style.fontSize = '12px';
+        note.style.color = '#9b6d00';
+
+        const actions = document.createElement('div');
+        actions.style.marginTop = '12px';
+        actions.style.display = 'flex';
+        actions.style.justifyContent = 'flex-end';
+        actions.style.gap = '8px';
+
+        if (!audioUnlocked) {
+            const enableAudioButton = document.createElement('button');
+            enableAudioButton.type = 'button';
+            enableAudioButton.textContent = 'Bật âm thanh nhắc';
+            enableAudioButton.style.border = '1px solid #d9b067';
+            enableAudioButton.style.borderRadius = '10px';
+            enableAudioButton.style.padding = '8px 14px';
+            enableAudioButton.style.background = '#fff';
+            enableAudioButton.style.color = '#8a5a00';
+            enableAudioButton.style.fontWeight = '700';
+            enableAudioButton.style.cursor = 'pointer';
+            enableAudioButton.addEventListener('click', async () => {
+                await primeAudio();
+                await startReminderSoundLoop();
+                showReminderBanner(orderIds);
+            });
+            actions.appendChild(enableAudioButton);
+        }
+
+        const acknowledgeButton = document.createElement('button');
+        acknowledgeButton.type = 'button';
+        acknowledgeButton.textContent = 'Đã biết';
+        acknowledgeButton.style.border = 'none';
+        acknowledgeButton.style.borderRadius = '10px';
+        acknowledgeButton.style.padding = '8px 14px';
+        acknowledgeButton.style.background = '#d4813a';
+        acknowledgeButton.style.color = '#fff';
+        acknowledgeButton.style.fontWeight = '700';
+        acknowledgeButton.style.cursor = 'pointer';
+        acknowledgeButton.addEventListener('click', () => acknowledgeReminders(orderIds));
+
+        actions.appendChild(acknowledgeButton);
+
+        content.appendChild(title);
+        content.appendChild(body);
+        content.appendChild(note);
+        content.appendChild(actions);
+        banner.appendChild(icon);
+        banner.appendChild(content);
+    }
+
+    function hideReminderBanner() {
+        const banner = document.getElementById('staffReminderBanner');
+        if (banner) {
+            banner.remove();
+        }
+    }
+
+    async function checkReminders() {
+        if (pollInFlight) {
+            return;
+        }
+
+        pollInFlight = true;
+
+        try {
+            const reminders = await syncConfirmedOrdersFromServer();
+            const ids = Object.keys(reminders);
+
+            if (!ids.length) {
+                hideReminderBanner();
+                stopReminderSound();
+                return;
+            }
+
+            const params = new URLSearchParams();
+            ids.forEach((id) => params.append('ids[]', id));
+
+            const response = await fetch(fetchUrl + '?' + params.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const statuses = data.orders || {};
+            const updatedReminders = readReminders();
+            const dueOrderIds = [];
+            const nowAt = Date.now();
+            let shouldNotify = false;
+
+            Object.keys(updatedReminders).forEach((id) => {
+                const status = statuses[id];
+                if (status !== 'confirmed') {
+                    delete updatedReminders[id];
+                    return;
+                }
+
+                const reminder = updatedReminders[id];
+                if (nowAt >= reminder.dueAt) {
+                    dueOrderIds.push(id);
+                    if (!reminder.lastNotifiedAt) {
+                        reminder.lastNotifiedAt = nowAt;
+                        shouldNotify = true;
+                    }
+                }
+            });
+
+            writeReminders(updatedReminders);
+
+            if (dueOrderIds.length) {
+                showReminderBanner(dueOrderIds);
+                startReminderSoundLoop();
+                if (shouldNotify) {
+                    showBrowserNotification(dueOrderIds);
+                }
+            } else {
+                hideReminderBanner();
+                stopReminderSound();
+            }
+        } catch (error) {
+            // Keep silent on polling errors to avoid interrupting staff workflow.
+        } finally {
+            pollInFlight = false;
+        }
+    }
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target.closest('[data-status-reminder-form="true"]');
+        if (!form) {
+            return;
+        }
+
+        const orderId = form.dataset.orderId;
+        const nextStatus = form.dataset.nextStatus;
+
+        if (!orderId || !nextStatus) {
+            return;
+        }
+
+        if (nextStatus === 'confirmed') {
+            setReminder(orderId);
+            return;
+        }
+
+        if (['processing', 'ready', 'delivered', 'cancelled', 'failed'].includes(nextStatus)) {
+            clearReminder(orderId);
+        }
+    });
+
+    const enableReminderAudioButton = document.getElementById('enableReminderAudioButton');
+    if (enableReminderAudioButton) {
+        enableReminderAudioButton.addEventListener('click', async () => {
+            await primeAudio();
+            updateReminderAudioButton();
+        });
+    }
+
+    document.addEventListener('pointerdown', primeAudio, { passive: true });
+    document.addEventListener('keydown', primeAudio);
+
+    if ('Notification' in window && Notification.permission === 'default') {
+        document.addEventListener('pointerdown', () => Notification.requestPermission(), { once: true, passive: true });
+    }
+
+    if (flashedClearReminderId) {
+        clearReminder(flashedClearReminderId);
+    }
+
+    if (flashedStartReminderId) {
+        setReminder(flashedStartReminderId);
+    }
+
+    registerVisibleConfirmedOrders();
+    updateReminderAudioButton();
+    checkReminders();
+    window.setInterval(checkReminders, 1000);
+})();
+</script>
 @yield('scripts')
 </body>
 </html>

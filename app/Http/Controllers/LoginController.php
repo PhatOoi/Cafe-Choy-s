@@ -11,6 +11,7 @@ class LoginController extends Controller
     // Hiển thị trang đăng nhập
     public function index()
     {
+        // Nếu đã đăng nhập thì không cho quay lại form login, chuyển thẳng theo vai trò.
         if (Auth::check()) {
             return $this->redirectByRole(Auth::user()->role_id);
         }
@@ -30,10 +31,12 @@ class LoginController extends Controller
         // Kiểm tra người dùng có chọn "Nhớ đăng nhập" không
         $remember = $request->has('remember');
 
-        // Thử đăng nhập với thông tin đã nhập
+        // Thử xác thực user bằng email/password và tùy chọn remember me.
         if (Auth::attempt($credentials, $remember)) {
             // Đăng nhập thành công, tạo lại session
             $request->session()->regenerate();
+
+            // Điều hướng theo role để admin/staff/customer vào đúng khu vực của họ.
             return $this->redirectByRole(Auth::user()->role_id);
         }
 
@@ -44,12 +47,13 @@ class LoginController extends Controller
     // Xử lý đăng xuất
     public function logout(Request $request)
     {
-        Auth::logout(); // Đăng xuất tài khoản
-        $request->session()->invalidate(); // Hủy session hiện tại
-        $request->session()->regenerateToken(); // Tạo lại CSRF token
-        return redirect('/'); // Chuyển về trang chủ
+        Auth::logout(); // Gỡ trạng thái đăng nhập hiện tại
+        $request->session()->invalidate(); // Hủy session cũ để tránh dùng lại dữ liệu cũ
+        $request->session()->regenerateToken(); // Tạo CSRF token mới sau logout
+        return redirect('/'); // Chuyển về trang chủ của khách
     }
 
+    // Gom logic redirect theo role vào một hàm riêng để tái sử dụng ở login/index.
     private function redirectByRole(int $roleId)
     {
         return match ($roleId) {

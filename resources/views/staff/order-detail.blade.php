@@ -134,6 +134,11 @@
         transition: color .15s;
     }
     .back-link:hover { color: var(--primary); text-decoration: none; }
+    .cancel-reason-help {
+        font-size: 12px;
+        color: #8a8fa8;
+        margin-top: 8px;
+    }
 </style>
 @endsection
 
@@ -174,9 +179,13 @@
                 @foreach($order->items as $item)
                 <div class="item-row">
                     <div style="position:relative;">
-                        <img src="{{ $item->product->image_url ? asset('images/products/' . $item->product->image_url) : 'https://via.placeholder.com/52x52/f4f6fb/d4813a?text=☕' }}"
+                        <img src="{{ $item->product && $item->product->image_url ? (
+                            \Illuminate\Support\Str::startsWith($item->product->image_url, ['http://', 'https://'])
+                                ? $item->product->image_url
+                                : asset('images/' . $item->product->image_url)
+                            ) : asset('images/logo.png') }}"
                              class="item-img"
-                             onerror="this.src='https://via.placeholder.com/52x52/f4f6fb/d4813a?text=☕'">
+                             onerror="this.onerror=null;this.src='{{ asset('images/logo.png') }}';">
                         <span style="position:absolute;top:-6px;right:-6px;background:var(--primary);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">{{ $item->quantity }}</span>
                     </div>
                     <div style="flex:1;">
@@ -225,8 +234,12 @@
 
         {{-- Customer info --}}
         <div class="card">
-            <div class="card-header"><i class="fas fa-user" style="color:var(--primary);margin-right:8px;"></i>Thông tin khách hàng</div>
+            <div class="card-header">
+                <i class="fas fa-user" style="color:var(--primary);margin-right:8px;"></i>
+                {{ $order->order_type === 'delivery' ? 'Thông tin khách hàng' : 'Thông tin đơn tại quán' }}
+            </div>
             <div class="card-body">
+                @if($order->order_type === 'delivery')
                 <div class="info-row">
                     <span class="info-label">Họ tên</span>
                     <span class="info-value">{{ $order->user->name ?? '—' }}</span>
@@ -239,13 +252,23 @@
                     <span class="info-label">Điện thoại</span>
                     <span class="info-value">{{ $order->user->phone ?? '—' }}</span>
                 </div>
-                @if($order->order_type === 'delivery' && $order->address)
+                @if($order->address)
                 <div class="info-row" style="flex-direction:column;gap:6px;">
                     <span class="info-label">Địa chỉ giao hàng</span>
                     <div class="address-box">
                         <i class="fas fa-map-marker-alt"></i>
                         {{ $order->address->full_address }}
                     </div>
+                </div>
+                @endif
+                @else
+                <div class="info-row">
+                    <span class="info-label">Số thứ tự đơn</span>
+                    <span class="info-value">#{{ $order->id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Hình thức</span>
+                    <span class="info-value">Tại quán</span>
                 </div>
                 @endif
                 @if($order->note)
@@ -381,8 +404,10 @@
                 <div class="status-actions">
                     @foreach($order->next_statuses as $nextStatus)
                       @continue($nextStatus === 'confirmed' && $order->payment && $order->payment->method === 'bank_transfer' && $order->payment->status !== 'paid')
-                    <form action="{{ route('staff.order.status', $order->id) }}" method="POST"
-                          @if($nextStatus === 'cancelled') onsubmit="return confirm('Xác nhận hủy đơn này?')" @endif>
+                      <form action="{{ route('staff.order.status', $order->id) }}" method="POST"
+                          data-status-reminder-form="true"
+                          data-order-id="{{ $order->id }}"
+                          data-next-status="{{ $nextStatus }}">
                         @csrf
                         <input type="hidden" name="status" value="{{ $nextStatus }}">
                         @php
@@ -395,9 +420,17 @@
                                 default      => ['btn-action-confirm',  'arrow-right',    ucfirst($nextStatus)],
                             };
                         @endphp
+                        @if($nextStatus === 'cancelled')
+                        <button type="button" class="btn-action-lg {{ $cfg[0] }}" style="width:100%;"
+                                data-cancel-order-trigger="true"
+                                data-order-action="{{ route('staff.order.status', $order->id) }}">
+                            <i class="fas fa-{{ $cfg[1] }}"></i> {{ $cfg[2] }}
+                        </button>
+                        @else
                         <button type="submit" class="btn-action-lg {{ $cfg[0] }}" style="width:100%;">
                             <i class="fas fa-{{ $cfg[1] }}"></i> {{ $cfg[2] }}
                         </button>
+                        @endif
                     </form>
                     @endforeach
                 </div>
@@ -432,4 +465,79 @@
 
     </div>
 </div>
+
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;">
+            <div class="modal-header" style="border-bottom:1px solid #f0f2f5;">
+                <h5 class="modal-title" style="font-weight:700;">Chọn lý do hủy đơn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cancelOrderModalForm" method="POST">
+                @csrf
+                <input type="hidden" name="status" value="cancelled">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cancelReasonSelect" class="form-label" style="font-weight:600;">Lý do hủy</label>
+                        <select class="form-select" id="cancelReasonSelect" name="cancel_reason" required>
+                            <option value="">Chọn lý do</option>
+                            <option value="change_option">Thay đổi topping/kích cỡ</option>
+                            <option value="no_longer_needed">Không còn nhu cầu mua</option>
+                            <option value="other">Lý do khác</option>
+                        </select>
+                        <div class="cancel-reason-help">Nhân viên cần chọn lý do trước khi xác nhận hủy đơn.</div>
+                    </div>
+                    <div class="mb-0 d-none" id="cancelReasonOtherWrap">
+                        <label for="cancelReasonOther" class="form-label" style="font-weight:600;">Nhập lý do khác</label>
+                        <textarea class="form-control" id="cancelReasonOther" name="cancel_reason_other" rows="3" placeholder="Nhập lý do hủy đơn..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #f0f2f5;">
+                    <button type="button" class="btn-outline-staff" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn-primary-staff">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+(() => {
+    const modalElement = document.getElementById('cancelOrderModal');
+    const form = document.getElementById('cancelOrderModalForm');
+    const reasonSelect = document.getElementById('cancelReasonSelect');
+    const otherWrap = document.getElementById('cancelReasonOtherWrap');
+    const otherInput = document.getElementById('cancelReasonOther');
+
+    if (!modalElement || !form || !reasonSelect || !otherWrap || !otherInput) {
+        return;
+    }
+
+    const cancelModal = new bootstrap.Modal(modalElement);
+
+    function syncOtherReasonVisibility() {
+        const isOther = reasonSelect.value === 'other';
+        otherWrap.classList.toggle('d-none', !isOther);
+        otherInput.required = isOther;
+        if (!isOther) {
+            otherInput.value = '';
+        }
+    }
+
+    document.querySelectorAll('[data-cancel-order-trigger="true"]').forEach((button) => {
+        button.addEventListener('click', () => {
+            form.action = button.dataset.orderAction;
+            reasonSelect.value = '';
+            otherInput.value = '';
+            syncOtherReasonVisibility();
+            cancelModal.show();
+        });
+    });
+
+    reasonSelect.addEventListener('change', syncOtherReasonVisibility);
+    syncOtherReasonVisibility();
+})();
+</script>
 @endsection

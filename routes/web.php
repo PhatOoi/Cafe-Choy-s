@@ -38,6 +38,7 @@ Route::post('/cart/checkout/cash', [CartController::class, 'confirmCashPayment']
 Route::post('/cart/checkout/qr', [CartController::class, 'confirmQrPayment'])->middleware('auth');
 Route::get('/cart/qr-status', [CartController::class, 'qrPaymentStatus'])->middleware('auth')->name('cart.qr-status');
 Route::get('/orders/history', [OrderHistoryController::class, 'index'])->middleware('auth')->name('orders.history');
+Route::post('/orders/{id}/cancel', [OrderHistoryController::class, 'cancel'])->middleware('auth')->name('orders.cancel');
 
 Route::get('/test-db', function () {
     $users = DB::table('users')->get();
@@ -81,6 +82,11 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(function () {
     Route::get('/',        [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/orders',  [StaffController::class, 'orders'])->name('orders');
+    Route::get('/orders/confirmed-reminder-ids', [StaffController::class, 'confirmedOrderReminderIds'])->name('orders.confirmed-reminder-ids');
+    Route::get('/orders/reminder-statuses', [StaffController::class, 'orderReminderStatuses'])->name('orders.reminder-statuses');
+    Route::get('/orders/created-history', [StaffController::class, 'createdOrderHistory'])->name('orders.created-history');
+    Route::get('/revenue/daily', [StaffController::class, 'dailyRevenueReport'])->name('revenue.daily');
+    Route::get('/revenue/monthly', [StaffController::class, 'monthlyRevenueReport'])->name('revenue.monthly');
     Route::get('/orders/create',        [StaffController::class, 'createOrder'])->name('create-order');
     Route::post('/orders',              [StaffController::class, 'storeOrder'])->name('store-order');
     Route::get('/orders/{id}',          [StaffController::class, 'orderDetail'])->name('order.detail');

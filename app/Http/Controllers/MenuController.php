@@ -8,28 +8,30 @@ use App\Models\Extra;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
-// Controller hiển thị menu sản phẩm
+// Controller hiển thị menu sản phẩm cho khách hàng.
 class MenuController extends Controller
 {
-    // Hiển thị trang menu với danh sách sản phẩm, topping, đường, đá, size
+    // Nạp toàn bộ dữ liệu cần thiết cho trang menu và modal tùy chỉnh món.
     public function index()
     {
+        // Staff không thao tác bằng giao diện menu khách nên điều hướng về dashboard staff.
         if (auth()->check() && auth()->user()->isStaff()) {
             return redirect()->route('staff.dashboard')->with('error', 'Nhân viên không có quyền truy cập trang menu.');
         }
 
-        // Lấy tất cả category có sản phẩm
-        $categories = Category::whereHas('products')->with(['products' => function($q) {
+        // Chỉ lấy các category thật sự có sản phẩm để giao diện không hiện mục rỗng.
+        $categories = Category::whereHas('products')->with(['products' => function ($q) {
+            // Sắp xếp sản phẩm theo tên để thứ tự hiển thị ổn định.
             $q->orderBy('name');
         }])->orderBy('sort_order')->get();
-        $toppings = Extra::topping()->get(); // Lấy danh sách topping
-        $sugars = Extra::sugar()->get(); // Lấy danh sách đường
-        $ices = Extra::ice()->get(); // Lấy danh sách đá
-        $sizes = Size::all(); // Lấy danh sách size
 
-        // Trả về view menu với dữ liệu đã lấy
+        // Lấy các nhóm option dùng trong modal chọn topping/đường/đá/kích cỡ.
+        $toppings = Extra::topping()->get();
+        $sugars = Extra::sugar()->get();
+        $ices = Extra::ice()->get();
+        $sizes = Size::all();
+
+        // Trả dữ liệu sang view menu để render danh mục và modal đặt món.
         return view('menu', compact('categories', 'toppings', 'sugars', 'ices', 'sizes'));
     }
-        
-    
 }

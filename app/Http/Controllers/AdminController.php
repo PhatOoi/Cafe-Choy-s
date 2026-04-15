@@ -17,6 +17,7 @@ class AdminController extends Controller
 
     public function dashboard()
     {
+        // Tổng hợp các chỉ số chính để render dashboard admin.
         $stats = [
             'total_revenue'   => Order::where('status', 'delivered')->sum('final_price'),
             'today_revenue'   => Order::where('status', 'delivered')->whereDate('created_at', today())->sum('final_price'),
@@ -27,7 +28,7 @@ class AdminController extends Controller
             'total_staff'     => User::where('role_id', 2)->count(),
         ];
 
-        // Doanh thu 7 ngày gần nhất
+        // Dữ liệu biểu đồ doanh thu 7 ngày gần nhất.
         $revenueChart = Order::where('status', 'delivered')
             ->selectRaw('DATE(created_at) as date, SUM(final_price) as total')
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
@@ -35,7 +36,7 @@ class AdminController extends Controller
             ->orderBy('date')
             ->get();
 
-        // Top 5 sản phẩm bán chạy
+        // Top 5 sản phẩm bán chạy theo số lượng và doanh thu.
         $topProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -46,6 +47,7 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
+        // 10 đơn gần nhất để admin theo dõi nhanh hoạt động hệ thống.
         $recentOrders = Order::with(['user', 'payment'])
             ->latest()
             ->take(10)
@@ -58,6 +60,7 @@ class AdminController extends Controller
 
     public function products(Request $request)
     {
+        // Query sản phẩm kèm category để phục vụ lọc ở trang quản trị.
         $query = Product::with('category');
 
         if ($request->filled('category')) {
@@ -78,12 +81,14 @@ class AdminController extends Controller
 
     public function createProduct()
     {
+        // Nạp danh mục cho form tạo sản phẩm mới.
         $categories = Category::orderBy('name')->get();
         return view('admin.products.create', compact('categories'));
     }
 
     public function storeProduct(Request $request)
     {
+        // Validate dữ liệu đầu vào của form tạo sản phẩm.
         $data = $request->validate([
             'name'        => 'required|string|max:200',
             'category_id' => 'required|exists:categories,id',
@@ -93,6 +98,7 @@ class AdminController extends Controller
             'image_url'   => 'nullable|url|max:500',
         ]);
 
+        // Tạo record sản phẩm mới trong menu.
         Product::create($data);
 
         return redirect()->route('admin.products')->with('success', 'Thêm sản phẩm thành công!');
@@ -100,6 +106,7 @@ class AdminController extends Controller
 
     public function editProduct($id)
     {
+        // Nạp sản phẩm hiện tại và danh mục để admin chỉnh sửa.
         $product    = Product::findOrFail($id);
         $categories = Category::orderBy('name')->get();
         return view('admin.products.edit', compact('product', 'categories'));
@@ -107,6 +114,7 @@ class AdminController extends Controller
 
     public function updateProduct(Request $request, $id)
     {
+        // Tìm sản phẩm và validate dữ liệu mới trước khi update.
         $product = Product::findOrFail($id);
 
         $data = $request->validate([
@@ -125,6 +133,7 @@ class AdminController extends Controller
 
     public function destroyProduct($id)
     {
+        // Xóa sản phẩm khỏi hệ thống.
         $product = Product::findOrFail($id);
         $product->delete();
 
@@ -135,12 +144,14 @@ class AdminController extends Controller
 
     public function categories()
     {
+        // Danh sách category kèm số lượng sản phẩm để admin quản lý nhanh.
         $categories = Category::withCount('products')->latest()->paginate(20);
         return view('admin.categories.index', compact('categories'));
     }
 
     public function storeCategory(Request $request)
     {
+        // Tạo danh mục mới với tên duy nhất.
         $data = $request->validate([
             'name'        => 'required|string|max:100|unique:categories,name',
             'description' => 'nullable|string',
@@ -152,6 +163,7 @@ class AdminController extends Controller
 
     public function updateCategory(Request $request, $id)
     {
+        // Sửa thông tin danh mục nhưng vẫn giữ ràng buộc tên duy nhất.
         $category = Category::findOrFail($id);
         $data = $request->validate([
             'name'        => 'required|string|max:100|unique:categories,name,' . $id,
@@ -163,6 +175,7 @@ class AdminController extends Controller
 
     public function destroyCategory($id)
     {
+        // Chỉ cho phép xóa danh mục khi không còn sản phẩm phụ thuộc.
         $category = Category::findOrFail($id);
         if ($category->products()->count() > 0) {
             return back()->with('error', 'Không thể xóa danh mục đang có sản phẩm!');
@@ -175,6 +188,7 @@ class AdminController extends Controller
 
     public function users(Request $request)
     {
+        // Danh sách user kèm role để admin lọc và quản lý tài khoản.
         $query = User::with('role');
 
         if ($request->filled('role')) {
@@ -196,12 +210,14 @@ class AdminController extends Controller
 
     public function createUser()
     {
+        // Chỉ nạp các role chính để tạo tài khoản nội bộ hoặc khách hàng.
         $roles = UserRole::whereIn('id', [1, 2, 3])->get(); // admin, staff, customer
         return view('admin.users.create', compact('roles'));
     }
 
     public function storeUser(Request $request)
     {
+        // Validate dữ liệu tạo user mới.
         $data = $request->validate([
             'name'     => 'required|string|max:100',
             'email'    => 'required|email|unique:users,email',
@@ -213,6 +229,7 @@ class AdminController extends Controller
         $data['password']  = Hash::make($data['password']);
         $data['is_active'] = true;
 
+        // Tạo user mới sau khi đã hash mật khẩu.
         User::create($data);
 
         return redirect()->route('admin.users')->with('success', 'Tạo tài khoản thành công!');
@@ -220,6 +237,7 @@ class AdminController extends Controller
 
     public function editUser($id)
     {
+        // Nạp user hiện tại và danh sách role cho form chỉnh sửa.
         $user  = User::findOrFail($id);
         $roles = UserRole::all();
         return view('admin.users.edit', compact('user', 'roles'));
@@ -227,6 +245,7 @@ class AdminController extends Controller
 
     public function updateUser(Request $request, $id)
     {
+        // Cập nhật thông tin tài khoản, mật khẩu chỉ đổi khi admin nhập mới.
         $user = User::findOrFail($id);
 
         $data = $request->validate([
@@ -248,6 +267,7 @@ class AdminController extends Controller
 
     public function toggleUserActive($id)
     {
+        // Bật/tắt trạng thái hoạt động của user để khóa/mở tài khoản nhanh.
         $user = User::findOrFail($id);
 
         // Không cho phép tự vô hiệu hóa chính mình
@@ -263,6 +283,7 @@ class AdminController extends Controller
 
     public function destroyUser($id)
     {
+        // Không cho admin xóa chính tài khoản đang đăng nhập.
         $user = User::findOrFail($id);
 
         if ($user->id === auth()->id()) {
@@ -277,6 +298,7 @@ class AdminController extends Controller
 
     public function orders(Request $request)
     {
+        // Nạp danh sách đơn cùng thông tin user, payment và staff để admin lọc theo nhiều tiêu chí.
         $query = Order::with(['user', 'payment', 'staff']);
 
         if ($request->filled('status')) {
@@ -303,6 +325,7 @@ class AdminController extends Controller
 
     public function orderDetail($id)
     {
+        // Xem chi tiết đầy đủ của một đơn cho admin kiểm tra.
         $order = Order::with(['user', 'address', 'items.product', 'items.extras', 'payment', 'staff'])->findOrFail($id);
         return view('admin.orders.detail', compact('order'));
     }
@@ -311,14 +334,17 @@ class AdminController extends Controller
 
     public function reports(Request $request)
     {
+        // period điều khiển cách gom dữ liệu doanh thu theo ngày/tháng/năm.
         $period = $request->input('period', 'month'); // day | month | year
 
+        // Chọn nguồn dữ liệu biểu đồ phù hợp với period đang xem.
         $revenueData = match ($period) {
             'day'   => $this->revenueByDay(),
             'year'  => $this->revenueByYear(),
             default => $this->revenueByMonth(),
         };
 
+        // Danh sách top sản phẩm bán chạy cho báo cáo tổng hợp.
         $topProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -334,6 +360,7 @@ class AdminController extends Controller
 
     private function revenueByDay()
     {
+        // Gom doanh thu delivered theo từng ngày trong 30 ngày gần nhất.
         return Order::where('status', 'delivered')
             ->selectRaw('DATE(created_at) as label, SUM(final_price) as total')
             ->where('created_at', '>=', now()->subDays(29)->startOfDay())
@@ -344,6 +371,7 @@ class AdminController extends Controller
 
     private function revenueByMonth()
     {
+        // Gom doanh thu theo tháng cho 12 tháng gần nhất.
         return Order::where('status', 'delivered')
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as label, SUM(final_price) as total")
             ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
@@ -354,6 +382,7 @@ class AdminController extends Controller
 
     private function revenueByYear()
     {
+        // Gom doanh thu theo năm để nhìn xu hướng dài hạn.
         return Order::where('status', 'delivered')
             ->selectRaw("YEAR(created_at) as label, SUM(final_price) as total")
             ->groupBy('label')

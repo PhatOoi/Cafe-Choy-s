@@ -120,6 +120,14 @@
                 <p>Mọi đơn đã thanh toán đều được lưu lại để bạn xem nhanh món đã đặt, topping và thời gian mua.</p>
             </div>
 
+            @if(session('success'))
+                <div class="history-alert history-alert-success">{{ session('success') }}</div>
+            @endif
+
+            @if(session('error'))
+                <div class="history-alert history-alert-error">{{ session('error') }}</div>
+            @endif
+
             @php
                 $statusLabels = [
                     'pending' => 'Chờ xử lý',
@@ -201,6 +209,18 @@
                                     </div>
                                 @endforeach
                             </div>
+
+                            @if($order->canCustomerCancel())
+                                <div class="order-action-row">
+                                    <form action="{{ route('orders.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc muốn hủy đơn #{{ str_pad((string) $order->id, 6, '0', STR_PAD_LEFT) }}?')">
+                                        @csrf
+                                        <button type="submit" class="order-cancel-btn">
+                                            <i class="fas fa-times-circle"></i> Hủy đơn hàng
+                                        </button>
+                                    </form>
+                                    <span class="order-action-note">Bạn chỉ có thể hủy trước khi quán bắt đầu chuẩn bị đơn.</span>
+                                </div>
+                            @endif
                         </article>
                     @endforeach
                 </div>
@@ -308,6 +328,26 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 18px;
             margin-bottom: 28px;
+        }
+
+        .history-alert {
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-bottom: 22px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .history-alert-success {
+            background: rgba(32, 181, 102, 0.16);
+            border: 1px solid rgba(32, 181, 102, 0.32);
+            color: #8af0b8;
+        }
+
+        .history-alert-error {
+            background: rgba(255, 99, 99, 0.16);
+            border: 1px solid rgba(255, 99, 99, 0.3);
+            color: #ffb4b4;
         }
 
         .history-summary-card,
@@ -433,6 +473,39 @@
             gap: 14px;
         }
 
+        .order-action-row {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.12);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .order-cancel-btn {
+            border: none;
+            border-radius: 999px;
+            background: rgba(255, 99, 99, 0.16);
+            color: #ffb4b4;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .order-cancel-btn:hover,
+        .order-cancel-btn:focus {
+            background: rgba(255, 99, 99, 0.24);
+            color: #ffd0d0;
+            outline: none;
+        }
+
+        .order-action-note {
+            color: rgba(255, 255, 255, 0.56);
+            font-size: 13px;
+        }
+
         .order-item-row {
             display: flex;
             justify-content: space-between;
@@ -513,6 +586,16 @@
             background: #b6894f;
             border-color: #b6894f;
             color: #111;
+        }
+
+        @media (max-width: 767px) {
+            .order-action-row {
+                align-items: stretch;
+            }
+
+            .order-cancel-btn {
+                width: 100%;
+            }
         }
 
         .coffee-footer {

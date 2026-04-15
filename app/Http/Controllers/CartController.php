@@ -10,25 +10,38 @@ use App\Models\Extra;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Support\DailyRevenueSnapshotService;
 
-// Controller xử lý giỏ hàng
+// Controller xử lý toàn bộ nghiệp vụ giỏ hàng và checkout của khách.
 class CartController extends Controller
 {
+    // Đồng bộ bảng snapshot doanh thu sau những thay đổi ảnh hưởng tới đơn đã thanh toán.
+    private function syncDailyRevenueSnapshots(): void
+    {
+        app(DailyRevenueSnapshotService::class)->syncLastDays(30);
+    }
+
+    // Kiểm tra đơn QR đang treo trong session đã được staff xác nhận hay chưa.
+    // Nếu đã thanh toán xong thì dọn giỏ hàng cũ khỏi session.
     private function syncPendingQrOrderCart(): void
     {
         $pendingOrderId = session('pending_qr_order_id');
 
+        // Không có đơn QR theo dõi hoặc chưa đăng nhập thì bỏ qua.
         if (!$pendingOrderId || !auth()->check()) {
             return;
         }
 
+        // Lấy payment của đơn QR đang được theo dõi.
         $payment = Payment::where('order_id', $pendingOrderId)->first();
 
+        // Khi payment đã được staff xác nhận là paid thì session cart không còn cần giữ nữa.
         if ($payment && $payment->status === 'paid') {
             session()->forget(['cart', 'pending_qr_order_id']);
         }
     }
 
+    // Tính tổng tiền giỏ hàng từ giá đã cộng option của từng item.
     private function calculateCartTotal(array $cart): float
     {
         $total = 0;
@@ -39,9 +52,12 @@ class CartController extends Controller
         return $total;
     }
 
+    // Chuyển toàn bộ session cart thành order thật trong database.
+    // Hàm này gom cả order, order item, extra và payment vào chung một transaction.
     private function createOrderFromCart(array $cart, float $total, array $orderData, ?array $paymentData = null): Order
     {
         return DB::transaction(function () use ($cart, $total, $orderData, $paymentData) {
+            // Tạo record đơn hàng gốc với mặc định chung cho checkout của khách.
             $order = Order::create(array_merge([
                 'user_id' => auth()->id(),
                 'address_id' => null,
@@ -56,7 +72,9 @@ class CartController extends Controller
                 'note' => null,
             ], $orderData));
 
+            // Mỗi item trong giỏ trở thành một dòng order item riêng.
             foreach ($cart as $item) {
+                // Gộp option của món vào note để staff/admin xem lại dễ hơn.
                 $itemNoteParts = [
                     'Size: ' . ($item['size'] ?? '-'),
                     'Đường: ' . ($item['sugar'] ?? '-'),
@@ -75,6 +93,7 @@ class CartController extends Controller
                     'note' => implode(' | ', $itemNoteParts),
                 ]);
 
+                // Tách topping ra để lưu ở bảng order_item_extras.
                 $toppings = is_array($item['toppings'] ?? null) ? $item['toppings'] : [];
                 if (!empty($toppings)) {
                     $extras = Extra::whereIn('name', $toppings)->get()->keyBy('name');
@@ -94,12 +113,14 @@ class CartController extends Controller
                         ];
                     }
 
+                    // Insert hàng loạt để giảm số query.
                     if (!empty($extraRows)) {
                         DB::table('order_item_extras')->insert($extraRows);
                     }
                 }
             }
 
+            // Tạo payment nếu flow checkout yêu cầu gắn thanh toán ngay khi tạo đơn.
             if ($paymentData) {
                 Payment::create(array_merge([
                     'order_id' => $order->id,
@@ -115,10 +136,10 @@ class CartController extends Controller
         });
     }
 
-    // Thêm sản phẩm vào giỏ hàng
+    // Thêm sản phẩm đã chọn option vào session cart.
     public function add(Request $request)
     {
-        // Kiểm tra người dùng đã đăng nhập chưa
+        // Chỉ khách đã đăng nhập mới được thêm món vào giỏ.
         if (!auth()->check()) {
             return response()->json([
                 'success' => false,
@@ -126,7 +147,7 @@ class CartController extends Controller
             ], 401);
         }
 
-        // Tìm sản phẩm theo id
+        // Lấy sản phẩm từ database để chắc chắn id hợp lệ.
         $product = Product::find($request->product_id);
 
         if (!$product) {
@@ -136,28 +157,25 @@ class CartController extends Controller
             ], 404);
         }
 
-        // Lấy giỏ hàng từ session
         $cart = session()->get('cart', []);
 
-        // Xử lý toppings thành chuỗi để tạo key duy nhất cho sản phẩm
+        // Gộp topping thành chuỗi để tạo key phân biệt các biến thể cùng một món.
         $toppingsStr = is_array($request->toppings)
             ? implode(',', $request->toppings)
             : '';
 
-        // Tạo key cho sản phẩm trong giỏ hàng dựa trên các thuộc tính
-        $cartKey = $request->product_id . '_' .
-                   $request->size . '_' .
-                   $request->sugar . '_' .
-                   $request->ice . '_' .
-                   $toppingsStr;
+        // Key cart được ghép từ product + toàn bộ option để tránh đè nhầm biến thể khác nhau.
+        $cartKey = $request->product_id . '_'
+                   . $request->size . '_'
+                   . $request->sugar . '_'
+                   . $request->ice . '_'
+                   . $toppingsStr;
 
-
-
-        // Lấy extra_price của size từ bảng sizes
+        // Tính phụ thu của size đã chọn.
         $size = Size::where('name', $request->size)->first();
         $extraPrice = $size ? (float)$size->extra_price : 0;
 
-        // Tính tổng giá topping
+        // Tính tổng giá topping đã chọn.
         $toppingPrice = 0;
         if (!empty($request->toppings) && is_array($request->toppings)) {
             $toppingObjs = Extra::whereIn('name', $request->toppings)->get();
@@ -166,12 +184,14 @@ class CartController extends Controller
             }
         }
 
+        // Giá 1 đơn vị món sau khi cộng option.
         $price = $product->price + $extraPrice + $toppingPrice;
 
-        // Nếu sản phẩm đã có trong giỏ thì tăng số lượng, ngược lại thêm mới
+        // Nếu biến thể món đã có trong giỏ thì cộng dồn số lượng.
         if (isset($cart[$cartKey])) {
             $cart[$cartKey]['qty'] += $request->qty;
         } else {
+            // Nếu chưa có thì tạo mới một dòng trong session cart.
             $cart[$cartKey] = [
                 'product_id' => $request->product_id,
                 'name' => $product->name,
@@ -186,13 +206,13 @@ class CartController extends Controller
             ];
         }
 
-        // Lưu lại giỏ hàng vào session
+        // Ghi cart mới vào session.
         session()->put('cart', $cart);
 
-        // Đếm tổng số lượng sản phẩm trong giỏ
+        // Tính badge số lượng món để update UI.
         $cartCount = array_sum(array_column($cart, 'qty'));
 
-        // Nếu là AJAX (application/json), trả về JSON
+        // Nếu frontend gọi AJAX thì trả JSON để update popup/cart badge mà không reload.
         if ($request->expectsJson() || $request->isJson() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -200,11 +220,15 @@ class CartController extends Controller
                 'cart_count' => $cartCount,
             ]);
         }
-        // Nếu là request thường, chuyển hướng về trang giỏ hàng
+
+        // Request thường thì chuyển về trang cart.
         return redirect('/cart');
     }
+
+    // Hiển thị trang cart hiện tại từ session.
     public function index()
     {
+        // Mỗi lần mở cart đều đồng bộ lại trạng thái đơn QR cũ trước.
         $this->syncPendingQrOrderCart();
 
         $cart = session()->get('cart', []);
@@ -213,6 +237,7 @@ class CartController extends Controller
         return view('cart', compact('cart', 'cartCount'));
     }
 
+    // Xóa một item khỏi cart theo key biến thể.
     public function remove($id)
     {
         if (!auth()->check()) {
@@ -228,6 +253,8 @@ class CartController extends Controller
             unset($cart[$id]);
             session()->put('cart', $cart);
         }
+
+        // Trả cart mới cho frontend nếu đây là request AJAX.
         if (request()->expectsJson() || request()->isJson() || request()->wantsJson()) {
             $cart = session()->get('cart', []);
             $total = 0;
@@ -243,10 +270,11 @@ class CartController extends Controller
                 'cart_count' => $cartCount
             ]);
         }
+
         return redirect('/cart');
     }
 
-    // Cập nhật số lượng sản phẩm trong giỏ hàng
+    // Cập nhật số lượng của một item trong giỏ.
     public function update(Request $request, $key)
     {
         if (!auth()->check()) {
@@ -258,6 +286,7 @@ class CartController extends Controller
 
         $cart = session()->get('cart', []);
 
+        // Nếu item tồn tại thì cập nhật qty hoặc xóa khi qty <= 0.
         if (isset($cart[$key])) {
             $qty = (int) $request->input('qty', 1);
             if ($qty > 0) {
@@ -268,6 +297,8 @@ class CartController extends Controller
                 session()->put('cart', $cart);
             }
         }
+
+        // AJAX sẽ nhận lại cart/tổng tiền mới để render lại ngay.
         if ($request->expectsJson() || $request->isJson() || $request->wantsJson()) {
             $cart = session()->get('cart', []);
             $total = 0;
@@ -283,9 +314,11 @@ class CartController extends Controller
                 'cart_count' => $cartCount
             ]);
         }
+
         return redirect('/cart');
     }
 
+    // Xác nhận thanh toán tiền mặt tại quầy.
     public function confirmCashPayment(Request $request)
     {
         if (!auth()->check()) {
@@ -306,9 +339,10 @@ class CartController extends Controller
 
         $total = $this->calculateCartTotal($cart);
 
+        // Đơn tiền mặt được xem là đã xác nhận và đã thanh toán ngay.
         $order = $this->createOrderFromCart($cart, $total, [
-            'status' => 'processing',
-            'note' => 'Thanh toán tiền mặt tại quầy - đơn hàng đã chuyển sang chuẩn bị',
+            'status' => 'confirmed',
+            'note' => 'Thanh toán tiền mặt tại quầy - đơn hàng đã được xác nhận',
         ], [
             'method' => 'cash',
             'status' => 'paid',
@@ -316,6 +350,10 @@ class CartController extends Controller
             'paid_at' => now(),
         ]);
 
+        // Đồng bộ báo cáo doanh thu vì đây là đơn đã paid.
+        $this->syncDailyRevenueSnapshots();
+
+        // Xóa cart khỏi session sau khi checkout thành công.
         session()->forget(['cart', 'pending_qr_order_id']);
 
         return response()->json([
@@ -327,6 +365,7 @@ class CartController extends Controller
         ]);
     }
 
+    // Gửi yêu cầu xác nhận thanh toán QR cho staff kiểm tra thủ công.
     public function confirmQrPayment(Request $request)
     {
         if (!auth()->check()) {
@@ -345,6 +384,7 @@ class CartController extends Controller
             ], 422);
         }
 
+        // Nếu đã có một đơn QR đang pending trong session thì không tạo thêm đơn trùng.
         $pendingOrderId = session('pending_qr_order_id');
         if ($pendingOrderId) {
             $existingPayment = Payment::where('order_id', $pendingOrderId)
@@ -364,6 +404,7 @@ class CartController extends Controller
         $total = $this->calculateCartTotal($cart);
         $qrNote = trim((string) $request->input('qr_note', ''));
 
+        // Đơn QR ban đầu chỉ ở trạng thái pending cho tới khi staff đối chiếu payment thành công.
         $order = $this->createOrderFromCart($cart, $total, [
             'status' => 'pending',
             'note' => $qrNote !== ''
@@ -376,6 +417,7 @@ class CartController extends Controller
             'ref_code' => $qrNote !== '' ? $qrNote : null,
         ]);
 
+        // Lưu id đơn đang chờ để frontend có thể poll trạng thái xác nhận.
         session()->put('pending_qr_order_id', $order->id);
 
         return response()->json([
@@ -386,6 +428,7 @@ class CartController extends Controller
         ]);
     }
 
+    // Frontend gọi API này theo chu kỳ để biết đơn QR đã được duyệt chưa.
     public function qrPaymentStatus(Request $request)
     {
         if (!auth()->check()) {
@@ -397,6 +440,7 @@ class CartController extends Controller
 
         $pendingOrderId = session('pending_qr_order_id');
 
+        // Không có đơn QR chờ trong session thì frontend dừng trạng thái chờ.
         if (!$pendingOrderId) {
             return response()->json([
                 'success' => true,
@@ -408,6 +452,7 @@ class CartController extends Controller
 
         $payment = Payment::where('order_id', $pendingOrderId)->first();
 
+        // Nếu payment không tồn tại nữa thì xóa cờ pending trong session để tránh treo UI.
         if (!$payment) {
             session()->forget('pending_qr_order_id');
 
@@ -419,6 +464,7 @@ class CartController extends Controller
             ]);
         }
 
+        // Khi staff xác nhận payment thành paid, frontend được báo để redirect lịch sử đơn.
         if ($payment->status === 'paid') {
             session()->forget(['cart', 'pending_qr_order_id']);
 
@@ -432,6 +478,7 @@ class CartController extends Controller
             ]);
         }
 
+        // Trường hợp còn pending thì frontend tiếp tục giữ popup/trạng thái chờ xác nhận.
         return response()->json([
             'success' => true,
             'has_pending_qr' => true,

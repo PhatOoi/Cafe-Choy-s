@@ -112,6 +112,11 @@
         color: #aaa;
     }
     .empty-state i { font-size: 48px; color: #ddd; margin-bottom: 12px; display: block; }
+    .cancel-reason-help {
+        font-size: 12px;
+        color: #8a8fa8;
+        margin-top: 8px;
+    }
 </style>
 @endsection
 
@@ -266,7 +271,10 @@
                                 </button>
                             </form>
                             @elseif(count($order->next_statuses) > 0)
-                            <form action="{{ route('staff.order.status', $order->id) }}" method="POST" style="margin:0;">
+                                <form action="{{ route('staff.order.status', $order->id) }}" method="POST" style="margin:0;"
+                                    data-status-reminder-form="true"
+                                    data-order-id="{{ $order->id }}"
+                                    data-next-status="{{ $order->next_statuses[0] }}">
                                 @csrf
                                 <input type="hidden" name="status" value="{{ $order->next_statuses[0] }}">
                                 <button type="submit" class="action-btn btn-next">
@@ -283,14 +291,12 @@
                             @endif
                             {{-- Cancel button --}}
                             @if(in_array('cancelled', $order->next_statuses))
-                            <form action="{{ route('staff.order.status', $order->id) }}" method="POST" style="margin:0;"
-                                  onsubmit="return confirm('Xác nhận hủy đơn #{{ $order->id }}?')">
-                                @csrf
-                                <input type="hidden" name="status" value="cancelled">
-                                <button type="submit" class="action-btn btn-cancel">
+                                <button type="button" class="action-btn btn-cancel"
+                                        data-cancel-order-trigger="true"
+                                        data-order-id="{{ $order->id }}"
+                                        data-order-action="{{ route('staff.order.status', $order->id) }}">
                                     <i class="fas fa-times"></i>
                                 </button>
-                            </form>
                             @endif
                         </div>
                     </td>
@@ -316,4 +322,79 @@
     </div>
     @endif
 </div>
+
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;">
+            <div class="modal-header" style="border-bottom:1px solid #f0f2f5;">
+                <h5 class="modal-title" style="font-weight:700;">Chọn lý do hủy đơn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cancelOrderModalForm" method="POST">
+                @csrf
+                <input type="hidden" name="status" value="cancelled">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cancelReasonSelect" class="form-label" style="font-weight:600;">Lý do hủy</label>
+                        <select class="form-select" id="cancelReasonSelect" name="cancel_reason" required>
+                            <option value="">Chọn lý do</option>
+                            <option value="change_option">Thay đổi topping/kích cỡ</option>
+                            <option value="no_longer_needed">Không còn nhu cầu mua</option>
+                            <option value="other">Lý do khác</option>
+                        </select>
+                        <div class="cancel-reason-help">Nhân viên cần chọn lý do trước khi xác nhận hủy đơn.</div>
+                    </div>
+                    <div class="mb-0 d-none" id="cancelReasonOtherWrap">
+                        <label for="cancelReasonOther" class="form-label" style="font-weight:600;">Nhập lý do khác</label>
+                        <textarea class="form-control" id="cancelReasonOther" name="cancel_reason_other" rows="3" placeholder="Nhập lý do hủy đơn..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #f0f2f5;">
+                    <button type="button" class="btn-outline-staff" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn-primary-staff">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+(() => {
+    const modalElement = document.getElementById('cancelOrderModal');
+    const form = document.getElementById('cancelOrderModalForm');
+    const reasonSelect = document.getElementById('cancelReasonSelect');
+    const otherWrap = document.getElementById('cancelReasonOtherWrap');
+    const otherInput = document.getElementById('cancelReasonOther');
+
+    if (!modalElement || !form || !reasonSelect || !otherWrap || !otherInput) {
+        return;
+    }
+
+    const cancelModal = new bootstrap.Modal(modalElement);
+
+    function syncOtherReasonVisibility() {
+        const isOther = reasonSelect.value === 'other';
+        otherWrap.classList.toggle('d-none', !isOther);
+        otherInput.required = isOther;
+        if (!isOther) {
+            otherInput.value = '';
+        }
+    }
+
+    document.querySelectorAll('[data-cancel-order-trigger="true"]').forEach((button) => {
+        button.addEventListener('click', () => {
+            form.action = button.dataset.orderAction;
+            reasonSelect.value = '';
+            otherInput.value = '';
+            syncOtherReasonVisibility();
+            cancelModal.show();
+        });
+    });
+
+    reasonSelect.addEventListener('change', syncOtherReasonVisibility);
+    syncOtherReasonVisibility();
+})();
+</script>
 @endsection
