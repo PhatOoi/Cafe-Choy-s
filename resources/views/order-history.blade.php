@@ -2,7 +2,7 @@
 <html lang="vi">
 
 <head>
-    <title>Hồ Sơ Khách Hàng - Choy's Cafe</title>
+    <title>Lịch Sử Đơn Hàng - Choy's Cafe</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -43,7 +43,7 @@
                     <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
                     <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
                     @auth
-                        <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        <li class="nav-item active"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
                     @endauth
                     @guest
                         <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
@@ -84,7 +84,7 @@
                                     </div>
 
                                     <div class="dropdown-divider"></div>
-                                    <a href="/profile" class="dropdown-link active-link">Hồ sơ</a>
+                                    <a href="/profile" class="dropdown-link">Hồ sơ</a>
 
                                     @if(Auth::user()->role === 'admin')
                                         <a href="/admin" class="dropdown-link">Quản trị</a>
@@ -108,120 +108,99 @@
         </div>
     </nav>
 
-    <section class="ftco-section profile-section">
-        <div class="container profile-container">
-            <div class="profile-hero text-center">
-                <span class="profile-kicker">Khu vực cá nhân</span>
-                <h1>Hồ sơ khách hàng</h1>
-                <p>Quản lý nhanh thông tin cá nhân, theo dõi trạng thái tài khoản và truy cập lại các khu vực bạn dùng thường xuyên trên Choy's Cafe.</p>
+    <section class="ftco-section order-history-section">
+        <div class="container order-history-container">
+            <div class="history-hero text-center">
+                <span class="history-kicker">Theo dõi đơn của bạn</span>
+                <h1>Lịch sử đơn hàng</h1>
+                <p>Mọi đơn đã thanh toán đều được lưu lại để bạn xem nhanh món đã đặt, topping và thời gian mua.</p>
             </div>
 
-            <div class="profile-shell">
-                <aside class="profile-side-card">
-                    <div class="profile-side-top">
-                        <div class="avatar-frame">
-                            @if($user->avatar)
-                                <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="profile-avatar">
-                            @else
-                                <img src="{{ asset('images/user.jpg') }}" alt="{{ $user->name }}" class="profile-avatar">
-                            @endif
-                        </div>
-                        <p class="profile-role-label">{{ $user->role->name ?? 'Khách hàng' }}</p>
-                        <h2 class="profile-user-name">{{ $user->name }}</h2>
-                        <p class="profile-user-email">{{ $user->email }}</p>
-                    </div>
+            @php
+                $statusLabels = [
+                    'pending' => 'Chờ xử lý',
+                    'confirmed' => 'Đã xác nhận',
+                    'processing' => 'Đang chuẩn bị',
+                    'ready' => 'Sẵn sàng',
+                    'delivered' => 'Hoàn tất',
+                    'failed' => 'Thất bại',
+                    'cancelled' => 'Đã hủy',
+                ];
+            @endphp
 
-                    <div class="profile-quick-list">
-                        <div class="quick-item">
-                            <span class="quick-label">Đơn đã lưu</span>
-                            <strong>{{ $orders->count() }}</strong>
-                        </div>
-                        <div class="quick-item">
-                            <span class="quick-label">Tham gia từ</span>
-                            <strong>{{ $user->created_at->format('m/Y') }}</strong>
-                        </div>
-                        <div class="quick-item">
-                            <span class="quick-label">Số điện thoại</span>
-                            <strong>{{ $user->phone ?? 'Chưa cập nhật' }}</strong>
-                        </div>
-                    </div>
-
-                    <div class="profile-side-actions">
-                        <a href="{{ url('/menu') }}" class="profile-action-btn primary-btn">
-                            <i class="fas fa-mug-hot"></i>
-                            Quay lại menu
-                        </a>
-                        <a href="{{ route('orders.history') }}" class="profile-action-btn secondary-btn">
-                            <i class="fas fa-receipt"></i>
-                            Lịch sử đơn hàng
-                        </a>
-                    </div>
-                </aside>
-
-                <div class="profile-main-grid">
-                    <section class="profile-panel panel-wide">
-                        <div class="panel-heading">
-                            <span class="panel-kicker">Thông tin chính</span>
-                            <h3>Thông tin khách hàng</h3>
-                        </div>
-                        <div class="profile-info-grid">
-                            <article class="info-card">
-                                <div class="info-icon-wrap"><i class="fas fa-envelope"></i></div>
-                                <div>
-                                    <p class="info-title">Email</p>
-                                    <p class="info-value">{{ $user->email }}</p>
-                                </div>
-                            </article>
-
-                            <article class="info-card">
-                                <div class="info-icon-wrap"><i class="fas fa-phone"></i></div>
-                                <div>
-                                    <p class="info-title">Số điện thoại</p>
-                                    <p class="info-value {{ $user->phone ? '' : 'is-empty' }}">{{ $user->phone ?? 'Chưa cập nhật' }}</p>
-                                </div>
-                            </article>
-
-                            <article class="info-card">
-                                <div class="info-icon-wrap"><i class="fas fa-user-tag"></i></div>
-                                <div>
-                                    <p class="info-title">Vai trò</p>
-                                    <p class="info-value">{{ $user->role->name ?? 'Khách hàng' }}</p>
-                                </div>
-                            </article>
-
-                            <article class="info-card">
-                                <div class="info-icon-wrap"><i class="fas fa-calendar-alt"></i></div>
-                                <div>
-                                    <p class="info-title">Tham gia từ</p>
-                                    <p class="info-value">{{ $user->created_at->format('m/Y') }}</p>
-                                </div>
-                            </article>
-                        </div>
-                    </section>
-
-                    <section class="profile-panel">
-                        <div class="panel-heading">
-                            <span class="panel-kicker">Tài khoản</span>
-                            <h3>Trạng thái hiện tại</h3>
-                        </div>
-                        <div class="status-stack">
-                            <div class="status-card">
-                                <span class="status-dot"></span>
-                                <div>
-                                    <p class="status-title">Tài khoản đang hoạt động</p>
-                                    <p class="status-copy">Bạn có thể tiếp tục đặt món, xem lịch sử đơn hàng và cập nhật thông tin khi cần.</p>
-                                </div>
-                            </div>
-                            <div class="status-card muted-card">
-                                <div>
-                                    <p class="status-title">Gợi ý tiếp theo</p>
-                                    <p class="status-copy">Sử dụng mục Lịch sử đơn hàng trên thanh menu để xem lại các đơn đã thanh toán và quay lại đặt món nhanh hơn.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+            @if($orders->isEmpty())
+                <div class="history-empty text-center">
+                    <div class="history-empty-icon"><i class="fas fa-receipt"></i></div>
+                    <h3>Chưa có đơn hàng nào</h3>
+                    <p>Khi bạn thanh toán thành công, đơn hàng sẽ xuất hiện tại đây.</p>
+                    <a href="{{ url('/menu') }}" class="btn btn-primary history-cta">Đặt món ngay</a>
                 </div>
-            </div>
+            @else
+                <div class="history-summary-grid">
+                    <div class="history-summary-card">
+                        <span>Tổng số đơn</span>
+                        <strong>{{ $orders->count() }}</strong>
+                    </div>
+                    <div class="history-summary-card">
+                        <span>Đơn gần nhất</span>
+                        <strong>{{ optional($orders->first()->created_at)->format('d/m/Y') }}</strong>
+                    </div>
+                    <div class="history-summary-card">
+                        <span>Tổng chi tiêu</span>
+                        <strong>{{ number_format((float) $orders->sum('final_price'), 0, ',', '.') }} đ</strong>
+                    </div>
+                </div>
+
+                <div class="order-history-list">
+                    @foreach($orders as $order)
+                        <article class="order-history-card">
+                            <div class="order-history-top">
+                                <div>
+                                    <p class="order-code">Đơn #{{ str_pad((string) $order->id, 6, '0', STR_PAD_LEFT) }}</p>
+                                    <p class="order-date">{{ optional($order->created_at)->format('d/m/Y H:i') }}</p>
+                                </div>
+                                <span class="order-status status-{{ $order->status }}">{{ $statusLabels[$order->status] ?? ucfirst($order->status) }}</span>
+                            </div>
+
+                            <div class="order-meta-grid">
+                                <div class="order-meta-item">
+                                    <span>Thanh toán</span>
+                                    <strong>{{ number_format((float) $order->final_price, 0, ',', '.') }} đ</strong>
+                                </div>
+                                <div class="order-meta-item">
+                                    <span>Hình thức</span>
+                                    <strong>{{ $order->order_type === 'in_store' ? 'Tại quán' : 'Giao hàng' }}</strong>
+                                </div>
+                                <div class="order-meta-item">
+                                    <span>Số món</span>
+                                    <strong>{{ $order->items->sum('quantity') }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="order-item-list">
+                                @foreach($order->items as $item)
+                                    <div class="order-item-row">
+                                        <div class="order-item-main">
+                                            <p class="order-item-title">{{ optional($item->product)->name ?? 'Sản phẩm đã xóa' }}</p>
+                                            <div class="order-item-notes">
+                                                @if($item->note)
+                                                    <p>{{ $item->note }}</p>
+                                                @endif
+                                                @if($item->extras->isNotEmpty())
+                                                    <p>Topping: {{ $item->extras->pluck('pivot.extra_name')->implode(', ') }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="order-item-side">
+                                            <span>{{ $item->quantity }} x {{ number_format((float) $item->unit_price, 0, ',', '.') }} đ</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </section>
 
@@ -283,20 +262,20 @@
     </footer>
 
     <style>
-        .profile-section {
+        .order-history-section {
             padding: 110px 0 90px;
         }
 
-        .profile-container {
+        .order-history-container {
             max-width: 1220px;
         }
 
-        .profile-hero {
-            max-width: 780px;
-            margin: 0 auto 46px;
+        .history-hero {
+            max-width: 760px;
+            margin: 0 auto 48px;
         }
 
-        .profile-kicker {
+        .history-kicker {
             display: inline-block;
             margin-bottom: 14px;
             color: #c49b63;
@@ -306,296 +285,230 @@
             font-weight: 600;
         }
 
-        .profile-hero h1 {
+        .history-hero h1 {
             font-size: 52px;
             color: #fff;
             margin-bottom: 16px;
             font-weight: 700;
         }
 
-        .profile-hero p {
+        .history-hero p {
             color: rgba(255, 255, 255, 0.72);
             font-size: 16px;
             line-height: 1.8;
             margin: 0;
         }
 
-        .profile-shell {
+        .history-summary-grid {
             display: grid;
-            grid-template-columns: 340px minmax(0, 1fr);
-            gap: 24px;
-            align-items: start;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
         }
 
-        .profile-side-card,
-        .profile-panel {
+        .history-summary-card,
+        .order-history-card,
+        .history-empty {
             background: rgba(24, 18, 15, 0.76);
             border: 1px solid rgba(196, 155, 99, 0.16);
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
             backdrop-filter: blur(8px);
         }
 
-        .profile-side-card {
-            border-radius: 24px;
-            padding: 28px;
-            position: sticky;
-            top: 110px;
+        .history-summary-card {
+            border-radius: 20px;
+            padding: 22px 24px;
         }
 
-        .profile-side-top {
-            text-align: center;
-            padding-bottom: 26px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .avatar-frame {
-            width: 126px;
-            height: 126px;
-            margin: 10px auto 24px;
-                padding: 0;
-            border-radius: 50%;
-                background: transparent;
-                overflow: hidden;
-                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-        }
-
-        .profile-avatar {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-                border: none;
-                box-shadow: none;
-                display: block;
-        }
-
-        .profile-role-label {
-            margin: 0 0 10px;
-            color: #c49b63;
-            letter-spacing: 0.12em;
+        .history-summary-card span {
+            display: block;
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 13px;
+            margin-bottom: 10px;
             text-transform: uppercase;
-            font-size: 12px;
-            font-weight: 700;
+            letter-spacing: 0.12em;
         }
 
-        .profile-user-name {
-            margin: 0 0 10px;
+        .history-summary-card strong {
             color: #fff;
             font-size: 28px;
             font-weight: 700;
         }
 
-        .profile-user-email {
-            margin: 0;
-            color: rgba(255, 255, 255, 0.68);
-            font-size: 15px;
-            word-break: break-word;
-        }
-
-        .profile-quick-list {
+        .order-history-list {
             display: grid;
-            gap: 12px;
-            margin-top: 22px;
+            gap: 22px;
         }
 
-        .quick-item {
-            padding: 14px 16px;
-            border-radius: 18px;
+        .order-history-card {
+            border-radius: 24px;
+            padding: 26px 28px;
+        }
+
+        .order-history-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .order-code {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .order-date {
+            margin: 6px 0 0;
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 14px;
+        }
+
+        .order-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .status-confirmed,
+        .status-delivered,
+        .status-ready {
+            background: rgba(32, 181, 102, 0.16);
+            color: #7dffb7;
+        }
+
+        .status-pending,
+        .status-processing {
+            background: rgba(255, 194, 84, 0.16);
+            color: #ffd273;
+        }
+
+        .status-cancelled,
+        .status-failed {
+            background: rgba(255, 99, 99, 0.16);
+            color: #ff9c9c;
+        }
+
+        .order-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .order-meta-item {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px 18px;
         }
 
-        .quick-label {
+        .order-meta-item span {
             display: block;
-            color: rgba(255, 255, 255, 0.54);
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
+            color: rgba(255, 255, 255, 0.56);
+            font-size: 13px;
             margin-bottom: 6px;
         }
 
-        .quick-item strong {
+        .order-meta-item strong {
             color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            line-height: 1.6;
-            word-break: break-word;
-        }
-
-        .profile-side-actions {
-            display: grid;
-            gap: 12px;
-            margin-top: 22px;
-        }
-
-        .profile-action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-            padding: 0.95rem 1.1rem;
-            border-radius: 999px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.25s ease;
-        }
-
-        .primary-btn {
-            background: #c49b63;
-            border: 1px solid #c49b63;
-            color: #1a140f;
-        }
-
-        .primary-btn:hover,
-        .primary-btn:focus {
-            background: #b6894f;
-            border-color: #b6894f;
-            color: #1a140f;
-            text-decoration: none;
-            transform: translateY(-2px);
-        }
-
-        .secondary-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #fff;
-        }
-
-        .secondary-btn:hover,
-        .secondary-btn:focus {
-            background: rgba(196, 155, 99, 0.12);
-            border-color: rgba(196, 155, 99, 0.22);
-            color: #fff;
-            text-decoration: none;
-            transform: translateY(-2px);
-        }
-
-        .profile-main-grid {
-            display: grid;
-            gap: 24px;
-        }
-
-        .profile-panel {
-            border-radius: 24px;
-            padding: 28px;
-        }
-
-        .panel-wide {
-            min-height: 100%;
-        }
-
-        .panel-heading {
-            margin-bottom: 20px;
-        }
-
-        .panel-kicker {
-            display: inline-block;
-            color: #c49b63;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.16em;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .panel-heading h3 {
-            margin: 0;
-            color: #fff;
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .profile-info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 16px;
-        }
-
-        .info-card {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            padding: 18px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .info-icon-wrap {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            background: rgba(196, 155, 99, 0.14);
-            color: #e8c48c;
             font-size: 18px;
+            font-weight: 700;
         }
 
-        .info-title {
-            margin: 0 0 6px;
-            color: rgba(255, 255, 255, 0.56);
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
+        .order-item-list {
+            display: grid;
+            gap: 14px;
         }
 
-        .info-value {
+        .order-item-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding-top: 14px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.12);
+        }
+
+        .order-item-row:first-child {
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .order-item-title {
             margin: 0;
             color: #fff;
             font-size: 17px;
             font-weight: 600;
-            line-height: 1.6;
-            word-break: break-word;
         }
 
-        .info-value.is-empty {
-            color: rgba(255, 255, 255, 0.46);
-            font-style: italic;
-        }
-
-        .status-stack {
-            display: grid;
-            gap: 16px;
-        }
-
-        .status-card {
-            display: flex;
-            gap: 14px;
-            padding: 18px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .muted-card {
-            background: rgba(196, 155, 99, 0.05);
-            border-color: rgba(196, 155, 99, 0.12);
-        }
-
-        .status-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #8ed699;
-            box-shadow: 0 0 0 6px rgba(142, 214, 153, 0.14);
+        .order-item-notes {
             margin-top: 6px;
-            flex-shrink: 0;
         }
 
-        .status-title {
-            margin: 0 0 8px;
+        .order-item-notes p {
+            margin: 0 0 4px;
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .order-item-side {
+            color: #c49b63;
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .history-empty {
+            border-radius: 24px;
+            padding: 54px 24px;
+        }
+
+        .history-empty-icon {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: rgba(196, 155, 99, 0.14);
+            color: #c49b63;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 18px;
+        }
+
+        .history-empty h3 {
             color: #fff;
-            font-size: 18px;
-            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 28px;
         }
 
-        .status-copy {
-            margin: 0;
-            color: rgba(255, 255, 255, 0.66);
-            line-height: 1.75;
+        .history-empty p {
+            color: rgba(255, 255, 255, 0.62);
+            margin-bottom: 24px;
+        }
+
+        .history-cta {
+            background: #c49b63;
+            border-color: #c49b63;
+            color: #111;
+            font-weight: 700;
+            padding: 12px 28px;
+        }
+
+        .history-cta:hover,
+        .history-cta:focus {
+            background: #b6894f;
+            border-color: #b6894f;
+            color: #111;
         }
 
         .coffee-footer {
@@ -749,29 +662,70 @@
         }
 
         .user-avatar-btn {
-            margin-left: 10px;
+            margin-left: 8px;
                 padding: 0;
                 border: none;
                 background: transparent;
                 box-shadow: none;
-            appearance: none;
+                appearance: none;
             border-radius: 999px;
             overflow: hidden;
         }
 
-        .dropdown-avatar {
-            width: 52px;
-            height: 52px;
-            border-radius: 999px;
-            object-fit: cover;
-            border: none;
-            box-shadow: none;
-            display: block;
-            flex-shrink: 0;
-        }
+            .dropdown-avatar {
+                width: 52px;
+                height: 52px;
+                border-radius: 999px;
+                object-fit: cover;
+                border: none;
+                box-shadow: none;
+                display: block;
+                flex-shrink: 0;
+            }
 
         .user-avatar:hover {
             transform: scale(1.1);
+        }
+
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user-dropdown .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 120%;
+            background: #1a1a1a;
+            border-radius: 12px;
+            min-width: 230px;
+            padding: 10px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-dropdown:hover .dropdown-menu {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .user-info img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #aaa;
         }
 
         .back-to-top-btn {
@@ -812,37 +766,56 @@
             box-shadow: 0 0 0 4px rgba(201, 169, 110, .25), 0 14px 30px rgba(26, 17, 13, .22);
         }
 
-        .active-link {
-            color: #c49b63 !important;
+        .dropdown-item {
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background: #ff6b00;
+            color: #fff;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 991.98px) {
-            .profile-shell {
+            .history-summary-grid,
+            .order-meta-grid {
                 grid-template-columns: 1fr;
             }
 
-            .profile-side-card {
-                position: static;
-            }
-
-            .profile-hero h1 {
+            .history-hero h1 {
                 font-size: 42px;
             }
         }
 
         @media (max-width: 767.98px) {
-            .profile-hero h1 {
-                font-size: 34px;
-            }
-
-            .profile-info-grid,
+            .order-history-top,
+            .order-item-row,
             .footer-grid {
+                flex-direction: column;
                 grid-template-columns: 1fr;
             }
 
-            .profile-side-card,
-            .profile-panel {
-                padding: 22px;
+            .history-hero h1 {
+                font-size: 34px;
+            }
+
+            .order-history-card,
+            .history-summary-card,
+            .history-empty {
+                padding: 20px;
             }
 
             .social-links {

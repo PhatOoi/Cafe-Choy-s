@@ -1,0 +1,63 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $renames = [
+            'tra_dao_cam_sa.jpg' => [
+                'name' => 'Peach Tea',
+                'description' => 'Trà đào thanh mát đúng theo hình ảnh đang dùng',
+            ],
+            'tra_vai_hoa_hong.jpg' => [
+                'name' => 'Trà Lài',
+                'description' => 'Trà lài thơm nhẹ theo hình ảnh đang dùng',
+            ],
+            'tra_oolong_nhan.jpg' => [
+                'name' => 'Trà Oolong Thiết Quan Âm',
+                'description' => 'Trà oolong Thiết Quan Âm đúng theo hình ảnh đang dùng',
+            ],
+            'matcha_dau_mua_he.jpg' => [
+                'name' => 'Trà Sữa Thái Xanh',
+                'description' => 'Trà sữa thái xanh đúng theo hình ảnh đang dùng',
+            ],
+        ];
+
+        foreach ($renames as $imageUrl => $productData) {
+            DB::table('products')
+                ->where('image_url', $imageUrl)
+                ->update($productData);
+        }
+    }
+
+    public function down(): void
+    {
+        $renames = [
+            'tra_dao_cam_sa.jpg' => [
+                'name' => 'Trà Đào Cam Sả',
+                'description' => 'Trà đào thanh mát với cam lát và sả',
+            ],
+            'tra_vai_hoa_hong.jpg' => [
+                'name' => 'Trà Vải Hoa Hồng',
+                'description' => 'Vị vải ngọt dịu hòa cùng hương hoa hồng',
+            ],
+            'tra_oolong_nhan.jpg' => [
+                'name' => 'Trà Oolong Nhãn',
+                'description' => 'Trà oolong thơm nhẹ kết hợp nhãn tươi',
+            ],
+            'matcha_dau_mua_he.jpg' => [
+                'name' => 'Matcha Dâu Mùa Hè',
+                'description' => 'Matcha sữa mát lạnh cùng sốt dâu',
+            ],
+        ];
+
+        foreach ($renames as $imageUrl => $productData) {
+            DB::table('products')
+                ->where('image_url', $imageUrl)
+                ->update($productData);
+        }
+    }
+};

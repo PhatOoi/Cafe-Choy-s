@@ -2,19 +2,38 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
+    use HasFactory;
+
+    protected $table = 'orders';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'user_id', 'address_id', 'assigned_staff_id', 'voucher_id',
-        'order_type', 'status', 'total_price', 'discount_amount',
-        'shipping_fee', 'final_price', 'note',
+        'user_id',
+        'address_id',
+        'assigned_staff_id',
+        'voucher_id',
+        'order_type',
+        'status',
+        'total_price',
+        'discount_amount',
+        'shipping_fee',
+        'final_price',
+        'note',
     ];
 
-    protected $dates = ['created_at'];
+    protected $casts = [
+        'created_at' => 'datetime',
+        'total_price' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'shipping_fee' => 'decimal:2',
+        'final_price' => 'decimal:2',
+    ];
 
     public function user()
     {

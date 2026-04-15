@@ -47,8 +47,11 @@
                 <ul class="navbar-nav ml-auto">
 
                     <!-- MENU ITEMS -->
-                    <li class="nav-item "><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
+                    <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
                     <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @auth
+                        <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                    @endauth
                     @guest
                         <li class="nav-item">
                             <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>
@@ -84,7 +87,7 @@
                                                 <div class="dropdown-header-info">
                                                     <img src="{{ Auth::user()->avatar
                         ? asset('storage/' . Auth::user()->avatar)
-                        : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) }}" class="dropdown-avatar">
+                        : asset('images/user.jpg') }}" class="dropdown-avatar">
 
                                                     <div class="user-details">
                                                         <p class="user-name">{{ Auth::user()->name }}</p>
@@ -126,18 +129,33 @@
         </div>
     </nav>
 
-	<section class="ftco-section" style="padding: 100px 0;">
-		<div class="container">
+    <section class="ftco-section" style="padding: 100px 0;">
+        <div class="container cart-section-container">
 			<div class="row justify-content-center">
-				<div class="col-md-8">
+                <div class="col-lg-12 cart-page-wrap">
 					<h1 class="text-center mb-5">Đơn hàng của bạn</h1>
-					<div class="table-responsive">
-						<table class="table table-striped">
+                    <div class="toast-wrap" id="toastWrap">
+                        <div class="toast-icon">
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a110d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="2 6 5 9 10 3" />
+                            </svg>
+                        </div>
+                        <span id="toastMsg"></span>
+                    </div>
+                    <button type="button" class="back-to-top-btn" id="backToTopBtn" aria-label="Trở về đầu trang">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 19V5" />
+                            <path d="m5 12 7-7 7 7" />
+                        </svg>
+                    </button>
+                    <div class="table-responsive cart-table-wrap">
+                        <table class="table table-striped cart-table">
 							<thead>
                                 <tr style="font-size:15px;">
-                                    <th style="font-size:15px; font-weight:600;">Sản Phẩm</th>
+                                    <th class="cart-image-col" style="font-size:15px; font-weight:600;">Hình Ảnh</th>
+                                    <th class="cart-product-col" style="font-size:15px; font-weight:600;">Sản Phẩm</th>
                                     <th style="font-size:15px; font-weight:600;">Giá</th>
-                                    <th style="font-size:15px; font-weight:600;">Số Lượng</th>
+                                    <th class="cart-qty-col" style="font-size:15px; font-weight:600;">Số Lượng</th>
                                     <th style="font-size:15px; font-weight:600;">Tổng Cộng</th>
                                     <th style="font-size:15px; font-weight:600;"></th>
                                 </tr>
@@ -149,32 +167,32 @@
 											$itemTotal = $item['price'] * $item['qty'];
 										@endphp
 										<tr>
-                                            <td>
-                                                <div style="display:flex;align-items:flex-start;gap:10px;">
-                                                    <img src="{{ isset($item['image_url']) ? asset('images/' . $item['image_url']) : asset('images/no-image.png') }}" alt="{{ $item['name'] }}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid #eee;">
-                                                    <div>
-                                                        <strong>{{ $item['name'] }}</strong><br>
-                                                        <small class="text-muted">
-                                                            Kích cỡ: {{ $item['size'] }}<br>
-                                                            Đường: {{ $item['sugar'] }}<br>
-                                                            Đá: {{ $item['ice'] }}
-                                                            @if(!empty($item['toppings']) && count($item['toppings']) > 0)
-                                                                <br>Topping: {{ implode(', ', $item['toppings']) }}
-                                                            @endif
-                                                            @if(!empty($item['note']))
-                                                                <br>Ghi chú: {{ $item['note'] }}
-                                                            @endif
-                                                        </small>
-                                                    </div>
+                                            <td class="cart-image-cell">
+                                                <img src="{{ isset($item['image_url']) ? asset('images/' . $item['image_url']) : asset('images/no-image.png') }}" alt="{{ $item['name'] }}" class="cart-product-image">
+                                            </td>
+                                            <td class="cart-product-cell">
+                                                <div class="cart-product-details">
+                                                    <strong class="cart-product-name">{{ $item['name'] }}</strong><br>
+                                                    <small class="text-muted cart-product-meta">
+                                                        Kích cỡ: {{ $item['size'] }}<br>
+                                                        Đường: {{ $item['sugar'] }}<br>
+                                                        Đá: {{ $item['ice'] }}
+                                                        @if(!empty($item['toppings']) && count($item['toppings']) > 0)
+                                                            <br>Topping: {{ implode(', ', $item['toppings']) }}
+                                                        @endif
+                                                        @if(!empty($item['note']))
+                                                            <br>Ghi chú: {{ $item['note'] }}
+                                                        @endif
+                                                    </small>
                                                 </div>
                                             </td>
 											<td>{{ number_format($item['price']) }} đ</td>
-                                            <td>
-                                                <div class="input-group input-group-sm" style="max-width:120px;">
+											<td class="cart-qty-cell">
+												<div class="input-group input-group-sm cart-qty-group">
                                                     <div class="input-group-prepend">
                                                         <button class="btn btn-outline-secondary btn-qty" data-action="decrease" data-key="{{ $key }}" type="button">-</button>
                                                     </div>
-                                                    <input type="text" class="form-control text-center cart-qty-input" value="{{ $item['qty'] }}" data-key="{{ $key }}" style="width:40px;" readonly>
+													<input type="text" class="form-control text-center cart-qty-input" value="{{ $item['qty'] }}" data-key="{{ $key }}" readonly>
                                                     <div class="input-group-append">
                                                         <button class="btn btn-outline-secondary btn-qty" data-action="increase" data-key="{{ $key }}" type="button">+</button>
                                                     </div>
@@ -182,13 +200,13 @@
                                             </td>
                                             <td class="item-total" data-key="{{ $key }}">{{ number_format($itemTotal) }} đ</td>
                                             <td>
-                                                <button class="btn btn-sm btn-danger btn-remove-item" data-key="{{ $key }}">Xóa</button>
+                                                <button class="btn btn-sm btn-remove-item" data-key="{{ $key }}">Xóa</button>
                                             </td>
 										</tr>
 									@endforeach
 								@else
 									<tr>
-										<td colspan="5" class="text-center">Giỏ hàng của bạn đang trống</td>
+                                        <td colspan="6" class="text-center">Giỏ hàng của bạn đang trống</td>
 									</tr>
 								@endif
                                     </tbody>
@@ -250,23 +268,20 @@
                                                                 $qrApi = 'https://img.vietqr.io/image/' . 'vietcombank' . '-' . $qrAccount . '-print.png?amount=' . $qrAmount . '&addInfo=' . $qrNote . '&accountName=' . urlencode($qrName);
                                                             @endphp
                                                             <img src="{{ $qrApi }}" alt="QR code" style="width:220px;max-width:100%;border:2px solid #eee;padding:8px;background:#fff;">
-                                                            <div class="mt-2">
-                                                                <a class="btn btn-primary btn-sm" href="{{ $qrApi }}" download="qr-vietcombank.png">Tải ảnh QR</a>
-                                                            </div>
                                                             <div class="mt-2" style="font-size:13px;color:#888;">Trạng thái: <span>Chờ thanh toán...</span></div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="font-weight-bold mb-2" style="font-size:16px;">Cách 2: Chuyển khoản <b>thủ công</b> theo thông tin</div>
                                                             <div class="card p-3" style="background:#fff;border:1px solid #e0e0e0;">
                                                                     <div class="d-flex align-items-center mb-2">
-                                                                        <span style="font-weight:bold;font-size:18px;">Vietcombank</span>
+                                                                        <span style="font-weight:bold;font-size:18px;color:#1f9d55;">Vietcombank</span>
                                                                     </div>
                                                                     <div style="font-size:15px;">
-                                                                        <div><b>Ngân hàng:</b> Vietcombank</div>
+                                                                        <div><b>Ngân hàng:</b> <span style="color:#1f9d55;">Vietcombank</span></div>
                                                                         <div><b>Thụ hưởng:</b> TRAN QUOC LONG</div>
-                                                                        <div><b>Số tài khoản:</b> 1042131375 <button class="btn btn-link btn-sm py-0 px-1" onclick="copyToClipboard('1042131375')">📋</button></div>
-                                                                        <div><b>Số tiền:</b> <span id="qr-amount">{{ number_format($qrAmount) }} đ</span> <button class="btn btn-link btn-sm py-0 px-1" onclick="copyToClipboard('{{ $qrAmount }}')">📋</button></div>
-                                                                        <div><b>Nội dung CK:</b> <span id="qr-note">{{ $qrNote }}</span> <button class="btn btn-link btn-sm py-0 px-1" onclick="copyToClipboard('{{ $qrNote }}')">📋</button></div>
+                                                                        <div><b>Số tài khoản:</b> 1042131375</div>
+                                                                        <div><b>Số tiền:</b> <span id="qr-amount">{{ number_format($qrAmount) }} đ</span></div>
+                                                                        <div><b>Nội dung CK:</b> <span id="qr-note">{{ $qrNote }}</span></div>
                                                                     </div>
                                                                     <div class="alert alert-warning mt-2 mb-0 p-2" style="font-size:13px;">
                                                                         <b>Lưu ý:</b> Vui lòng giữ nguyên nội dung chuyển khoản <b>{{ $qrNote }}</b> để xác nhận thanh toán tự động.
@@ -356,7 +371,7 @@
                                                         Hẹn gặp lại quý khách lần sau
                                                     </div>
                                                     <div class="text-center mt-2" style="color:#111;">
-                                                        <button type="button" class="btn btn-secondary btn-sm px-4" data-dismiss="modal">Đóng</button>
+                                                        <button type="button" class="btn btn-success btn-sm px-4" onclick="confirmCashPayment()">Xác nhận thanh toán</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -365,6 +380,88 @@
 
                                     <!-- Đặt toàn bộ JS ở cuối file, sau tất cả HTML -->
                                     <script>
+                                    function syncCartCount(cartCount) {
+                                        var cartCountElement = document.getElementById('cart-count');
+                                        if (cartCountElement && typeof cartCount !== 'undefined') {
+                                            cartCountElement.textContent = cartCount;
+                                        }
+                                    }
+
+                                    function getPaymentAudioContext() {
+                                        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                                        if (!AudioContextClass) {
+                                            return null;
+                                        }
+
+                                        if (!window.paymentAudioContext) {
+                                            window.paymentAudioContext = new AudioContextClass();
+                                        }
+
+                                        return window.paymentAudioContext;
+                                    }
+
+                                    function primePaymentAudio() {
+                                        var audioContext = getPaymentAudioContext();
+                                        if (audioContext && audioContext.state === 'suspended') {
+                                            audioContext.resume();
+                                        }
+                                    }
+
+                                    function playPaymentSuccessSound() {
+                                        var audioContext = getPaymentAudioContext();
+                                        if (!audioContext) {
+                                            return;
+                                        }
+
+                                        if (audioContext.state === 'suspended') {
+                                            audioContext.resume().then(function() {
+                                                playPaymentSuccessSound();
+                                            }).catch(function() {});
+                                            return;
+                                        }
+
+                                        var masterGain = audioContext.createGain();
+                                        masterGain.connect(audioContext.destination);
+                                        masterGain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+                                        masterGain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.01);
+                                        masterGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.9);
+
+                                        var firstTone = audioContext.createOscillator();
+                                        var secondTone = audioContext.createOscillator();
+
+                                        firstTone.type = 'sine';
+                                        secondTone.type = 'sine';
+
+                                        firstTone.frequency.setValueAtTime(1318.51, audioContext.currentTime);
+                                        secondTone.frequency.setValueAtTime(1760, audioContext.currentTime + 0.18);
+
+                                        firstTone.connect(masterGain);
+                                        secondTone.connect(masterGain);
+
+                                        firstTone.start(audioContext.currentTime);
+                                        firstTone.stop(audioContext.currentTime + 0.22);
+
+                                        secondTone.start(audioContext.currentTime + 0.18);
+                                        secondTone.stop(audioContext.currentTime + 0.48);
+                                    }
+
+                                    function showToast(message) {
+                                        var toastMessage = document.getElementById('toastMsg');
+                                        var toastWrap = document.getElementById('toastWrap');
+
+                                        if (!toastMessage || !toastWrap) {
+                                            return;
+                                        }
+
+                                        toastMessage.textContent = message;
+                                        toastWrap.classList.add('show');
+
+                                        clearTimeout(window.cartToastTimeout);
+                                        window.cartToastTimeout = setTimeout(function() {
+                                            toastWrap.classList.remove('show');
+                                        }, 2800);
+                                    }
+
                                     // Ajax cập nhật số lượng
                                     document.addEventListener('DOMContentLoaded', function() {
                                         document.querySelectorAll('.btn-qty').forEach(function(btn) {
@@ -405,6 +502,8 @@
                                                         if (typeof data.total !== 'undefined') {
                                                             document.getElementById('cart-total').textContent = data.total.toLocaleString('vi-VN') + ' đ';
                                                         }
+
+                                                        syncCartCount(data.cart_count);
                                                     }
                                                 });
                                             });
@@ -430,13 +529,17 @@
                                                     if (typeof data.total !== 'undefined') {
                                                         document.getElementById('cart-total').textContent = data.total.toLocaleString('vi-VN') + ' đ';
                                                     }
+
+                                                    syncCartCount(data.cart_count);
                                                 }
                                             });
                                         });
                                     });
                                     function confirmPayment() {
+                                        primePaymentAudio();
                                         $('#qrPaymentModal').modal('hide');
                                         setTimeout(function() {
+                                            playPaymentSuccessSound();
                                             alert('Cảm ơn bạn! Đơn hàng sẽ được xác nhận sau khi thanh toán thành công.');
                                         }, 400);
                                     }
@@ -444,18 +547,43 @@
                                         $('#paymentMethodModal').modal('hide');
                                         setTimeout(function() { $('#billModal').modal('show'); }, 400);
                                     }
+                                    function confirmCashPayment() {
+                                        primePaymentAudio();
+                                        fetch('/cart/checkout/cash', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                            },
+                                            body: JSON.stringify({})
+                                        })
+                                        .then(function(res) {
+                                            return res.json();
+                                        })
+                                        .then(function(data) {
+                                            if (!data.success) {
+                                                showToast(data.message || 'Không thể thanh toán.');
+                                                return;
+                                            }
+
+                                            $('#billModal').modal('hide');
+                                            syncCartCount(data.cart_count);
+
+                                            setTimeout(function() {
+                                                playPaymentSuccessSound();
+                                                showToast(data.message || 'Thanh toán thành công!');
+                                                setTimeout(function() {
+                                                    window.location.href = data.redirect_url || '/profile#order-history';
+                                                }, 1200);
+                                            }, 400);
+                                        })
+                                        .catch(function() {
+                                            showToast('Không thể thanh toán. Vui lòng thử lại.');
+                                        });
+                                    }
                                     function showQRModal() {
                                         $('#paymentMethodModal').modal('hide');
                                         setTimeout(function() { $('#qrPaymentModal').modal('show'); }, 400);
-                                    }
-                                    function copyToClipboard(text) {
-                                        var temp = document.createElement('input');
-                                        document.body.appendChild(temp);
-                                        temp.value = text;
-                                        temp.select();
-                                        document.execCommand('copy');
-                                        document.body.removeChild(temp);
-                                        alert('Đã sao chép: ' + text);
                                     }
                                     // Hiển thị ngày giờ và mã hóa đơn trong bill
                                     document.addEventListener('DOMContentLoaded', function() {
@@ -473,7 +601,6 @@
                                     </script>
                                     </div>
                                     </div>
-                                    </body>
                                     <!-- Đã loại bỏ đoạn script gán bill-code không tồn tại để tránh lỗi JS. -->
 									</div>
 								</div>
@@ -616,87 +743,6 @@
             width: auto;
             object-fit: contain;
         }
-    .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #ff6b00;
-    transition: 0.3s;
-}
-
-.user-avatar:hover {
-    transform: scale(1.1);
-}
-
-/* DROPDOWN */
-.user-dropdown {
-    position: relative;
-}
-
-.user-dropdown .dropdown-menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 120%;
-    background: #1a1a1a;
-    border-radius: 12px;
-    min-width: 230px;
-    padding: 10px;
-    border: none;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-/* SHOW HOVER */
-.user-dropdown:hover .dropdown-menu {
-    display: block;
-    animation: fadeIn 0.3s ease;
-}
-
-/* USER INFO */
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-}
-
-.user-info img {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-}
-
-.user-info p {
-    margin: 0;
-    font-size: 12px;
-    color: #aaa;
-}
-
-/* ITEM */
-.dropdown-item {
-    color: #fff;
-    padding: 10px 12px;
-    border-radius: 8px;
-    transition: 0.3s;
-}
-
-.dropdown-item:hover {
-    background: #ff6b00;
-    color: #fff;
-}
-
-/* ANIMATION */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
     /* === COFFEE FOOTER STYLES === */
     .coffee-footer {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -925,13 +971,304 @@
         box-shadow: none !important;
         border: none !important;
     }
+
+    .cart-section-container {
+        max-width: 1280px;
+    }
+
+    .cart-page-wrap {
+        max-width: 1240px;
+        flex: 0 0 100%;
+    }
+
+    .cart-table-wrap {
+        overflow-x: visible;
+    }
+
+    .cart-table {
+        table-layout: auto;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .toast-wrap {
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-90px);
+        background: #1a110d;
+        color: #f0e6d0;
+        padding: 10px 20px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 99999;
+        transition: transform .38s cubic-bezier(.25, .8, .25, 1);
+        pointer-events: none;
+    }
+
+    .toast-wrap.show {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-icon {
+        width: 20px;
+        height: 20px;
+        background: #c9a96e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .back-to-top-btn {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        width: 52px;
+        height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #c9a96e, #8a5b2f);
+        color: #fff7ed;
+        box-shadow: 0 14px 30px rgba(26, 17, 13, .22);
+        cursor: pointer;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(16px);
+        transition: opacity .25s ease, transform .25s ease, visibility .25s ease, box-shadow .25s ease;
+        z-index: 9998;
+    }
+
+    .back-to-top-btn.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .back-to-top-btn:hover {
+        box-shadow: 0 18px 34px rgba(26, 17, 13, .28);
+        transform: translateY(-3px);
+    }
+
+    .back-to-top-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(201, 169, 110, .25), 0 14px 30px rgba(26, 17, 13, .22);
+    }
+
+    .cart-image-col,
+    .cart-image-cell {
+        width: 130px;
+        min-width: 130px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .cart-product-col,
+    .cart-product-cell {
+        width: 36%;
+        min-width: 0;
+    }
+
+    .cart-product-col {
+        vertical-align: top;
+        padding-top: 12px !important;
+        text-align: center;
+    }
+
+    .cart-qty-col,
+    .cart-qty-cell {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .cart-product-cell {
+        vertical-align: top;
+    }
+
+    .cart-table th:not(.cart-product-col),
+    .cart-table td:not(.cart-product-cell) {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .cart-product-image {
+        width: 104px;
+        height: 104px;
+        flex-shrink: 0;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid #eee;
+        margin-top: 2px;
+    }
+
+    .cart-product-details {
+        min-width: 0;
+        padding-top: 0;
+    }
+
+    .cart-product-name {
+        display: inline-block;
+        margin-bottom: 6px;
+        font-size: 17px;
+        line-height: 1.45;
+    }
+
+    .cart-product-meta {
+        display: block;
+        font-size: 14px;
+        line-height: 1.65;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .cart-qty-group {
+        max-width: 132px;
+        flex-wrap: nowrap;
+        align-items: center;
+        margin: 0 auto;
+    }
+
+    .cart-qty-group .input-group-prepend,
+    .cart-qty-group .input-group-append {
+        display: flex;
+    }
+
+    .cart-qty-group .btn-qty {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0;
+        line-height: 1;
+        font-size: 16px;
+        font-weight: 700;
+        color: #111;
+        background: #c49b63;
+        border-color: #c49b63;
+        box-shadow: none;
+    }
+
+    .cart-qty-group .btn-qty:hover,
+    .cart-qty-group .btn-qty:focus,
+    .cart-qty-group .btn-qty:active {
+        color: #111;
+        background: #b6894f;
+        border-color: #b6894f;
+        box-shadow: none;
+    }
+
+    .cart-qty-group .cart-qty-input {
+        width: 52px;
+        min-width: 52px;
+        height: 34px;
+        padding: 0;
+        text-align: center;
+        border-left: 0;
+        border-right: 0;
+        box-shadow: none;
+    }
+
+    .btn-remove-item {
+        color: #111 !important;
+        background: #c49b63;
+        border-color: #c49b63;
+        font-weight: 600;
+    }
+
+    .btn-remove-item:hover,
+    .btn-remove-item:focus,
+    .btn-remove-item:active {
+        color: #111 !important;
+        background: #b6894f;
+        border-color: #b6894f;
+        box-shadow: none;
+    }
+
+    @media (max-width: 991.98px) {
+        .cart-page-wrap {
+            max-width: 100%;
+        }
+
+        .cart-table-wrap {
+            overflow-x: auto;
+        }
+
+        .cart-table {
+            min-width: 820px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .cart-product-col {
+            padding-left: 112px !important;
+        }
+
+        .cart-product-col,
+        .cart-product-cell {
+            width: 34%;
+            min-width: 260px;
+        }
+
+        .cart-image-col,
+        .cart-image-cell {
+            width: 110px;
+            min-width: 110px;
+        }
+
+        .cart-product-image {
+            width: 84px;
+            height: 84px;
+        }
+
+        .cart-product-name {
+            font-size: 16px;
+        }
+    }
+
     .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
     object-fit: cover;
-    border: 2px solid #ff6b00;
+    border: none;
+    box-shadow: none;
+    display: block;
     transition: 0.3s;
+}
+
+    .user-avatar-btn {
+    margin-left: 8px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    appearance: none;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+    .dropdown-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: none;
+    box-shadow: none;
+    display: block;
+    flex-shrink: 0;
 }
 
 .user-avatar:hover {
@@ -995,6 +1332,15 @@
     color: #fff;
 }
 
+@media (max-width: 767.98px) {
+    .back-to-top-btn {
+        right: 16px;
+        bottom: 18px;
+        width: 48px;
+        height: 48px;
+    }
+}
+
 /* ANIMATION */
 @keyframes fadeIn {
     from {
@@ -1007,51 +1353,6 @@
     }
 }
 </style>
-    <script>
-		document.addEventListener('DOMContentLoaded', function() {
-			const userMenuBtn = document.getElementById('userMenuBtn');
-			const userDropdownMenu = document.getElementById('userDropdownMenu');
-			const dropdownContainer = document.querySelector('.user-dropdown-container');
-
-			if (userMenuBtn && userDropdownMenu) {
-				// Show dropdown on click
-				userMenuBtn.addEventListener('click', function(e) {
-					e.preventDefault();
-					e.stopPropagation();
-					userDropdownMenu.classList.toggle('active');
-					userMenuBtn.classList.toggle('active');
-				});
-
-				// Keep dropdown open when hovering
-				dropdownContainer.addEventListener('mouseenter', function() {
-					userDropdownMenu.classList.add('active');
-					userMenuBtn.classList.add('active');
-				});
-
-				dropdownContainer.addEventListener('mouseleave', function() {
-					userDropdownMenu.classList.remove('active');
-					userMenuBtn.classList.remove('active');
-				});
-
-				// Close dropdown when clicking outside
-				document.addEventListener('click', function(e) {
-					if (!dropdownContainer.contains(e.target)) {
-						userDropdownMenu.classList.remove('active');
-						userMenuBtn.classList.remove('active');
-					}
-				});
-
-				// Close dropdown when clicking on a link
-				const links = userDropdownMenu.querySelectorAll('.dropdown-link:not(.logout-link)');
-				links.forEach(link => {
-					link.addEventListener('click', function() {
-						userDropdownMenu.classList.remove('active');
-						userMenuBtn.classList.remove('active');
-					});
-				});
-			}
-		});
-	</script>
 	<script src="js/jquery.min.js"></script>
 	<script src="js/jquery-migrate-3.0.1.min.js"></script>
 	<script src="js/popper.min.js"></script>
@@ -1074,6 +1375,27 @@
 			const userMenuBtn = document.getElementById('userMenuBtn');
 			const userDropdownMenu = document.getElementById('userDropdownMenu');
 			const dropdownContainer = document.querySelector('.user-dropdown-container');
+            const backToTopBtn = document.getElementById('backToTopBtn');
+
+            function toggleBackToTopButton() {
+                if (!backToTopBtn) {
+                    return;
+                }
+
+                if (window.scrollY > 320) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            }
+
+            if (backToTopBtn) {
+                toggleBackToTopButton();
+                backToTopBtn.addEventListener('click', function() {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+                window.addEventListener('scroll', toggleBackToTopButton, { passive: true });
+            }
 
 			if (userMenuBtn && userDropdownMenu) {
 				// Show dropdown on click

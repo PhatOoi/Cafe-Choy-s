@@ -54,6 +54,9 @@
                     <!-- MENU ITEMS -->
                     <li class="nav-item active"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
                     <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @auth
+                        <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                    @endauth
                     @guest
                         <li class="nav-item">
                             <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>
@@ -554,12 +557,36 @@
         /* FIX NAVBAR ALIGN */
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
             object-fit: cover;
-            border: 2px solid #ff6b00;
+                border: none;
+                box-shadow: none;
+                display: block;
             transition: 0.3s;
+        }
+
+        .user-avatar-btn {
+            margin-left: 8px;
+                padding: 0;
+                border: none;
+                background: transparent;
+                box-shadow: none;
+            appearance: none;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .dropdown-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: none;
+            box-shadow: none;
+            display: block;
+            flex-shrink: 0;
         }
 
         .user-avatar:hover {
@@ -608,6 +635,44 @@
             margin: 0;
             font-size: 12px;
             color: #aaa;
+        }
+
+        .back-to-top-btn {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: 52px;
+            height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c9a96e, #8a5b2f);
+            color: #fff7ed;
+            box-shadow: 0 14px 30px rgba(26, 17, 13, .22);
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(16px);
+            transition: opacity .25s ease, transform .25s ease, visibility .25s ease, box-shadow .25s ease;
+            z-index: 9998;
+        }
+
+        .back-to-top-btn.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-to-top-btn:hover {
+            box-shadow: 0 18px 34px rgba(26, 17, 13, .28);
+            transform: translateY(-3px);
+        }
+
+        .back-to-top-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(201, 169, 110, .25), 0 14px 30px rgba(26, 17, 13, .22);
         }
 
         /* ITEM */
@@ -856,8 +921,23 @@
             .newsletter-content h3 {
                 font-size: 1.8rem;
             }
+
+            .back-to-top-btn {
+                right: 16px;
+                bottom: 18px;
+                width: 48px;
+                height: 48px;
+            }
         }
     </style>
+
+    <button type="button" class="back-to-top-btn" id="backToTopBtn" aria-label="Trở về đầu trang">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5" />
+            <path d="m5 12 7-7 7 7" />
+        </svg>
+    </button>
 
     <script>
         function subscribeNewsletter() {
@@ -890,6 +970,27 @@
             const userMenuBtn = document.getElementById('userMenuBtn');
             const userDropdownMenu = document.getElementById('userDropdownMenu');
             const dropdownContainer = document.querySelector('.user-dropdown-container');
+            const backToTopBtn = document.getElementById('backToTopBtn');
+
+            function toggleBackToTopButton() {
+                if (!backToTopBtn) {
+                    return;
+                }
+
+                if (window.scrollY > 320) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            }
+
+            if (backToTopBtn) {
+                toggleBackToTopButton();
+                backToTopBtn.addEventListener('click', function () {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+                window.addEventListener('scroll', toggleBackToTopButton, { passive: true });
+            }
 
             if (userMenuBtn && userDropdownMenu) {
                 // Show dropdown on click

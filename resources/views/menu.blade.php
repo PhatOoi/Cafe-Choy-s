@@ -54,6 +54,9 @@
                     <!-- MENU ITEMS -->
                     <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
                     <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @auth
+                        <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                    @endauth
                     @guest
                         <li class="nav-item">
                             <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>
@@ -81,8 +84,7 @@
                                                 @if(Auth::user()->avatar)
                                                     <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
                                                 @else
-                                                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}"
-                                                        class="user-avatar">
+                                                    <img src="{{ asset('images/user.jpg') }}" class="user-avatar">
                                                 @endif
                                             </button>
 
@@ -90,7 +92,7 @@
                                                 <div class="dropdown-header-info">
                                                     <img src="{{ Auth::user()->avatar
                         ? asset('storage/' . Auth::user()->avatar)
-                        : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) }}" class="dropdown-avatar">
+                        : asset('images/user.jpg') }}" class="dropdown-avatar">
 
                                                     <div class="user-details">
                                                         <p class="user-name">{{ Auth::user()->name }}</p>
@@ -147,10 +149,67 @@
         </div>
     </section>
 
+    @php
+        $menuDirectory = [
+            ['label' => 'Cà phê', 'slug' => 'ca-phe', 'aliases' => ['cà phê', 'ca phe', 'coffee']],
+            ['label' => 'Trà sữa', 'slug' => 'tra-sua', 'aliases' => ['trà sữa', 'tra sua', 'milk tea']],
+            ['label' => 'Nước ép và sinh tố', 'slug' => 'nuoc-ep-sinh-to', 'aliases' => ['nước ép', 'nuoc ep', 'sinh tố', 'sinh to', 'juice', 'smoothie']],
+            ['label' => 'Đá xay', 'slug' => 'da-xay', 'aliases' => ['đá xay', 'da xay', 'frappe']],
+            ['label' => 'Trà và thức uống theo mùa', 'slug' => 'tra-va-thuc-uong-theo-mua', 'aliases' => ['trà và thức uống theo mùa', 'tra va thuc uong theo mua', 'theo mùa', 'theo mua', 'seasonal']],
+            ['label' => 'Bánh', 'slug' => 'banh-snack', 'aliases' => ['bánh', 'banh', 'cake', 'pastry']],
+        ];
+    @endphp
+
+    <section class="menu-directory-section">
+        <div class="menu-directory-shell">
+            <p class="menu-directory-kicker">Mục lục thực đơn</p>
+            <div class="menu-directory-links">
+                @foreach($menuDirectory as $directoryItem)
+                    @php
+                        $targetCategory = $categories->first(function ($category) use ($directoryItem) {
+                            return \Illuminate\Support\Str::slug($category->name) === $directoryItem['slug'];
+                        });
+
+                        if (!$targetCategory) {
+                            $targetCategory = $categories->first(function ($category) use ($directoryItem) {
+                                $categoryName = \Illuminate\Support\Str::lower(trim($category->name));
+                                $aliases = collect($directoryItem['aliases']);
+
+                                if ($aliases->contains($categoryName)) {
+                                    return true;
+                                }
+
+                                return $aliases->contains(function ($alias) use ($categoryName) {
+                                    return str_contains($categoryName, $alias);
+                                });
+                            });
+                        }
+                    @endphp
+
+                    @if($targetCategory)
+                        @php
+                            $directoryImage = optional($targetCategory->products->first())->image_url;
+                        @endphp
+                        <a href="#menu-cat-{{ \Illuminate\Support\Str::slug($targetCategory->name) }}" class="menu-directory-link">
+                            <span class="menu-directory-avatar-wrap">
+                                <img
+                                    src="{{ $directoryImage ? asset('images/' . $directoryImage) : 'https://via.placeholder.com/180x180/c8b8a8/ffffff?text=Menu' }}"
+                                    alt="{{ $directoryItem['label'] }}"
+                                    class="menu-directory-avatar"
+                                    onerror="this.src='https://via.placeholder.com/180x180/c8b8a8/ffffff?text=Menu'">
+                            </span>
+                            <span class="menu-directory-label">{{ $directoryItem['label'] }}</span>
+                        </a>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </section>
+
     {{-- ===== GRID SẢN PHẨM THEO PHÂN LOẠI ===== --}}
     <section class="menu-section">
         @foreach($categories as $category)
-            <div class="menu-category-block">
+            <div class="menu-category-block" id="menu-cat-{{ \Illuminate\Support\Str::slug($category->name) }}">
                 <h2 class="menu-category-title" style="
                             border-bottom: 2px solid #c8b8a8;
                             margin-top: 40px;
@@ -161,58 +220,93 @@
                         ">
                     {{ $category->name }}
                 </h2>
-                <div class="menu-grid">
-                    @foreach($category->products as $product)
-                        <div class="product-card">
-                            <div class="card-image-wrap">
-                                <img src="{{ asset('images/' . $product->image_url) }}"
-                                    onerror="this.src='https://via.placeholder.com/400x280/c8b8a8/ffffff?text=Coffee'"
-                                    alt="{{ $product->name }}" class="card-img">
-                                <div class="card-shine"></div>
-                                @if($product->is_new ?? false)
-                                    <span class="card-badge badge-new">Mới</span>
-                                @endif
-                                @if($product->is_hot ?? false)
-                                    <span class="card-badge badge-hot">Bán chạy</span>
-                                @endif
-                            </div>
-                            <div class="card-body">
-                              
-                                <h3 class="card-name">{{ $product->name }}</h3>
-                                @if($product->description ?? false)
-                                    <p class="card-desc">{{ Str::limit($product->description, 65) }}</p>
-                                @endif
-                                <div class="card-footer">
-                                    <span class="card-price">
-                                        {{ number_format($product->price) }}<span class="price-unit">đ</span>
-                                    </span>
-                                    @auth
-                                        <button class="btn-add-cart" onclick="openModal(
-                                                        {{ $product->id }},
-                                                        '{{ addslashes($product->name) }}',
-                                                        {{ $product->price }},
-                                                        '{{ $category->name }}',
-                                                        '{{ asset('images/' . $product->image_url) }}',
-                                                        {{ $category->id }}
-                                                    )">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                <circle cx="9" cy="21" r="1" />
-                                                <circle cx="20" cy="21" r="1" />
-                                                <path d="M1 1h4l2.68 13.39..." />
-                                            </svg>
-                                            <span>Thêm vào giỏ</span>
-                                        </button>
-                                    @else
-                                        <button class="btn-add-cart" onclick="redirectLogin()">
-                                            <span>Đăng nhập để mua</span>
-                                        </button>
-                                    @endauth
+                @php
+                    $categorySlug = \Illuminate\Support\Str::slug($category->name);
+                    $productGroups = collect([
+                        [
+                            'label' => null,
+                            'products' => $category->products,
+                        ],
+                    ]);
+
+                    if ($categorySlug === 'tra-va-thuc-uong-theo-mua') {
+                        $coldNames = ['Peach Tea', 'Trà Dâu', 'Trà Trái Cây Nhiệt Đới'];
+                        $hotNames = ['Trà Lài', 'Trà Oolong Thiết Quan Âm', 'Trà Dưỡng Nhan'];
+
+                        $coldProducts = collect($coldNames)
+                            ->map(fn ($name) => $category->products->firstWhere('name', $name))
+                            ->filter();
+
+                        $hotProducts = collect($hotNames)
+                            ->map(fn ($name) => $category->products->firstWhere('name', $name))
+                            ->filter();
+
+                        $productGroups = collect([
+                            ['label' => 'Uống lạnh', 'products' => $coldProducts],
+                            ['label' => 'Uống nóng', 'products' => $hotProducts],
+                        ])->filter(fn ($group) => $group['products']->isNotEmpty());
+                    }
+                @endphp
+
+                @foreach($productGroups as $group)
+                    @if($group['label'])
+                        <div class="menu-subcategory-label-wrap">
+                            <h3 class="menu-subcategory-label">{{ $group['label'] }}</h3>
+                        </div>
+                    @endif
+
+                    <div class="menu-grid">
+                        @foreach($group['products'] as $product)
+                            <div class="product-card">
+                                <div class="card-image-wrap">
+                                    <img src="{{ asset('images/' . $product->image_url) }}"
+                                        onerror="this.src='https://via.placeholder.com/400x280/c8b8a8/ffffff?text=Coffee'"
+                                        alt="{{ $product->name }}" class="card-img">
+                                    <div class="card-shine"></div>
+                                    @if($product->is_new ?? false)
+                                        <span class="card-badge badge-new">Mới</span>
+                                    @endif
+                                    @if($product->is_hot ?? false)
+                                        <span class="card-badge badge-hot">Bán chạy</span>
+                                    @endif
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="card-name">{{ $product->name }}</h3>
+                                    @if($product->description ?? false)
+                                        <p class="card-desc">{{ Str::limit($product->description, 65) }}</p>
+                                    @endif
+                                    <div class="card-footer">
+                                        <span class="card-price">
+                                            {{ number_format($product->price) }}<span class="price-unit">đ</span>
+                                        </span>
+                                        @auth
+                                            <button class="btn-add-cart" onclick="openModal(
+                                                            {{ $product->id }},
+                                                            '{{ addslashes($product->name) }}',
+                                                            {{ $product->price }},
+                                                            '{{ $category->name }}',
+                                                            '{{ asset('images/' . $product->image_url) }}',
+                                                            {{ $category->id }}
+                                                        )">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="9" cy="21" r="1" />
+                                                    <circle cx="20" cy="21" r="1" />
+                                                    <path d="M1 1h4l2.68 13.39..." />
+                                                </svg>
+                                                <span>Thêm vào giỏ</span>
+                                            </button>
+                                        @else
+                                            <button class="btn-add-cart" onclick="redirectLogin()">
+                                                <span>Đăng nhập để mua</span>
+                                            </button>
+                                        @endauth
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
+                        @endforeach
+                    </div>
+                @endforeach
             </div>
         @endforeach
 
@@ -376,6 +470,15 @@
         </div>
         <span id="toastMsg"></span>
     </div>
+
+    <button type="button" class="back-to-top-btn" id="backToTopBtn" aria-label="Trở về đầu trang">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5" />
+            <path d="m5 12 7-7 7 7" />
+        </svg>
+    </button>
+
     <footer class="coffee-footer">
         <!-- Newsletter Section -->
 
@@ -510,13 +613,37 @@
         }
 
         .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #ff6b00;
-    transition: 0.3s;
-}
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+                object-fit: cover;
+                border: none;
+                box-shadow: none;
+                display: block;
+                transition: 0.3s;
+            }
+
+        .user-avatar-btn {
+            margin-left: 8px;
+                padding: 0;
+                border: none;
+                background: transparent;
+                box-shadow: none;
+            appearance: none;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .dropdown-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: none;
+            box-shadow: none;
+            display: block;
+            flex-shrink: 0;
+        }
 
 .user-avatar:hover {
     transform: scale(1.1);
@@ -891,11 +1018,101 @@
             margin: 0;
         }
 
+        .menu-directory-section {
+            background: linear-gradient(180deg, #1a110d 0%, #f5f0eb 100%);
+            padding: 0 24px 24px;
+        }
+
+        .menu-directory-shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 22px 24px;
+            border-radius: 24px;
+            background: rgba(255, 248, 240, 0.92);
+            border: 1px solid rgba(201, 169, 110, .28);
+            box-shadow: 0 16px 34px rgba(26, 17, 13, .08);
+        }
+
+        .menu-directory-kicker {
+            margin: 0 0 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .78rem;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: #8b7060;
+        }
+
+        .menu-directory-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+            gap: 16px;
+        }
+
+        .menu-directory-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 16px 12px 14px;
+            border-radius: 22px;
+            background: #fff;
+            border: 1px solid rgba(201, 169, 110, .28);
+            color: #3b2a20;
+            font-family: 'DM Sans', sans-serif;
+            text-decoration: none;
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease;
+        }
+
+        .menu-directory-avatar-wrap {
+            width: 82px;
+            height: 82px;
+            padding: 4px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(201, 169, 110, .32), rgba(255, 255, 255, .85));
+            box-shadow: 0 10px 22px rgba(26, 17, 13, .12);
+            flex-shrink: 0;
+        }
+
+        .menu-directory-avatar {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .menu-directory-label {
+            display: block;
+            text-align: center;
+            color: #3b2a20;
+            font-size: .92rem;
+            font-weight: 600;
+            line-height: 1.4;
+            min-height: 2.6em;
+        }
+
+        .menu-directory-link:hover {
+            color: #8a5b2f;
+            border-color: rgba(138, 91, 47, .45);
+            box-shadow: 0 10px 20px rgba(26, 17, 13, .08);
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+
+        .menu-directory-link:hover .menu-directory-label {
+            color: #8a5b2f;
+        }
+
         /* ===== MENU SECTION ===== */
         .menu-section {
             background: #f5f0eb;
             padding: 56px 24px 80px;
             min-height: 50vh;
+        }
+
+        .menu-category-block {
+            scroll-margin-top: 120px;
         }
 
         .menu-grid {
@@ -904,6 +1121,27 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 28px;
+        }
+
+        .menu-subcategory-label-wrap {
+            max-width: 1200px;
+            margin: 0 auto 18px;
+        }
+
+        .menu-subcategory-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0 0;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(201, 169, 110, .12);
+            color: #6f4d33;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .86rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
         }
 
         /* ===== CARD ===== */
@@ -1502,8 +1740,75 @@
             flex-shrink: 0;
         }
 
+        .back-to-top-btn {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: 52px;
+            height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c9a96e, #8a5b2f);
+            color: #fff7ed;
+            box-shadow: 0 14px 30px rgba(26, 17, 13, .22);
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(16px);
+            transition: opacity .25s ease, transform .25s ease, visibility .25s ease, box-shadow .25s ease;
+            z-index: 9998;
+        }
+
+        .back-to-top-btn.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-to-top-btn:hover {
+            box-shadow: 0 18px 34px rgba(26, 17, 13, .28);
+            transform: translateY(-3px);
+        }
+
+        .back-to-top-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(201, 169, 110, .25), 0 14px 30px rgba(26, 17, 13, .22);
+        }
+
         /* RESPONSIVE */
         @media (max-width: 768px) {
+            .menu-directory-section {
+                padding: 0 14px 18px;
+            }
+
+            .menu-directory-shell {
+                padding: 18px 16px;
+                border-radius: 20px;
+            }
+
+            .menu-directory-links {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .menu-directory-link {
+                width: 100%;
+                border-radius: 18px;
+                padding: 14px 10px 12px;
+            }
+
+            .menu-directory-avatar-wrap {
+                width: 72px;
+                height: 72px;
+            }
+
+            .menu-directory-label {
+                font-size: .86rem;
+            }
+
             .menu-section {
                 padding: 36px 14px 60px;
             }
@@ -1518,6 +1823,13 @@
 
             .sheet-body {
                 padding: 16px 16px 28px;
+            }
+
+            .back-to-top-btn {
+                right: 16px;
+                bottom: 18px;
+                width: 48px;
+                height: 48px;
             }
         }
 
@@ -1753,6 +2065,29 @@
         const userMenuBtn = document.getElementById('userMenuBtn');
         const userDropdownMenu = document.getElementById('userDropdownMenu');
         const dropdownContainer = document.querySelector('.user-dropdown-container');
+        const backToTopBtn = document.getElementById('backToTopBtn');
+
+        function toggleBackToTopButton() {
+            if (!backToTopBtn) {
+                return;
+            }
+
+            if (window.scrollY > 320) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        }
+
+        if (backToTopBtn) {
+            toggleBackToTopButton();
+
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            window.addEventListener('scroll', toggleBackToTopButton, { passive: true });
+        }
 
         if (userMenuBtn && userDropdownMenu) {
             // Show dropdown on click

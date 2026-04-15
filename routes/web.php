@@ -13,6 +13,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\OrderHistoryController;
 
 // Trang chủ
 Route::get('/', function () {
@@ -32,6 +33,8 @@ Route::post('/cart/add', [CartController::class, 'add'])->middleware('auth');
 Route::get('/cart', [CartController::class, 'index'])->middleware('auth');
 Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->middleware('auth');
 Route::post('/cart/update/{key}', [CartController::class, 'update'])->middleware('auth');
+Route::post('/cart/checkout/cash', [CartController::class, 'confirmCashPayment'])->middleware('auth');
+Route::get('/orders/history', [OrderHistoryController::class, 'index'])->middleware('auth')->name('orders.history');
 
 Route::get('/test-db', function () {
     $users = DB::table('users')->get();
