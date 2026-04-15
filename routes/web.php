@@ -13,7 +13,13 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\OrderHistoryController;
 
 // ── PUBLIC ────────────────────────────────────────────────────
-Route::get('/', fn() => view('home'));
+Route::get('/', function () {
+    if (auth()->check() && auth()->user()->isStaff()) {
+        return redirect()->route('staff.dashboard');
+    }
+
+    return view('home');
+});
 Route::get('/menu', [MenuController::class, 'index']);
 
 // FIX: /search trùng lặp — giữ SearchController, xóa MenuController::search
@@ -29,6 +35,8 @@ Route::get('/cart', [CartController::class, 'index'])->middleware('auth');
 Route::get('/cart/remove/{id}', [CartController::class, 'remove'])->middleware('auth');
 Route::post('/cart/update/{key}', [CartController::class, 'update'])->middleware('auth');
 Route::post('/cart/checkout/cash', [CartController::class, 'confirmCashPayment'])->middleware('auth');
+Route::post('/cart/checkout/qr', [CartController::class, 'confirmQrPayment'])->middleware('auth');
+Route::get('/cart/qr-status', [CartController::class, 'qrPaymentStatus'])->middleware('auth')->name('cart.qr-status');
 Route::get('/orders/history', [OrderHistoryController::class, 'index'])->middleware('auth')->name('orders.history');
 
 Route::get('/test-db', function () {
@@ -80,6 +88,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
     Route::put('/orders/{id}',          [StaffController::class, 'updateOrder'])->name('order.update');
     Route::delete('/orders/{id}',       [StaffController::class, 'deleteOrder'])->name('order.delete');
     Route::post('/orders/{id}/status',  [StaffController::class, 'updateStatus'])->name('order.status');
+    Route::post('/orders/{id}/confirm-payment', [StaffController::class, 'confirmPayment'])->name('order.payment.confirm');
     Route::get('/orders/{id}/invoice',  [StaffController::class, 'invoice'])->name('order.invoice');
     Route::post('/orders/{id}/assign',  [StaffController::class, 'assignDelivery'])->name('order.assign');
     Route::post('/shift/start', [StaffController::class, 'startShift'])->name('shift.start');

@@ -14,6 +14,10 @@ class MenuController extends Controller
     // Hiển thị trang menu với danh sách sản phẩm, topping, đường, đá, size
     public function index()
     {
+        if (auth()->check() && auth()->user()->isStaff()) {
+            return redirect()->route('staff.dashboard')->with('error', 'Nhân viên không có quyền truy cập trang menu.');
+        }
+
         // Lấy tất cả category có sản phẩm
         $categories = Category::whereHas('products')->with(['products' => function($q) {
             $q->orderBy('name');

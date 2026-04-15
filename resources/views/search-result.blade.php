@@ -48,7 +48,9 @@
 
                     <!-- MENU ITEMS -->
                     <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                    <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @if(!(auth()->check() && auth()->user()->isStaff()))
+                        <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @endif
                     @guest
                         <li class="nav-item">
                             <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>
@@ -132,14 +134,14 @@
     <section class="menu-hero">
         <div class="menu-hero-inner">
             <p><br></p>
-            <p class="menu-tagline">Thức uống thủ công</p>
-            <h1 class="menu-title">Thực đơn</h1>
+            <p class="menu-tagline">Tìm món yêu thích</p>
+            <h1 class="menu-title">Kết Quả Tìm Kiếm</h1>
             <div class="menu-divider">
                 <span class="divider-line"></span>
                 <span class="divider-dot">✦</span>
                 <span class="divider-line"></span>
             </div>
-            <p class="menu-sub">Mỗi ly được pha chế với tâm huyết &amp; nguyên liệu chọn lọc</p>
+            <p class="menu-sub">Khám phá các món phù hợp với từ khóa bạn vừa tìm</p>
         </div>
     </section>
 
@@ -147,89 +149,144 @@
 
 {{-- ===== KẾT QUẢ TÌM KIẾM ===== --}}
 <section class="menu-section">
-
-    <h2 class="menu-category-title" style="text-align:center;">
+    <h2 class="menu-category-title search-result-title">
         Kết quả cho "{{ $q }}"
     </h2>
 
     @forelse($categories as $category)
-        <div class="menu-category-block">
+        <div class="menu-category-block" id="search-cat-{{ \Illuminate\Support\Str::slug($category->name) }}">
+            <h2 class="menu-category-title" style="
+                        border-bottom: 2px solid #c8b8a8;
+                        margin-top: 40px;
+                        margin-bottom: 24px;
+                        padding-bottom: 8px;
+                        color: var(--category-title-color, #1a110d);
+                        text-align: left;
+                    ">
+                {{ $category->name }}
+            </h2>
 
-            
-            <div class="menu-grid">
-                @foreach($category->products as $product)
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <img src="{{ asset('images/' . $product->image_url) }}"
-                                 onerror="this.src='https://via.placeholder.com/400x280/c8b8a8/ffffff?text=Coffee'"
-                                 alt="{{ $product->name }}" class="card-img">
+            @php
+                $categorySlug = \Illuminate\Support\Str::slug($category->name);
+                $productGroups = collect([
+                    [
+                        'label' => null,
+                        'products' => $category->products,
+                    ],
+                ]);
 
-                            @if($product->is_new ?? false)
-                                <span class="card-badge badge-new">Mới</span>
-                            @endif
+                if ($categorySlug === 'tra-va-thuc-uong-theo-mua') {
+                    $coldNames = ['Peach Tea', 'Trà Dâu', 'Trà Trái Cây Nhiệt Đới'];
+                    $hotNames = ['Trà Lài', 'Trà Olong thiết quan âm', 'Trà Dưỡng Nhan'];
 
-                            @if($product->is_hot ?? false)
-                                <span class="card-badge badge-hot">Bán chạy</span>
-                            @endif
-                        </div>
+                    $coldProducts = collect($coldNames)
+                        ->map(fn ($name) => $category->products->firstWhere('name', $name))
+                        ->filter();
 
-                        <div class="card-body">
-                            <h3 class="card-name">{{ $product->name }}</h3>
+                    $hotProducts = collect($hotNames)
+                        ->map(fn ($name) => $category->products->firstWhere('name', $name))
+                        ->filter();
 
-                            @if($product->description)
-                                <p class="card-desc">
-                                    {{ Str::limit($product->description, 65) }}
-                                </p>
-                            @endif
+                    $productGroups = collect([
+                        ['label' => 'Uống lạnh', 'products' => $coldProducts],
+                        ['label' => 'Uống nóng', 'products' => $hotProducts],
+                    ])->filter(fn ($group) => $group['products']->isNotEmpty());
+                }
+            @endphp
 
-                            <div class="card-footer">
-                                <span class="card-price">
-                                    {{ number_format($product->price) }}đ
-                                </span>
+            @foreach($productGroups as $group)
+                @if($group['label'])
+                    <div class="menu-subcategory-label-wrap">
+                        <h3 class="menu-subcategory-label">{{ $group['label'] }}</h3>
+                    </div>
+                @endif
 
-                                @auth
-                                    <button class="btn-add-cart"
-                                        onclick="openModal(
-                                            {{ $product->id }},
-                                            '{{ addslashes($product->name) }}',
-                                            {{ $product->price }},
-                                            '{{ $category->name }}',
-                                            '{{ asset('images/' . $product->image_url) }}',
-                                            {{ $category->id }}
-                                        )">
-                                        Thêm
-                                    </button>
-                                @else
-                                    <button class="btn-add-cart" onclick="redirectLogin()">
-                                        Đăng nhập
-                                    </button>
-                                @endauth
+                <div class="menu-grid">
+                    @foreach($group['products'] as $product)
+                        <div class="product-card">
+                            <div class="card-image-wrap">
+                                <img src="{{ asset('images/' . $product->image_url) }}"
+                                    onerror="this.src='https://via.placeholder.com/400x280/c8b8a8/ffffff?text=Coffee'"
+                                    alt="{{ $product->name }}" class="card-img">
+                                <div class="card-shine"></div>
+                                @if($product->is_new ?? false)
+                                    <span class="card-badge badge-new">Mới</span>
+                                @endif
+                                @if($product->is_hot ?? false)
+                                    <span class="card-badge badge-hot">Bán chạy</span>
+                                @endif
+                            </div>
+
+                            <div class="card-body">
+                                <h3 class="card-name">{{ $product->name }}</h3>
+                                @if($product->description ?? false)
+                                    <p class="card-desc">{{ \Illuminate\Support\Str::limit($product->description, 65) }}</p>
+                                @endif
+
+                                <div class="card-footer">
+                                    <span class="card-price">
+                                        {{ number_format($product->price) }}<span class="price-unit">đ</span>
+                                    </span>
+
+                                    @auth
+                                        <button class="btn-add-cart" onclick='openModal(
+                                                {{ $product->id }},
+                                                @json($product->name),
+                                                {{ $product->price }},
+                                                @json($category->name),
+                                                @json(asset('images/' . $product->image_url)),
+                                                @json(\Illuminate\Support\Str::slug($category->name)),
+                                                @json($product->description ?? "")
+                                            )'>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="9" cy="21" r="1" />
+                                                <circle cx="20" cy="21" r="1" />
+                                                <path d="M1 1h4l2.68 13.39..." />
+                                            </svg>
+                                            <span>Thêm vào giỏ</span>
+                                        </button>
+                                    @else
+                                        <button class="btn-add-cart" onclick="redirectLogin()">
+                                            <span>Đăng nhập để mua</span>
+                                        </button>
+                                    @endauth
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @endforeach
-            </div>
-
+                    @endforeach
+                </div>
+            @endforeach
         </div>
-
     @empty
-        <div style="text-align:center; padding:60px;">
-            <h3>Không tìm thấy sản phẩm 😢</h3>
+        <div class="search-empty-state">
+            <h3>Không tìm thấy sản phẩm</h3>
+            <p>Thử tìm với từ khóa khác hoặc quay lại menu để xem toàn bộ thức uống.</p>
         </div>
     @endforelse
-
 </section>
 
     {{-- ===== MODAL TOPPING ===== --}}
     <div class="modal-backdrop" id="modalBackdrop" onclick="closeModalOutside(event)">
         <div class="modal-sheet" id="modalSheet">
+            <div class="sheet-scroll">
 
             <div class="sheet-handle"></div>
 
             {{-- Ảnh sản phẩm --}}
             <div class="sheet-img-wrap" id="sheetImgWrap">
                 <img id="sheetImg" src="" alt="">
-                <div class="sheet-img-overlay"></div>
+                <div class="sheet-img-overlay">
+                    <div class="sheet-hero-copy">
+                        <p class="sheet-cat" id="sheetCat"></p>
+                        <h2 class="sheet-name" id="sheetName"></h2>
+                        <p class="sheet-desc" id="sheetDesc"></p>
+                    </div>
+                    <div class="sheet-hero-price">
+                        <span>Giá gốc</span>
+                        <strong id="priceBaseHero">0đ</strong>
+                    </div>
+                </div>
                 <button class="sheet-close" onclick="closeModal()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -240,100 +297,90 @@
             </div>
 
             <div class="sheet-body">
-
-                {{-- Tên & giá --}}
-                <p class="sheet-cat" id="sheetCat"></p>
-                <h2 class="sheet-name" id="sheetName"></h2>
-
                 <div class="price-summary">
-                    <div>
+                    <div class="price-main">
                         <p class="price-label">Tổng cộng</p>
                         <p class="price-total" id="priceTotal">0đ</p>
+                        <p class="price-hint">Giá sẽ cập nhật theo kích cỡ và lựa chọn thêm.</p>
                     </div>
-                    <p class="price-base" id="priceBase">0đ</p>
                 </div>
 
-                <div class="sheet-divider"></div>
-
-                {{-- Kích cỡ --}}
-                <p class="section-label">
-                    Kích cỡ <span class="required">*</span>
-                </p>
-                <div class="size-row">
-                    @foreach($sizes as $index => $size)
-                        <div class="size-btn {{ $index == 0 ? 'active' : '' }}" data-extra="{{ $size->extra_price }}"
-                            onclick="selectSize(this)">
-                            <span class="size-letter">{{ $size->name }}</span>
-                            <span class="size-price">
-                                {{ $size->extra_price > 0 ? '+' . number_format($size->extra_price) . 'đ' : 'Mặc định' }}
-                            </span>
-                        </div>
-                    @endforeach
-                </div>
-
-                <div class="sheet-divider"></div>
-
-                {{-- Topping --}}
-                <p class="section-label">
-                    Topping
-                    <span class="optional-badge">Tùy chọn</span>
-                </p>
-
-                <div class="topping-grid">
-                    @foreach($toppings as $tp)
-                        <div class="topping-item" data-price="{{ $tp->price }}" data-id="{{ $tp->id }}"
-                            onclick="toggleTopping(this)">
-                            <div class="tp-check">
-                                <svg width="10" height="10">
-                                    <polyline points="2 6 5 9 10 3" />
-                                </svg>
+                <div class="sheet-section sheet-section-size">
+                    <p class="section-label">
+                        Kích cỡ <span class="required">*</span>
+                    </p>
+                    <div class="size-row">
+                        @foreach($sizes as $index => $size)
+                            <div class="size-btn {{ $index == 0 ? 'active' : '' }}" data-extra="{{ $size->extra_price }}"
+                                onclick="selectSize(this)">
+                                <span class="size-letter">{{ $size->name }}</span>
+                                <span class="size-price">
+                                    {{ $size->extra_price > 0 ? '+' . number_format($size->extra_price) . 'đ' : 'Mặc định' }}
+                                </span>
                             </div>
-                            <div class="tp-info">
-                                <span class="tp-name">{{ $tp->name }}</span>
-                                <span class="tp-price">+{{ number_format($tp->price) }}đ</span>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="sheet-section sheet-section-topping">
+                    <p class="section-label">
+                        Topping
+                        <span class="optional-badge">Tùy chọn</span>
+                    </p>
+
+                    <div class="topping-grid">
+                        @foreach($toppings as $tp)
+                            <div class="topping-item" data-price="{{ $tp->price }}" data-id="{{ $tp->id }}"
+                                onclick="toggleTopping(this)">
+                                <div class="tp-check">
+                                    <svg width="10" height="10">
+                                        <polyline points="2 6 5 9 10 3" />
+                                    </svg>
+                                </div>
+                                <div class="tp-info">
+                                    <span class="tp-name">{{ $tp->name }}</span>
+                                    <span class="tp-price">+{{ number_format($tp->price) }}đ</span>
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
 
-                <div class="sheet-divider"></div>
-
-                {{-- Đường --}}
-                <p class="section-label">
-                    Đường & Sữa
-                    <span class="optional-badge">Tùy chọn</span>
-                </p>
-                <div class="option-row">
-                    @foreach($sugars as $sugar)
-                        <div class="option-chip {{ $loop->last ? 'active' : '' }}" data-group="sugar"
-                            data-val="{{ $sugar->name }}" onclick="selectOption(this, 'sugar')">
-                            {{ $sugar->name }}
-                        </div>
-                    @endforeach
+                <div class="sheet-section sheet-section-sugar">
+                    <p class="section-label">
+                        Đường & Sữa
+                        <span class="optional-badge">Tùy chọn</span>
+                    </p>
+                    <div class="option-row">
+                        @foreach($sugars as $sugar)
+                            <div class="option-chip {{ $loop->last ? 'active' : '' }}" data-group="sugar"
+                                data-val="{{ $sugar->name }}" onclick="selectOption(this, 'sugar')">
+                                {{ $sugar->name }}
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
 
-                <div class="sheet-divider"></div>
-
-                {{-- Đá --}}
-                <p class="section-label">
-                    Đá
-                    <span class="optional-badge">Tùy chọn</span>
-                </p>
-                <div class="option-row">
-                    @foreach($ices as $ice)
-                        <div class="option-chip {{ $loop->last ? 'active' : '' }}" data-group="ice"
-                            data-val="{{ $ice->name }}" onclick="selectOption(this, 'ice')">
-                            {{ $ice->name }}
-                        </div>
-                    @endforeach
+                <div class="sheet-section sheet-section-ice">
+                    <p class="section-label">
+                        Đá
+                        <span class="optional-badge">Tùy chọn</span>
+                    </p>
+                    <div class="option-row">
+                        @foreach($ices as $ice)
+                            <div class="option-chip {{ $loop->last ? 'active' : '' }}" data-group="ice"
+                                data-val="{{ $ice->name }}" onclick="selectOption(this, 'ice')">
+                                {{ $ice->name }}
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
 
-                <div class="sheet-divider"></div>
-
-                {{-- Ghi chú --}}
-                <p class="section-label">Ghi chú</p>
-                <textarea class="note-input" id="noteInput" placeholder="Vd: ít ngọt, thêm siro, không đường..."
-                    rows="2"></textarea>
+                <div class="sheet-section sheet-section-note">
+                    <p class="section-label">Ghi chú</p>
+                    <textarea class="note-input" id="noteInput" placeholder="Vd: ít ngọt, thêm siro, không đường..."
+                        rows="3"></textarea>
+                </div>
 
                 {{-- Số lượng + Thêm giỏ --}}
                 <div class="confirm-row">
@@ -353,6 +400,7 @@
                     </button>
                 </div>
 
+            </div>
             </div>
         </div>
     </div>
@@ -879,6 +927,38 @@
             min-height: 50vh;
         }
 
+        .search-result-title {
+            max-width: 1200px;
+            margin: 0 auto 12px;
+            text-align: center;
+        }
+
+        .search-empty-state {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 56px 24px;
+            text-align: center;
+            border-radius: 26px;
+            background: #fff;
+            border: 1px solid rgba(201, 169, 110, .18);
+            box-shadow: 0 12px 32px rgba(26, 17, 13, .07);
+        }
+
+        .search-empty-state h3 {
+            margin: 0 0 10px;
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #1a110d;
+        }
+
+        .search-empty-state p {
+            margin: 0;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            color: #7d6348;
+            line-height: 1.7;
+        }
+
         .menu-grid {
             max-width: 1200px;
             margin: 0 auto;
@@ -1050,18 +1130,44 @@
             pointer-events: all;
         }
 
-        /* ===== MODAL SHEET ===== */
         .modal-sheet {
-            background: #fff;
-            border-radius: 24px 24px 0 0;
+            background: linear-gradient(180deg, #fffdfa 0%, #f7efe5 100%);
+            border-radius: 30px;
             width: 100%;
-            max-width: 560px;
-            max-height: 92vh;
+            max-width: 640px;
+            max-height: min(90vh, 800px);
+            overflow: hidden;
+            transform: translateY(24px);
+            transition: transform .32s cubic-bezier(.25, .8, .25, 1);
+            box-shadow: 0 30px 90px rgba(15, 8, 5, .28);
+            border: 1px solid rgba(201, 169, 110, .18);
+            text-rendering: geometricPrecision;
+        }
+
+        .sheet-scroll {
+            width: 100%;
+            max-height: min(90vh, 800px);
             overflow-y: auto;
-            transform: translateY(50px);
-            transition: transform .38s cubic-bezier(.25, .8, .25, 1);
+            overflow-x: hidden;
             scrollbar-width: thin;
-            scrollbar-color: #e0d4c8 transparent;
+            scrollbar-color: #dcc7af transparent;
+            scrollbar-gutter: stable;
+            padding-right: 4px;
+        }
+
+        .sheet-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sheet-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sheet-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #dbc2a1, #c89b63);
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
         }
 
         .modal-backdrop.open .modal-sheet {
@@ -1078,10 +1184,11 @@
 
         .sheet-img-wrap {
             position: relative;
-            height: 200px;
+            height: 280px;
             background: #d4b896;
             overflow: hidden;
-            margin-top: 10px;
+            margin: 10px 10px 0;
+            border-radius: 24px 24px 18px 18px;
         }
 
         .sheet-img-wrap img {
@@ -1094,57 +1201,123 @@
         .sheet-img-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to top, rgba(26, 17, 13, .3), transparent 60%);
+            background: linear-gradient(180deg, rgba(9, 7, 5, .08) 0%, rgba(9, 7, 5, .16) 30%, rgba(9, 7, 5, .78) 100%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 22px;
+        }
+
+        .sheet-hero-copy {
+            max-width: 72%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .sheet-close {
             position: absolute;
             top: 12px;
             right: 12px;
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, .92);
+            background: rgba(255, 255, 255, .94);
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #1a110d;
-            transition: background .2s;
+            transition: background .2s, transform .2s;
             z-index: 2;
+            box-shadow: 0 10px 24px rgba(15, 8, 5, .18);
         }
 
         .sheet-close:hover {
             background: #fff;
+            transform: rotate(90deg);
         }
 
         .sheet-body {
-            padding: 20px 22px 32px;
+            padding: 22px 20px 24px;
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
         }
 
         .sheet-cat {
             font-family: 'DM Sans', sans-serif;
-            font-size: 10px;
-            letter-spacing: .2em;
+            font-size: 11px;
+            letter-spacing: .26em;
             text-transform: uppercase;
-            color: #b8a090;
-            margin: 0 0 4px;
+            color: rgba(255, 243, 224, .82);
+            margin: 0;
         }
 
         .sheet-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.4rem;
-            font-weight: 500;
-            color: #1a110d;
-            margin: 0 0 16px;
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.35rem);
+            font-weight: 800;
+            letter-spacing: -.03em;
+            color: #fffaf2;
+            margin: 0;
+            line-height: 1.05;
+        }
+
+        .sheet-desc {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            line-height: 1.65;
+            color: rgba(255, 243, 224, .72);
+            margin: 0;
+            max-width: 44ch;
+        }
+
+        .sheet-hero-price {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(255, 248, 238, .14);
+            border: 1px solid rgba(255, 255, 255, .16);
+            backdrop-filter: blur(10px);
+            color: #fff5e7;
+            text-align: right;
+            align-self: flex-end;
+            min-width: 120px;
+        }
+
+        .sheet-hero-price span {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 10px;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            opacity: .72;
+        }
+
+        .sheet-hero-price strong {
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            font-size: 1.22rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
         }
 
         .price-summary {
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
+            gap: 18px;
+            margin-bottom: 8px;
+            padding: 18px 20px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #fff 0%, #fbf3e8 100%);
+            border: 1px solid rgba(201, 169, 110, .22);
+            box-shadow: 0 12px 26px rgba(26, 17, 13, .06);
+        }
+
+        .price-main {
+            min-width: 0;
         }
 
         .price-label {
@@ -1152,33 +1325,39 @@
             font-size: 11px;
             color: #b8a090;
             margin: 0 0 2px;
+            letter-spacing: .18em;
+            text-transform: uppercase;
         }
 
         .price-total {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.4rem;
-            font-weight: 500;
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -.03em;
             color: #1a110d;
             margin: 0;
         }
 
-        .price-base {
-            font-family: 'Playfair Display', serif;
-            font-size: 1rem;
-            color: #c9a96e;
-            margin: 0;
+        .price-hint {
+            margin: 6px 0 0;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            color: #8b7060;
         }
 
-        .sheet-divider {
-            border: none;
-            border-top: 1px solid #f0e8e0;
-            margin: 16px 0;
+        .sheet-section {
+            margin-top: 18px;
+            padding: 18px 18px 16px;
+            border-radius: 20px;
+            background: #fff;
+            border: 1px solid rgba(201, 169, 110, .16);
+            box-shadow: 0 8px 22px rgba(26, 17, 13, .04);
         }
 
         .section-label {
             font-family: 'DM Sans', sans-serif;
             font-size: 11px;
-            font-weight: 500;
+            font-weight: 700;
             letter-spacing: .18em;
             text-transform: uppercase;
             color: #8b7060;
@@ -1195,43 +1374,45 @@
         }
 
         .optional-badge {
-            background: #f5efe8;
-            color: #b8a090;
+            background: #f8f0e6;
+            color: #b08f71;
             font-size: 9px;
-            padding: 2px 8px;
+            padding: 4px 8px;
             border-radius: 10px;
             letter-spacing: .1em;
-            font-weight: 400;
+            font-weight: 600;
         }
 
-        /* SIZE */
         .size-row {
             display: flex;
-            gap: 10px;
-            margin-bottom: 4px;
+            gap: 12px;
         }
 
         .size-btn {
             flex: 1;
-            border: 1.5px solid #e0d4c8;
-            border-radius: 12px;
-            padding: 10px 6px;
+            border: 1px solid #e7d8c8;
+            border-radius: 18px;
+            padding: 16px 10px 14px;
             text-align: center;
             cursor: pointer;
-            transition: all .2s;
-            background: #fff;
+            transition: all .2s ease, transform .2s ease;
+            background: linear-gradient(180deg, #fff 0%, #fffaf5 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
         }
 
         .size-btn.active {
             border-color: #1a110d;
-            background: #1a110d;
+            background: linear-gradient(180deg, #2a1a13 0%, #160d09 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 24px rgba(26, 17, 13, .16);
         }
 
         .size-letter {
             display: block;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            font-weight: 500;
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
             color: #1a110d;
         }
 
@@ -1242,65 +1423,63 @@
         .size-price {
             display: block;
             font-family: 'DM Sans', sans-serif;
-            font-size: 10px;
+            font-size: 11px;
             color: #b8a090;
-            margin-top: 2px;
+            margin-top: 6px;
         }
 
         .size-btn.active .size-price {
             color: #c9a96e;
         }
 
-        /* OPTIONS (ĐƯỜNG, ĐÁ) */
         .option-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 4px;
+            gap: 10px;
         }
 
         .option-chip {
-            border: 1.5px solid #e0d4c8;
-            border-radius: 20px;
-            padding: 6px 14px;
+            border: 1px solid #e6d8c8;
+            border-radius: 999px;
+            padding: 10px 16px;
             font-family: 'DM Sans', sans-serif;
             font-size: 12px;
             color: #6b5a4a;
             cursor: pointer;
             transition: all .2s;
-            background: #fff;
+            background: linear-gradient(180deg, #fff 0%, #fffaf5 100%);
         }
 
         .option-chip.active {
             border-color: #c9a96e;
-            background: #c9a96e;
+            background: linear-gradient(135deg, #d7b27a, #c69858);
             color: #1a110d;
-            font-weight: 500;
+            font-weight: 700;
+            box-shadow: 0 10px 18px rgba(201, 169, 110, .22);
         }
 
-        /* TOPPING */
         .topping-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 4px;
+            gap: 12px;
         }
 
         .topping-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            border: 1.5px solid #e0d4c8;
-            border-radius: 12px;
-            padding: 10px 12px;
+            border: 1px solid #e6d8c8;
+            border-radius: 16px;
+            padding: 12px 14px;
             cursor: pointer;
             transition: all .2s;
-            background: #fff;
+            background: linear-gradient(180deg, #fff 0%, #fffaf5 100%);
         }
 
         .topping-item.active {
             border-color: #c9a96e;
-            background: #fdf8f2;
+            background: linear-gradient(135deg, #fff6ea 0%, #f8ecdd 100%);
+            box-shadow: 0 10px 20px rgba(201, 169, 110, .16);
         }
 
         .tp-check {
@@ -1333,8 +1512,8 @@
         .tp-name {
             display: block;
             font-family: 'DM Sans', sans-serif;
-            font-size: 12px;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 700;
             color: #1a110d;
         }
 
@@ -1343,21 +1522,22 @@
             font-family: 'DM Sans', sans-serif;
             font-size: 11px;
             color: #b8a090;
+            margin-top: 2px;
         }
 
-        /* NOTE */
         .note-input {
             width: 100%;
-            border: 1.5px solid #e0d4c8;
-            border-radius: 12px;
-            padding: 10px 14px;
+            border: 1px solid #e6d8c8;
+            border-radius: 16px;
+            padding: 14px 16px;
             font-family: 'DM Sans', sans-serif;
             font-size: 13px;
             color: #1a110d;
             resize: none;
             outline: none;
             transition: border-color .2s;
-            background: #fff;
+            background: linear-gradient(180deg, #fff 0%, #fffaf5 100%);
+            min-height: 92px;
         }
 
         .note-input:focus {
@@ -1368,26 +1548,31 @@
             color: #c0b0a0;
         }
 
-        /* CONFIRM ROW */
         .confirm-row {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-top: 20px;
+            position: sticky;
+            bottom: 0;
+            padding-top: 14px;
+            background: linear-gradient(180deg, rgba(255, 253, 250, 0) 0%, rgba(255, 253, 250, .96) 24%, #fffdfa 100%);
         }
 
         .qty-wrap {
             display: flex;
             align-items: center;
-            border: 1.5px solid #e0d4c8;
-            border-radius: 12px;
+            border: 1px solid #e6d8c8;
+            border-radius: 16px;
             overflow: hidden;
             flex-shrink: 0;
+            background: #fff;
+            box-shadow: 0 8px 18px rgba(26, 17, 13, .05);
         }
 
         .qty-btn {
-            width: 38px;
-            height: 42px;
+            width: 44px;
+            height: 48px;
             border: none;
             background: #fff;
             color: #1a110d;
@@ -1405,15 +1590,15 @@
         }
 
         .qty-num {
-            width: 34px;
+            width: 42px;
             text-align: center;
-            font-family: 'Playfair Display', serif;
-            font-size: 15px;
-            font-weight: 500;
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
             color: #1a110d;
             border-left: 1px solid #e0d4c8;
             border-right: 1px solid #e0d4c8;
-            height: 42px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1425,16 +1610,17 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            background: #1a110d;
+            background: linear-gradient(135deg, #1f140f 0%, #120a07 100%);
             color: #f0e6d0;
             border: none;
-            border-radius: 12px;
-            height: 42px;
+            border-radius: 16px;
+            height: 52px;
             font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
             transition: background .22s, transform .15s;
+            box-shadow: 0 18px 30px rgba(26, 17, 13, .18);
         }
 
         .btn-confirm:hover {
@@ -1485,6 +1671,51 @@
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
+            .modal-backdrop {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .modal-sheet {
+                max-width: 100%;
+                max-height: 92vh;
+                border-radius: 28px 28px 0 0;
+                transform: translateY(36px);
+            }
+
+            .sheet-scroll {
+                max-height: 92vh;
+                padding-right: 0;
+            }
+
+            .sheet-img-wrap {
+                height: 228px;
+                margin: 10px 10px 0;
+                border-radius: 22px 22px 16px 16px;
+            }
+
+            .sheet-img-overlay {
+                padding: 16px;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: flex-end;
+            }
+
+            .sheet-hero-copy {
+                max-width: 100%;
+            }
+
+            .sheet-hero-price {
+                min-width: 0;
+                align-self: flex-start;
+                text-align: left;
+            }
+
+            .price-summary {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
             .menu-section {
                 padding: 36px 14px 60px;
             }
@@ -1498,7 +1729,31 @@
             }
 
             .sheet-body {
-                padding: 16px 16px 28px;
+                padding: 16px 14px 24px;
+            }
+
+            .sheet-section {
+                padding: 16px 14px 14px;
+            }
+
+            .size-row {
+                gap: 10px;
+            }
+
+            .confirm-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .qty-wrap {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .qty-btn,
+            .qty-num {
+                flex: 1;
+                width: auto;
             }
         }
 
@@ -1522,7 +1777,7 @@
         var modalState = { productId: null, basePrice: 0, sizeExtra: 0, toppingTotal: 0, qty: 1 };
         var cartTotal = 0;
 
-        function openModal(id, name, price, cat, imgUrl, categoryId) {
+        function openModal(id, name, price, cat, imgUrl, categorySlug, description) {
 
             // 🚨 CHẶN CHƯA LOGIN
             if (!isLoggedIn) {
@@ -1537,8 +1792,10 @@
 
             document.getElementById('sheetCat').textContent = cat;
             document.getElementById('sheetName').textContent = name;
-            document.getElementById('priceBase').textContent = fmtPrice(price);
+            document.getElementById('sheetDesc').textContent = description || 'Tùy chỉnh món theo khẩu vị của bạn với kích cỡ và lựa chọn thêm phù hợp.';
+            document.getElementById('priceBaseHero').textContent = fmtPrice(price);
             document.getElementById('sheetImg').src = imgUrl;
+            document.getElementById('sheetImg').alt = name;
             document.getElementById('qtyNum').textContent = '1';
             document.getElementById('noteInput').value = '';
 
@@ -1557,67 +1814,50 @@
             document.querySelectorAll('.topping-item').forEach(t => t.classList.remove('active'));
             modalState.toppingTotal = 0;
 
-            // Ẩn/hiện topping theo category id
-            var toppingGrid = document.querySelector('.topping-grid');
-            var toppingLabel = toppingGrid.previousElementSibling;
-
-            var sugarSection = document.querySelector('.option-chip[data-group="sugar"]').closest('.option-row').previousElementSibling;
-            var sugarRow = document.querySelector('.option-chip[data-group="sugar"]').closest('.option-row');
-
-            var iceSection = document.querySelector('.option-chip[data-group="ice"]').closest('.option-row').previousElementSibling;
-            var iceRow = document.querySelector('.option-chip[data-group="ice"]').closest('.option-row');
-
-            var sizeSection = document.querySelector('.size-row').previousElementSibling;
-            var sizeRow = document.querySelector('.size-row');
+            var toppingSection = document.querySelector('.sheet-section-topping');
+            var sugarSection = document.querySelector('.sheet-section-sugar');
+            var iceSection = document.querySelector('.sheet-section-ice');
+            var sizeSection = document.querySelector('.sheet-section-size');
 
             // ===== RESET HIỆN TẤT CẢ =====
-            [toppingGrid, toppingLabel, sugarSection, sugarRow, iceSection, iceRow, sizeSection, sizeRow].forEach(el => {
+            [toppingSection, sugarSection, iceSection, sizeSection].forEach(el => {
                 if (el) el.style.display = '';
             });
 
             // ===== LOGIC MỚI =====
             var productName = document.getElementById('sheetName').textContent || '';
-            if (categoryId === 2) {
-                // Trà sữa: chỉ hiện topping, ẩn đường & sữa
+            if (categorySlug === 'tra-sua') {
+                // Trà sữa: hiện topping và đá, ẩn đường & sữa
                 sugarSection.style.display = 'none';
-                sugarRow.style.display = 'none';
-            } else if (categoryId === 3) {
+            } else if (categorySlug === 'da-xay') {
                 // Đá xay: ẩn topping, đường, sữa, đá
-                toppingGrid.style.display = 'none';
-                toppingLabel.style.display = 'none';
+                toppingSection.style.display = 'none';
                 sugarSection.style.display = 'none';
-                sugarRow.style.display = 'none';
                 iceSection.style.display = 'none';
-                iceRow.style.display = 'none';
-            } else if (categoryId === 4) {
+            } else if (categorySlug === 'nuoc-ep-sinh-to' || categorySlug === 'nuoc-ep') {
                 // Sinh tố/nước ép: ẩn topping
-                toppingGrid.style.display = 'none';
-                toppingLabel.style.display = 'none';
+                toppingSection.style.display = 'none';
                 if (productName.toLowerCase().includes('sinh tố')) {
                     // Sinh tố: ẩn luôn đá, đường & sữa
                     sugarSection.style.display = 'none';
-                    sugarRow.style.display = 'none';
                     iceSection.style.display = 'none';
-                    iceRow.style.display = 'none';
                 } else {
                     // Nước ép: ẩn đường & sữa
                     sugarSection.style.display = 'none';
-                    sugarRow.style.display = 'none';
                 }
-            } else if (categoryId === 1) {
+            } else if (categorySlug === 'ca-phe') {
                 // Cà phê: ẩn topping
-                toppingGrid.style.display = 'none';
-                toppingLabel.style.display = 'none';
-            } else if (categoryId === 5) {
-                // Bánh/snack: ẩn tất cả option
-                toppingGrid.style.display = 'none';
-                toppingLabel.style.display = 'none';
+                toppingSection.style.display = 'none';
+            } else if (categorySlug === 'tra-va-thuc-uong-theo-mua') {
+                // Thức uống theo mùa: ẩn topping, đường & sữa
+                toppingSection.style.display = 'none';
                 sugarSection.style.display = 'none';
-                sugarRow.style.display = 'none';
+            } else if (categorySlug === 'banh-snack') {
+                // Bánh/snack: ẩn tất cả option
+                toppingSection.style.display = 'none';
+                sugarSection.style.display = 'none';
                 iceSection.style.display = 'none';
-                iceRow.style.display = 'none';
                 sizeSection.style.display = 'none';
-                sizeRow.style.display = 'none';
             }
             updateTotal();
 

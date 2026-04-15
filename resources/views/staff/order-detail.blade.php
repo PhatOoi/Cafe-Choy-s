@@ -292,6 +292,15 @@
                     <span class="info-value" style="font-family:monospace;font-size:12px;">{{ $order->payment->ref_code }}</span>
                 </div>
                 @endif
+
+                @if($order->payment->method === 'bank_transfer' && $order->payment->status !== 'paid')
+                <form action="{{ route('staff.order.payment.confirm', $order->id) }}" method="POST" style="margin-top:16px;">
+                    @csrf
+                    <button type="submit" class="btn-action-lg btn-action-done" style="width:100%;">
+                        <i class="fas fa-money-check-alt"></i> Chuyển khoản thành công và qua pha chế
+                    </button>
+                </form>
+                @endif
             </div>
         </div>
         @endif
@@ -308,23 +317,39 @@
                 {{-- Timeline --}}
                 <div class="status-timeline">
                     @php
-                        $steps = ['pending','confirmed','processing','ready','delivering','delivered'];
-                        $labels = [
-                            'pending'    => 'Chờ xác nhận',
-                            'confirmed'  => 'Đã xác nhận',
-                            'processing' => 'Đang pha chế',
-                            'ready'      => 'Sẵn sàng giao',
-                            'delivering' => 'Đang giao',
-                            'delivered'  => 'Đã giao',
-                        ];
-                        $icons = [
-                            'pending'    => 'clock',
-                            'confirmed'  => 'check',
-                            'processing' => 'blender',
-                            'ready'      => 'box',
-                            'delivering' => 'motorcycle',
-                            'delivered'  => 'check-double',
-                        ];
+                        if ($order->order_type === 'delivery') {
+                            $steps = ['pending','confirmed','processing','ready','delivered'];
+                            $labels = [
+                                'pending'    => 'Chờ xác nhận',
+                                'confirmed'  => 'Đã xác nhận',
+                                'processing' => 'Đang chuẩn bị',
+                                'ready'      => 'Sẵn sàng giao',
+                                'delivered'  => 'Đã giao',
+                            ];
+                            $icons = [
+                                'pending'    => 'clock',
+                                'confirmed'  => 'check',
+                                'processing' => 'blender',
+                                'ready'      => 'box',
+                                'delivered'  => 'check-double',
+                            ];
+                        } else {
+                            $steps = ['pending','confirmed','processing','ready','delivered'];
+                            $labels = [
+                                'pending'    => 'Chờ xác nhận',
+                                'confirmed'  => 'Đã xác nhận',
+                                'processing' => 'Đang chuẩn bị',
+                                'ready'      => 'Sẵn sàng',
+                                'delivered'  => 'Hoàn thành đơn hàng',
+                            ];
+                            $icons = [
+                                'pending'    => 'clock',
+                                'confirmed'  => 'check',
+                                'processing' => 'blender',
+                                'ready'      => 'box',
+                                'delivered'  => 'check-double',
+                            ];
+                        }
                         $currentIdx = array_search($order->status, $steps);
                     @endphp
 
@@ -355,6 +380,7 @@
                 @if(count($order->next_statuses) > 0)
                 <div class="status-actions">
                     @foreach($order->next_statuses as $nextStatus)
+                      @continue($nextStatus === 'confirmed' && $order->payment && $order->payment->method === 'bank_transfer' && $order->payment->status !== 'paid')
                     <form action="{{ route('staff.order.status', $order->id) }}" method="POST"
                           @if($nextStatus === 'cancelled') onsubmit="return confirm('Xác nhận hủy đơn này?')" @endif>
                         @csrf
@@ -362,10 +388,9 @@
                         @php
                             $cfg = match($nextStatus) {
                                 'confirmed'  => ['btn-action-confirm',  'check-circle',   'Xác nhận đơn hàng'],
-                                'processing' => ['btn-action-process',  'blender',        'Bắt đầu pha chế'],
-                                'ready'      => ['btn-action-ready',    'box',            'Đã sẵn sàng giao'],
-                                'delivering' => ['btn-action-deliver',  'motorcycle',     'Bắt đầu giao hàng'],
-                                'delivered'  => ['btn-action-done',     'check-double',   'Xác nhận đã giao'],
+                                'processing' => ['btn-action-process',  'blender',        'Bắt đầu chuẩn bị'],
+                                'ready'      => ['btn-action-ready',    'box',            'Đã sẵn sàng'],
+                                'delivered'  => ['btn-action-done',     'check-double',   'Hoàn thành đơn hàng'],
                                 'cancelled'  => ['btn-action-cancel',   'ban',            'Hủy đơn hàng'],
                                 default      => ['btn-action-confirm',  'arrow-right',    ucfirst($nextStatus)],
                             };

@@ -11,6 +11,10 @@ class LoginController extends Controller
     // Hiển thị trang đăng nhập
     public function index()
     {
+        if (Auth::check()) {
+            return $this->redirectByRole(Auth::user()->role_id);
+        }
+
         return view('login');
     }
 
@@ -30,25 +34,10 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             // Đăng nhập thành công, tạo lại session
             $request->session()->regenerate();
-            return redirect('/'); // Chuyển hướng đến trang chủ
+            return $this->redirectByRole(Auth::user()->role_id);
         }
 
         // Đăng nhập thất bại, quay lại với thông báo lỗi
-        
-
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-            
-            $user = Auth::user();
-            
-            if ($user->role_id == 1) {
-                return redirect('/admin');
-            }
-            if ($user->role_id == 2) {
-                return redirect()->route('staff.dashboard');
-            }
-            return redirect('/');
-        }
         return back()->with('error', 'Email hoặc mật khẩu không đúng!');
     }
 
@@ -60,5 +49,13 @@ class LoginController extends Controller
         $request->session()->regenerateToken(); // Tạo lại CSRF token
         return redirect('/'); // Chuyển về trang chủ
     }
-    
+
+    private function redirectByRole(int $roleId)
+    {
+        return match ($roleId) {
+            1 => redirect('/admin'),
+            2 => redirect()->route('staff.dashboard'),
+            default => redirect('/'),
+        };
+    }
 }

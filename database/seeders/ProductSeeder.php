@@ -51,6 +51,14 @@ class ProductSeeder extends Seeder
                 'name' => 'Trà Sữa Thái Xanh',
             ]);
 
+        DB::table('products')
+            ->where('category_id', $categoryIds['tra-va-thuc-uong-theo-mua'])
+            ->where('image_url', 'tra_oolong_nhan.jpg')
+            ->update([
+                'name' => 'Trà Olong thiết quan âm',
+                'description' => 'Trà Olong thiết quan âm tốt cho sức khỏe',
+            ]);
+
         // Products
         $products = [
             // ===== CÀ PHÊ (1) =====
@@ -82,7 +90,7 @@ class ProductSeeder extends Seeder
             // ===== TRÀ VÀ THỨC UỐNG THEO MÙA (5) =====
             ['category_id' => $categoryIds['tra-va-thuc-uong-theo-mua'], 'name' => 'Peach Tea', 'description' => 'Trà đào thanh mát ', 'price' => 42000, 'stock' => 45, 'status' => 'available', 'image_url' => 'tra_dao_cam_sa.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['tra-va-thuc-uong-theo-mua'], 'name' => 'Trà Lài', 'description' => 'Trà lài thơm nhẹ ', 'price' => 45000, 'stock' => 40, 'status' => 'available', 'image_url' => 'tra_vai_hoa_hong.jpg', 'created_at' => now()],
-            ['category_id' => $categoryIds['tra-va-thuc-uong-theo-mua'], 'name' => 'Trà Oolong Thiết Quan Âm', 'description' => 'Trà oolong Thiết Quan Âm tốt cho sức khỏe', 'price' => 47000, 'stock' => 38, 'status' => 'available', 'image_url' => 'tra_oolong_nhan.jpg', 'created_at' => now()],
+            ['category_id' => $categoryIds['tra-va-thuc-uong-theo-mua'], 'name' => 'Trà Olong thiết quan âm', 'description' => 'Trà Olong thiết quan âm tốt cho sức khỏe', 'price' => 47000, 'stock' => 38, 'status' => 'available', 'image_url' => 'tra_oolong_nhan.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['tra-va-thuc-uong-theo-mua'], 'name' => 'Trà Dâu', 'description' => 'Trà dâu thanh mát chua ngọt đánh thức vị giác', 'price' => 49000, 'stock' => 35, 'status' => 'available', 'image_url' => 'tradau.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['tra-va-thuc-uong-theo-mua'], 'name' => 'Trà Dưỡng Nhan', 'description' => 'Trà dưỡng nhan thanh nhẹ, ngọt dịu', 'price' => 52000, 'stock' => 30, 'status' => 'available', 'image_url' => 'tradn.jpg', 'created_at' => now()],
             ['category_id' => $categoryIds['tra-va-thuc-uong-theo-mua'], 'name' => 'Trà Trái Cây Nhiệt Đới', 'description' => 'Bùng nổ vị trái cây tươi mát, chua ngọt sảng khoái và thơm dịu như một kỳ nghỉ mùa hè trong từng ngụm', 'price' => 53000, 'stock' => 32, 'status' => 'available', 'image_url' => 'tratraicaynhietdoi.jpg', 'created_at' => now()],

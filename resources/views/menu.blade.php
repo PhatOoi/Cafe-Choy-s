@@ -53,9 +53,13 @@
 
                     <!-- MENU ITEMS -->
                     <li class="nav-item"><a href="{{ url('/') }}" class="nav-link">Trang chủ</a></li>
-                    <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @if(!(auth()->check() && auth()->user()->isStaff()))
+                        <li class="nav-item active"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
+                    @endif
                     @auth
-                        <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @if(!auth()->user()->isStaff())
+                            <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @endif
                     @endauth
                     @guest
                         <li class="nav-item">
@@ -77,24 +81,25 @@
 
                     <!-- USER DROPDOWN -->
                     @if(Auth::check())
+                                    @php
+                                        $menuUserAvatar = Auth::user()->avatar
+                                            ? asset('storage/' . Auth::user()->avatar)
+                                            : asset('images/user.jpg');
+                                    @endphp
                                     <li class="nav-item user-dropdown-wrapper">
                                         <div class="user-dropdown-container">
 
-                                            <button class="user-avatar-btn" type="button" id="userMenuBtn">
-                                                @if(Auth::user()->avatar)
-                                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
-                                                @else
-                                                    <img src="{{ asset('images/user.jpg') }}" class="user-avatar">
-                                                    <img img src="{{ asset('images/user.jpg') }}" 
-                                                        class="user-avatar">
-                                                @endif
+                                            <button class="user-avatar-btn" type="button" id="userMenuBtn" aria-label="Mở menu người dùng">
+                                                <img src="{{ $menuUserAvatar }}" alt="{{ Auth::user()->name }}"
+                                                    class="user-avatar"
+                                                    onerror="this.onerror=null;this.src='{{ asset('images/user.jpg') }}';">
                                             </button>
 
                                             <div class="user-dropdown-menu" id="userDropdownMenu">
                                                 <div class="dropdown-header-info">
-                                                    <img src="{{ Auth::user()->avatar
-                        ? asset('storage/' . Auth::user()->avatar)
-                        : asset('images/user.jpg') }}" class="dropdown-avatar">
+                                                    <img src="{{ $menuUserAvatar }}" alt="{{ Auth::user()->name }}"
+                                                        class="dropdown-avatar"
+                                                        onerror="this.onerror=null;this.src='{{ asset('images/user.jpg') }}';">
 
                                                     <div class="user-details">
                                                         <p class="user-name">{{ Auth::user()->name }}</p>
@@ -233,7 +238,7 @@
 
                     if ($categorySlug === 'tra-va-thuc-uong-theo-mua') {
                         $coldNames = ['Peach Tea', 'Trà Dâu', 'Trà Trái Cây Nhiệt Đới'];
-                        $hotNames = ['Trà Lài', 'Trà Oolong Thiết Quan Âm', 'Trà Dưỡng Nhan'];
+                        $hotNames = ['Trà Lài', 'Trà Olong thiết quan âm', 'Trà Dưỡng Nhan'];
 
                         $coldProducts = collect($coldNames)
                             ->map(fn ($name) => $category->products->firstWhere('name', $name))
@@ -619,41 +624,56 @@
         }
 
         .user-avatar {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: 999px;
-                object-fit: cover;
-                border: none;
-                box-shadow: none;
-                display: block;
-                transition: 0.3s;
-            }
+            object-fit: cover;
+            border: 2px solid rgba(201, 169, 110, 0.42);
+            background: #f6ede3;
+            box-shadow: 0 8px 20px rgba(26, 17, 13, 0.14);
+            display: block;
+            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+        }
 
         .user-avatar-btn {
+            width: 48px;
+            height: 48px;
             margin-left: 8px;
-                padding: 0;
-                border: none;
-                background: transparent;
-                box-shadow: none;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
             appearance: none;
             border-radius: 999px;
-            overflow: hidden;
+            overflow: visible;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .user-avatar-btn:hover .user-avatar,
+        .user-avatar-btn:focus-visible .user-avatar {
+            transform: translateY(-1px) scale(1.03);
+            border-color: rgba(201, 169, 110, 0.82);
+            box-shadow: 0 12px 24px rgba(26, 17, 13, 0.18);
+        }
+
+        .user-avatar-btn:focus-visible {
+            outline: none;
         }
 
         .dropdown-avatar {
-            width: 52px;
-            height: 52px;
+            width: 56px;
+            height: 56px;
             border-radius: 999px;
             object-fit: cover;
-            border: none;
-            box-shadow: none;
+            border: 2px solid rgba(201, 169, 110, 0.42);
+            background: #f6ede3;
+            box-shadow: 0 10px 24px rgba(26, 17, 13, 0.12);
             display: block;
             flex-shrink: 0;
         }
-
-.user-avatar:hover {
-    transform: scale(1.1);
-}
 
 /* DROPDOWN */
 .user-dropdown {

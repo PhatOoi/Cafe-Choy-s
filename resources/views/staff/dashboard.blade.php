@@ -74,14 +74,7 @@
         <div class="stat-icon blue"><i class="fas fa-blender"></i></div>
         <div>
             <div class="stat-value">{{ $stats['processing'] }}</div>
-            <div class="stat-label">Đang xử lý</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon purple"><i class="fas fa-motorcycle"></i></div>
-        <div>
-            <div class="stat-value">{{ $stats['delivering'] }}</div>
-            <div class="stat-label">Đang giao</div>
+            <div class="stat-label">Đang chuẩn bị</div>
         </div>
     </div>
     <div class="stat-card">
@@ -116,7 +109,12 @@
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
                     <div class="order-card-price">{{ number_format($order->final_price, 0, ',', '.') }}đ</div>
                     <div style="display:flex;gap:6px;">
-                        @if(in_array('confirmed', $order->next_statuses))
+                        @if($order->payment && $order->payment->method === 'bank_transfer' && $order->payment->status !== 'paid')
+                        <form action="{{ route('staff.order.payment.confirm', $order->id) }}" method="POST" style="margin:0;">
+                            @csrf
+                            <button class="quick-action-btn qa-confirm" type="submit">Chuyển khoản thành công</button>
+                        </form>
+                        @elseif(in_array('confirmed', $order->next_statuses))
                         <form action="{{ route('staff.order.status', $order->id) }}" method="POST" style="margin:0;">
                             @csrf
                             <input type="hidden" name="status" value="confirmed">
@@ -126,13 +124,13 @@
                         <form action="{{ route('staff.order.status', $order->id) }}" method="POST" style="margin:0;">
                             @csrf
                             <input type="hidden" name="status" value="processing">
-                            <button class="quick-action-btn qa-prepare" type="submit">Pha chế</button>
+                            <button class="quick-action-btn qa-prepare" type="submit">Chuẩn bị</button>
                         </form>
-                        @elseif(in_array('delivering', $order->next_statuses))
+                        @elseif(in_array('delivered', $order->next_statuses))
                         <form action="{{ route('staff.order.status', $order->id) }}" method="POST" style="margin:0;">
                             @csrf
-                            <input type="hidden" name="status" value="delivering">
-                            <button class="quick-action-btn qa-deliver" type="submit">Giao hàng</button>
+                            <input type="hidden" name="status" value="delivered">
+                            <button class="quick-action-btn qa-deliver" type="submit">Hoàn thành</button>
                         </form>
                         @endif
                         <a href="{{ route('staff.order.detail', $order->id) }}" class="quick-action-btn qa-view">Chi tiết</a>
@@ -159,9 +157,6 @@
                 <a href="{{ route('staff.orders', ['status' => 'pending']) }}" class="btn-outline-staff" style="justify-content:center;">
                     <i class="fas fa-clock"></i> Đơn chờ xác nhận ({{ $stats['pending'] }})
                 </a>
-                <a href="{{ route('staff.orders', ['status' => 'delivering']) }}" class="btn-outline-staff" style="justify-content:center;">
-                    <i class="fas fa-motorcycle"></i> Đang giao ({{ $stats['delivering'] }})
-                </a>
             </div>
         </div>
 
@@ -171,10 +166,9 @@
                 @foreach([
                     ['pending', 'Chờ xác nhận', 'warning'],
                     ['confirmed', 'Đã xác nhận', 'info'],
-                    ['processing', 'Đang pha chế', 'primary'],
+                    ['processing', 'Đang chuẩn bị', 'primary'],
                     ['ready', 'Sẵn sàng', 'success'],
-                    ['delivering', 'Đang giao', 'purple'],
-                    ['delivered', 'Đã giao', 'success'],
+                    ['delivered', 'Hoàn thành', 'success'],
                 ] as [$s, $label, $c])
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                     <span class="badge-status badge-{{ $s }}" style="min-width:100px;text-align:center;">{{ $label }}</span>

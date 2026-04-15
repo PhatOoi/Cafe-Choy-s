@@ -17,8 +17,8 @@ return new class extends Migration
                 'description' => 'Trà lài thơm nhẹ theo hình ảnh đang dùng',
             ],
             'tra_oolong_nhan.jpg' => [
-                'name' => 'Trà Oolong Thiết Quan Âm',
-                'description' => 'Trà oolong Thiết Quan Âm đúng theo hình ảnh đang dùng',
+                'name' => 'Trà Olong thiết quan âm',
+                'description' => 'Trà Olong thiết quan âm đúng theo hình ảnh đang dùng',
             ],
             'matcha_dau_mua_he.jpg' => [
                 'name' => 'Trà Sữa Thái Xanh',
