@@ -210,7 +210,7 @@
 
 @section('content')
 
-<form id="orderForm" action="{{ route('staff.create-order.store') }}" method="POST">
+<form id="orderForm" action="{{ route('staff.store-order') }}" method="POST">
 @csrf
 <div class="create-grid">
 
@@ -240,9 +240,13 @@
                              data-cat="{{ $catName }}"
                              onclick="addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }})">
                             <span class="in-cart-badge" id="badge-{{ $product->id }}">1</span>
-                            <img src="{{ $product->image_url ? asset('images/products/' . $product->image_url) : '' }}"
-                                 class="product-img"
-                                 onerror="this.src='https://via.placeholder.com/60x60/f4f6fb/d4813a?text=☕'">
+                           <img src="{{ 
+                                $product->image_url 
+                                    ? (Str::startsWith($product->image_url, ['http://', 'https://']) 
+                                        ? $product->image_url 
+                                        : asset('images/' . $product->image_url)) 
+                                    : 'https://via.placeholder.com/60x60?text=☕' 
+                            }}" class="product-img">
                             <div class="product-name">{{ $product->name }}</div>
                             <div class="product-price">{{ number_format($product->price, 0, ',', '.') }}đ</div>
                         </div>

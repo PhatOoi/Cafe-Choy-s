@@ -26,12 +26,6 @@ class MenuController extends Controller
         // Trả về view menu với dữ liệu đã lấy
         return view('menu', compact('categories', 'toppings', 'sugars', 'ices', 'sizes'));
     }
-    public function search(Request $request)
-{
-    $q = $request->input('q');
-
-    $products = Product::where('name', 'LIKE', "%{$q}%")->get();
-
-    return view('search-result', compact('products', 'q'));
-}
+        
+    
 }

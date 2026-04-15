@@ -85,6 +85,8 @@
                                                     <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
                                                 @else
                                                     <img src="{{ asset('images/user.jpg') }}" class="user-avatar">
+                                                    <img img src="{{ asset('images/user.jpg') }}" 
+                                                        class="user-avatar">
                                                 @endif
                                             </button>
 
@@ -97,7 +99,7 @@
                                                     <div class="user-details">
                                                         <p class="user-name">{{ Auth::user()->name }}</p>
                                                         <p class="user-role">
-                                                            @if(Auth::user()->role === 'admin')
+                                                            @if(Auth::user()->role_id === 1)
                                                                 <span class="badge-admin">Admin</span>
                                                             @else
                                                                 <span class="badge-customer">Khách hàng</span>
@@ -110,7 +112,7 @@
 
                                                 <a href="/profile" class="dropdown-link">Hồ sơ</a>
 
-                                                @if(Auth::user()->role === 'admin')
+                                                @if(Auth::user()->role_id === 1)
                                                     <a href="/admin" class="dropdown-link">Quản trị</a>
                                                 @endif
 

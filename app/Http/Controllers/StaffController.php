@@ -202,4 +202,43 @@ class StaffController extends Controller
             return back()->with('error', 'Lỗi khi tạo đơn: ' . $e->getMessage());
         }
     }
+
+    // FIX: alias đúng tên cho route
+    public function createOrder() { return $this->createInStoreOrder(); }
+    public function storeOrder(Request $request) { return $this->storeInStoreOrder($request); }
+
+    public function editOrder($id) {
+        $order = Order::with(['user','items.product','address','payment'])->findOrFail($id);
+        return view('staff.order-detail', compact('order'));
+    }
+    public function updateOrder(Request $request, $id) {
+        Order::findOrFail($id)->update(['note' => $request->note]);
+        return redirect()->route('staff.order.detail', $id)->with('success', 'Đã cập nhật đơn hàng.');
+    }
+    public function deleteOrder($id) {
+        $order = Order::findOrFail($id);
+        if (!in_array($order->status, ['cancelled','failed']))
+            return back()->with('error', 'Chỉ xóa đơn đã hủy hoặc thất bại.');
+        $order->delete();
+        return redirect()->route('staff.orders')->with('success', "Đã xóa đơn #$id");
+    }
+    public function invoice($id) {
+        $order = Order::with(['user','address','items.product','items.extras','payment'])->findOrFail($id);
+        return view('staff.order-detail', ['order'=>$order, 'printMode'=>true]);
+    }
+    public function assignDelivery(Request $request, $id) {
+        Order::findOrFail($id)->update(['assigned_staff_id' => $request->staff_id]);
+        return back()->with('success', 'Đã phân công nhân viên.');
+    }
+    public function startShift(Request $request) {
+        \Illuminate\Support\Facades\DB::table('shifts')->insert([
+            'staff_id'=>auth()->id(),'start_time'=>now(),'created_at'=>now()
+        ]);
+        return back()->with('success', 'Đã bắt đầu ca.');
+    }
+    public function endShift(Request $request) {
+        $shift = \Illuminate\Support\Facades\DB::table('shifts')->where('staff_id',auth()->id())->whereNull('end_time')->latest('start_time')->first();
+        if ($shift) \Illuminate\Support\Facades\DB::table('shifts')->where('id',$shift->id)->update(['end_time'=>now()]);
+        return back()->with('success', 'Đã kết thúc ca.');
+    }
 }

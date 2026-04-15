@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
+
 class Order extends Model
 {
     use HasFactory;
@@ -26,13 +28,13 @@ class Order extends Model
         'final_price',
         'note',
     ];
-
-    protected $casts = [
+        protected $casts = [
         'created_at' => 'datetime',
         'total_price' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'shipping_fee' => 'decimal:2',
         'final_price' => 'decimal:2',
+        'updated_at' => 'datetime',
     ];
 
     public function user()

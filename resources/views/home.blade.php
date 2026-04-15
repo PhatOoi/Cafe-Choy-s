@@ -5,6 +5,7 @@
     <title>Choy's Cafe</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Josefin+Sans:400,700" rel="stylesheet">
@@ -91,8 +92,8 @@
                                             <div class="user-dropdown-menu" id="userDropdownMenu">
                                                 <div class="dropdown-header-info">
                                                     <img src="{{ Auth::user()->avatar
-                        ? asset('storage/' . Auth::user()->avatar)
-                        : asset('images/user.jpg') }}"
+                                                        ? asset('storage/' . Auth::user()->avatar)
+                                                        : asset('images/user.jpg') }}"
                                                         class="dropdown-avatar">
 
                                                     <div class="user-details">
@@ -373,7 +374,10 @@
                 <div class="col-md-6 d-flex align-items-center intro-ad">
                     <div class="ad-content" style="text-align:center;">
                         <span style="display:block;font-family:'Great Vibes',cursive;font-size:clamp(3rem,8vw,5.5rem);color:#c9a96e;font-weight:400;line-height:1.1;">Choy's Cafe</span>
-                        <div style="font-family:'Inter',sans-serif;font-size:2.2rem;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:-10px;margin-bottom:18px;">Lựa chọn tốt nhất</div>
+                        <div class="heading-section ftco-animate ">
+                            <div  class="mb-4" style="font-size: 40px; font-weight: 900;">
+                            LỰA CHỌN TỐT NHẤT</div>
+                        </div>
                         <div style="font-family:'Inter',sans-serif;font-size:0.98rem;color:#bdbdbd;opacity:0.65;max-width:600px;margin:0 auto 0;">Không chỉ là nơi thưởng thức cà phê, chúng tôi mang đến không gian thư giãn, hương vị tuyệt hảo và trải nghiệm đáng nhớ cho mọi khách hàng.</div>
                     </div>
                 </div>
@@ -707,7 +711,7 @@
             color: #ffffff;
             background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
             line-height: 1.6;
-            margin-top: 100px;
+            margin-top: 50px;
             /* Khoảng cách với nội dung chính */
         }
 
@@ -941,24 +945,56 @@
 
     <script>
         function subscribeNewsletter() {
-            const emailInput = document.getElementById('emailInput');
-            if (!emailInput) return;
-            const username = emailInput.value.trim();
-            const button = emailInput.nextElementSibling;
-            if (!button) return;
-            if (!username || username.length < 3) {
-                button.style.background = '#c46d62';
-                setTimeout(() => button.style.background = '', 500);
-                return;
-            }
-            button.textContent = 'Đã đăng ký!';
-            button.style.background = '#6f9a78';
-            emailInput.value = '';
-            setTimeout(() => {
-                button.textContent = 'Đăng ký';
-                button.style.background = 'linear-gradient(135deg, #a56a49, #c18a68)';
-            }, 2000);
-        }
+    const emailInput = document.getElementById('emailInput');
+    if (!emailInput) return;
+
+    const email = emailInput.value.trim();
+    const button = emailInput.nextElementSibling;
+
+    if (!email || email.length < 3) {
+        button.style.background = '#ef4444';
+        setTimeout(() => button.style.background = '', 500);
+        return;
+    }
+
+    fetch('/subscribe', {
+        method: 'POST',
+        credentials: 'include', // 🔥 QUAN TRỌNG
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Server error');
+        return res.json();
+    })
+    .then(data => {
+        if (!data.success) throw new Error(data.error || 'Fail');
+
+        button.textContent = 'Đã đăng ký!';
+        button.style.background = '#10b981';
+        emailInput.value = '';
+
+        setTimeout(() => {
+            button.textContent = 'Đăng ký';
+            button.style.background = 'linear-gradient(45deg, #ff6b00, #ff8c42)';
+        }, 2000);
+    })
+    .catch(err => {
+        console.error(err);
+
+        button.textContent = 'Lỗi!';
+        button.style.background = '#ef4444';
+
+        setTimeout(() => {
+            button.textContent = 'Đăng ký';
+            button.style.background = 'linear-gradient(45deg, #ff6b00, #ff8c42)';
+        }, 2000);
+    });
+}
 
         // Enter key
         document.getElementById('emailInput').addEventListener('keypress', function (e) {

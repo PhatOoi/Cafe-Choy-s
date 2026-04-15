@@ -1,248 +1,304 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>☕ Cafe Shop - Thanh toán</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Thanh toán — Choy's Cafe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Poppins', sans-serif; background: #f8f5f0; min-height: 100vh; padding: 40px 20px; }
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .page-header h1 { font-size: 2rem; font-weight: 700; color: #1a110d; }
+        .page-header p  { color: #8b7355; font-size: 14px; margin-top: 6px; }
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-    font-family:'Poppins',sans-serif;
-    background:#0a0a0a;
-    color:#fff;
-    padding:20px;
-}
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 28px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        @media(max-width:900px){ .payment-grid{ grid-template-columns:1fr; } }
 
-.container{
-    max-width:1100px;
-    margin:auto;
-    border-radius:25px;
-    overflow:hidden;
-    background:rgba(255,255,255,0.05);
-}
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 20px rgba(0,0,0,.06);
+            padding: 28px;
+            border: none;
+        }
+        .card-title { font-size: 16px; font-weight: 700; color: #1a110d; margin-bottom: 20px; display:flex; align-items:center; gap:10px; }
+        .card-title i { color: #c8773a; }
 
-.header{
-    text-align:center;
-    padding:40px;
-    background:#111;
-}
+        /* Form */
+        .form-group { margin-bottom: 16px; }
+        label { font-size: 13px; font-weight: 600; color: #3d2b1f; margin-bottom: 6px; display:block; }
+        input, textarea, select {
+            width: 100%; padding: 11px 14px;
+            border: 1.5px solid #e8ddd2; border-radius: 10px;
+            font-size: 13.5px; font-family: 'Poppins', sans-serif;
+            color: #1a110d; background: #fdfaf7;
+            outline: none; transition: border-color .16s;
+        }
+        input:focus, textarea:focus, select:focus { border-color: #c8773a; background: #fff; }
+        textarea { resize: vertical; min-height: 80px; }
 
-.logo{
-    font-size:2em;
-    font-weight:700;
-}
+        /* Payment methods */
+        .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .pay-method {
+            border: 2px solid #e8ddd2; border-radius: 14px;
+            padding: 16px; text-align: center; cursor: pointer;
+            transition: all .2s;
+        }
+        .pay-method:hover { border-color: #c8b8a8; background: #fdfaf7; }
+        .pay-method.active { border-color: #c8773a; background: #fffaf6; }
+        .pay-method i { font-size: 26px; display: block; margin-bottom: 8px; }
+        .pay-method span { font-size: 13px; font-weight: 600; color: #1a110d; }
+        .pay-method small { display: block; font-size: 11px; color: #8b7355; margin-top: 3px; }
 
-.content{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:30px;
-    padding:30px;
-}
+        /* QR section */
+        #qr-section {
+            display: none; margin-top: 18px;
+            background: #f8f5f0; border-radius: 14px;
+            padding: 20px; text-align: center;
+        }
+        #qr-section img { width: 180px; border: 3px solid #e8ddd2; border-radius: 12px; padding: 8px; background: #fff; }
+        .bank-info { text-align: left; margin-top: 16px; }
+        .bank-info div { font-size: 13px; margin-bottom: 8px; color: #3d2b1f; }
+        .bank-info b { color: #1a110d; }
+        .copy-btn { border: none; background: transparent; color: #c8773a; cursor: pointer; font-size: 12px; padding: 2px 6px; }
+        .copy-btn:hover { text-decoration: underline; }
 
-.section{
-    background:rgba(255,255,255,0.05);
-    padding:25px;
-    border-radius:20px;
-}
+        /* Order summary */
+        .order-items { list-style: none; margin-bottom: 18px; }
+        .order-items li {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid #f0ebe4; font-size: 13.5px;
+        }
+        .order-items li:last-child { border-bottom: none; }
+        .item-name { color: #3d2b1f; }
+        .item-price { font-weight: 600; color: #1a110d; }
+        .order-total { display:flex; justify-content:space-between; font-size:17px; font-weight:700; color:#1a110d; border-top:2px solid #f0ebe4; padding-top:14px; margin-top:4px; }
+        .order-total span:last-child { color: #c8773a; }
 
-/* cart */
-.cart-item{
-    display:flex;
-    align-items:center;
-    margin-bottom:15px;
-}
-.cart-item img{
-    width:60px;height:60px;border-radius:10px;margin-right:10px;
-}
-.item-price{margin-left:auto;font-weight:bold}
+        /* Submit button */
+        .btn-pay {
+            width: 100%; padding: 15px;
+            background: linear-gradient(135deg, #c8773a, #a85f28);
+            color: #fff; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            font-family: 'Poppins', sans-serif; transition: all .2s;
+            margin-top: 10px;
+        }
+        .btn-pay:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(200,119,58,.35); }
+        .btn-back { display: block; text-align:center; margin-top:12px; color:#8b7355; font-size:13px; text-decoration:none; }
+        .btn-back:hover { color: #c8773a; }
 
-/* form */
-input,textarea{
-    width:100%;
-    padding:12px;
-    margin-top:5px;
-    margin-bottom:15px;
-    border-radius:10px;
-    border:none;
-    background:#222;
-    color:#fff;
-}
-
-/* payment */
-.payment-methods{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-}
-.payment-card{
-    padding:15px;
-    border:1px solid #444;
-    border-radius:10px;
-    text-align:center;
-    cursor:pointer;
-}
-.payment-card.active{
-    border:2px solid #fff;
-    background:#333;
-}
-
-/* QR */
-.qr-section{
-    display:none;
-    text-align:center;
-    margin-top:20px;
-}
-.qr-section.active{display:block}
-
-.qr-code{
-    width:200px;
-    margin:auto;
-}
-
-/* button */
-.pay-button{
-    width:100%;
-    padding:15px;
-    background:#000;
-    color:#fff;
-    border:1px solid #fff;
-    border-radius:10px;
-    cursor:pointer;
-}
-
-/* toast */
-.toast{
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    background:#000;
-    padding:15px;
-    border-radius:10px;
-    border:1px solid #fff;
-    opacity:0;
-    transition:0.4s;
-}
-</style>
+        /* Success state */
+        .success-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:999; align-items:center; justify-content:center; }
+        .success-card { background:#fff; border-radius:20px; padding:40px; text-align:center; max-width:380px; margin:20px; }
+        .success-card i { font-size:56px; color:#27ae60; margin-bottom:16px; }
+        .success-card h3 { font-size:20px; font-weight:700; color:#1a110d; margin-bottom:8px; }
+        .success-card p { color:#8b7355; font-size:14px; }
+    </style>
 </head>
-
 <body>
 
-<div class="container">
-
-<div class="header">
-    <div class="logo">☕ Cafe Shop</div>
-    <h2>Thanh toán</h2>
+<div class="page-header">
+    <h1><i class="fas fa-lock" style="color:#c8773a;margin-right:10px;"></i>Thanh toán đơn hàng</h1>
+    <p>Hoàn tất thông tin để nhận đơn nhanh nhất</p>
 </div>
 
-<div class="content">
+<div class="payment-grid">
 
-<!-- CART -->
-<div class="section">
-    <h3>Giỏ hàng</h3>
+    <!-- LEFT: Form -->
+    <div>
+        <!-- Thông tin giao hàng -->
+        <div class="card" style="margin-bottom:20px;">
+            <div class="card-title"><i class="fas fa-map-marker-alt"></i> Thông tin giao hàng</div>
+            <div class="form-group">
+                <label>Họ và tên *</label>
+                <input type="text" id="name" placeholder="Nguyễn Văn A"
+                       value="{{ Auth::user()->name ?? '' }}">
+            </div>
+            <div class="form-group">
+                <label>Số điện thoại *</label>
+                <input type="tel" id="phone" placeholder="0901234567"
+                       value="{{ Auth::user()->phone ?? '' }}">
+            </div>
+            <div class="form-group">
+                <label>Địa chỉ giao hàng *</label>
+                <input type="text" id="address" placeholder="Số nhà, tên đường, phường/xã...">
+            </div>
+            <div class="form-group">
+                <label>Ghi chú thêm</label>
+                <textarea id="note" placeholder="Ít đá, giao trước 10h..."></textarea>
+            </div>
+        </div>
 
-    <div class="cart-item">
-        <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085">
-        <div>Cà phê đen đá</div>
-        <div class="item-price">45k</div>
+        <!-- Phương thức thanh toán -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-credit-card"></i> Phương thức thanh toán</div>
+            <div class="pay-methods">
+                <div class="pay-method active" onclick="selectMethod('cash')" id="m-cash">
+                    <i class="fas fa-money-bill-wave" style="color:#27ae60;"></i>
+                    <span>Tiền mặt</span>
+                    <small>Thanh toán khi nhận (COD)</small>
+                </div>
+                <div class="pay-method" onclick="selectMethod('qr')" id="m-qr">
+                    <i class="fas fa-qrcode" style="color:#2563eb;"></i>
+                    <span>QR / Chuyển khoản</span>
+                    <small>VietQR — nhanh & tiện</small>
+                </div>
+                <div class="pay-method" onclick="selectMethod('momo')" id="m-momo">
+                    <i class="fas fa-mobile-alt" style="color:#ae2070;"></i>
+                    <span>MoMo</span>
+                    <small>Ví điện tử MoMo</small>
+                </div>
+                <div class="pay-method" onclick="selectMethod('zalopay')" id="m-zalopay">
+                    <i class="fas fa-wallet" style="color:#0068ff;"></i>
+                    <span>ZaloPay</span>
+                    <small>Ví ZaloPay / ATM</small>
+                </div>
+            </div>
+
+            <!-- QR hiển thị khi chọn QR -->
+            <div id="qr-section">
+                <img src="https://img.vietqr.io/image/vietcombank-1042131375-print.png?amount=135000&addInfo=CHOYSCAFE1234&accountName=TRAN%20QUOC%20LONG"
+                     alt="QR thanh toán" id="qr-img">
+                <div class="bank-info">
+                    <div><b>Ngân hàng:</b> Vietcombank</div>
+                    <div><b>Số tài khoản:</b> 1042131375
+                        <button class="copy-btn" onclick="copy('1042131375')">📋 Sao chép</button>
+                    </div>
+                    <div><b>Chủ tài khoản:</b> TRAN QUOC LONG</div>
+                    <div><b>Số tiền:</b> <span id="qr-amount">—</span>
+                        <button class="copy-btn" onclick="copyAmount()">📋 Sao chép</button>
+                    </div>
+                    <div><b>Nội dung CK:</b> <span id="qr-note">CHOYSCAFE{{ rand(1000,9999) }}</span>
+                        <button class="copy-btn" onclick="copy(document.getElementById('qr-note').textContent)">📋 Sao chép</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-pay" onclick="placeOrder()">
+                <i class="fas fa-check-circle" style="margin-right:8px;"></i>Đặt hàng ngay
+            </button>
+            <a href="/cart" class="btn-back"><i class="fas fa-arrow-left" style="margin-right:6px;"></i>Quay lại giỏ hàng</a>
+        </div>
     </div>
 
-    <div class="cart-item">
-        <img src="https://images.unsplash.com/photo-1512568400610-42b9a8bc0e3f">
-        <div>Bánh croissant</div>
-        <div class="item-price">35k</div>
+    <!-- RIGHT: Order summary -->
+    <div>
+        <div class="card" style="position:sticky;top:20px;">
+            <div class="card-title"><i class="fas fa-receipt"></i> Đơn hàng của bạn</div>
+            <ul class="order-items">
+                <li>
+                    <span class="item-name">☕ Cà phê đen đá × 2</span>
+                    <span class="item-price">50.000đ</span>
+                </li>
+                <li>
+                    <span class="item-name">🧋 Trà sữa trân châu × 1</span>
+                    <span class="item-price">45.000đ</span>
+                </li>
+                <li>
+                    <span class="item-name">🧁 Croissant × 1</span>
+                    <span class="item-price">35.000đ</span>
+                </li>
+            </ul>
+
+            <div style="font-size:13px;color:#5c3d2e;margin-bottom:8px;display:flex;justify-content:space-between;">
+                <span>Tạm tính</span><span>130.000đ</span>
+            </div>
+            <div style="font-size:13px;color:#5c3d2e;margin-bottom:8px;display:flex;justify-content:space-between;">
+                <span>Phí giao hàng</span><span style="color:#27ae60;">Miễn phí</span>
+            </div>
+            <div class="order-total">
+                <span>Tổng thanh toán</span>
+                <span>130.000đ</span>
+            </div>
+
+            <!-- Security badges -->
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f0ebe4;display:flex;gap:16px;justify-content:center;">
+                <div style="text-align:center;font-size:11px;color:#8b7355;">
+                    <i class="fas fa-shield-alt" style="font-size:22px;color:#27ae60;display:block;margin-bottom:4px;"></i>
+                    Bảo mật SSL
+                </div>
+                <div style="text-align:center;font-size:11px;color:#8b7355;">
+                    <i class="fas fa-lock" style="font-size:22px;color:#2563eb;display:block;margin-bottom:4px;"></i>
+                    Thanh toán an toàn
+                </div>
+                <div style="text-align:center;font-size:11px;color:#8b7355;">
+                    <i class="fas fa-undo" style="font-size:22px;color:#c8773a;display:block;margin-bottom:4px;"></i>
+                    Đổi trả dễ dàng
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="cart-item">
-        <img src="https://images.unsplash.com/photo-1577968897966-f97b209163d6">
-        <div>Latte</div>
-        <div class="item-price">55k</div>
+<!-- Success overlay -->
+<div class="success-overlay" id="successOverlay" style="display:flex;display:none;">
+    <div class="success-card">
+        <i class="fas fa-check-circle"></i>
+        <h3>Đặt hàng thành công!</h3>
+        <p style="margin-bottom:20px;">Cảm ơn bạn đã tin tưởng Choy's Cafe. Chúng tôi sẽ liên hệ xác nhận đơn sớm nhất!</p>
+        <a href="/" style="display:inline-block;background:#c8773a;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:600;">Về trang chủ</a>
     </div>
-
-    <h2>Tổng: 135k</h2>
 </div>
-
-<!-- PAYMENT -->
-<div class="section">
-
-<h3>Thông tin</h3>
-
-<input id="name" placeholder="Tên">
-<input id="phone" placeholder="SĐT">
-<textarea id="address" placeholder="Địa chỉ / Bàn"></textarea>
-
-<h3>Thanh toán</h3>
-
-<div class="payment-methods">
-    <div class="payment-card active" data-method="cash">Tiền mặt</div>
-    <div class="payment-card" data-method="qr">QR</div>
-</div>
-
-<div class="qr-section" id="qr">
-    <img class="qr-code" src="https://img.vietqr.io/image/VCB-1234567890-compact.png">
-    <p>Ngân hàng: Vietcombank</p>
-    <p>STK: 1234567890</p>
-    <p id="content">Nội dung: ...</p>
-</div>
-
-<button class="pay-button" onclick="pay()">Thanh toán</button>
-
-</div>
-
-</div>
-</div>
-
-<div id="toast" class="toast"></div>
 
 <script>
-let method = "cash";
+let method = 'cash';
 
-const cards = document.querySelectorAll(".payment-card");
-const qr = document.getElementById("qr");
-
-cards.forEach(c=>{
-    c.onclick=()=>{
-        cards.forEach(x=>x.classList.remove("active"));
-        c.classList.add("active");
-        method=c.dataset.method;
-
-        if(method==="qr"){
-            qr.classList.add("active");
-        }else{
-            qr.classList.remove("active");
-        }
-    }
-});
-
-function show(msg){
-    let t=document.getElementById("toast");
-    t.innerText=msg;
-    t.style.opacity=1;
-    setTimeout(()=>t.style.opacity=0,2000);
+function selectMethod(m) {
+    method = m;
+    document.querySelectorAll('.pay-method').forEach(el => {
+        el.classList.remove('active');
+        el.style.border = '2px solid #e8ddd2';
+        el.style.background = '#fff';
+    });
+    const el = document.getElementById('m-' + m);
+    el.classList.add('active');
+    el.style.border = '2px solid #c8773a';
+    el.style.background = '#fffaf6';
+    document.getElementById('qr-section').style.display = m === 'qr' ? 'block' : 'none';
 }
 
-function pay(){
-    let name=document.getElementById("name").value;
-    let phone=document.getElementById("phone").value;
-    let address=document.getElementById("address").value;
+function copy(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const t = document.createElement('div');
+        t.textContent = '✅ Đã sao chép!';
+        t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a110d;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;font-family:Poppins,sans-serif;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2000);
+    });
+}
+function copyAmount() { copy(document.getElementById('qr-amount').textContent); }
 
-    if(!name||!phone||!address){
-        show("⚠️ Nhập đầy đủ thông tin!");
+function placeOrder() {
+    const name    = document.getElementById('name').value.trim();
+    const phone   = document.getElementById('phone').value.trim();
+    const address = document.getElementById('address').value.trim();
+
+    if (!name || !phone || !address) {
+        alert('⚠️ Vui lòng điền đầy đủ thông tin giao hàng!');
+        return;
+    }
+    if (!/^\d{8,11}$/.test(phone.replace(/\s/g,''))) {
+        alert('⚠️ Số điện thoại không hợp lệ!');
         return;
     }
 
-    document.getElementById("content").innerText=
-        "Nội dung: "+name+" - Cafe";
-
-    if(method==="qr"){
-        show("📲 Quét QR để thanh toán");
-    }else{
-        show("✅ Đặt hàng thành công!");
-    }
+    document.getElementById('successOverlay').style.display = 'flex';
 }
 </script>
-
 </body>
 </html>
