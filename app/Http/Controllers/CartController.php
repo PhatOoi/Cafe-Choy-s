@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use App\Models\Product;
 use App\Models\Size;
 use App\Models\Extra;
@@ -52,6 +53,163 @@ class CartController extends Controller
         return $total;
     }
 
+    // Xác định option nào hợp lệ theo category của sản phẩm.
+    private function getProductOptionRules(Product $product): array
+    {
+        $categorySlug = Str::slug(optional($product->category)->name ?? '');
+        $productName = Str::lower((string) $product->name);
+        $asciiProductName = Str::lower(Str::ascii((string) $product->name));
+
+        $rules = [
+            'size' => true,
+            'topping' => true,
+            'sugar' => true,
+            'ice' => true,
+        ];
+
+        if ($categorySlug === 'tra-sua') {
+            $rules['sugar'] = false;
+        } elseif ($categorySlug === 'da-xay') {
+            $rules['topping'] = false;
+            $rules['sugar'] = false;
+            $rules['ice'] = false;
+        } elseif (in_array($categorySlug, ['nuoc-ep', 'nuoc-ep-sinh-to'], true)) {
+            $rules['topping'] = false;
+            $rules['sugar'] = false;
+
+            if (str_contains($productName, 'sinh tố') || str_contains($asciiProductName, 'sinh to')) {
+                $rules['ice'] = false;
+            }
+        } elseif ($categorySlug === 'ca-phe') {
+            $rules['topping'] = false;
+        } elseif ($categorySlug === 'tra-va-thuc-uong-theo-mua') {
+            $rules['topping'] = false;
+            $rules['sugar'] = false;
+        } elseif ($categorySlug === 'banh-snack') {
+            $rules['size'] = false;
+            $rules['topping'] = false;
+            $rules['sugar'] = false;
+            $rules['ice'] = false;
+        }
+
+        return $rules;
+    }
+
+    // Chuẩn hóa option để các item cũ hoặc request thủ công không giữ dữ liệu thừa.
+    private function normalizeCartOptions(Product $product, array $item): array
+    {
+        $rules = $this->getProductOptionRules($product);
+
+        $normalizeText = static function ($value): ?string {
+            $value = trim((string) $value);
+            return $value !== '' ? $value : null;
+        };
+
+        $toppings = [];
+        if ($rules['topping']) {
+            $toppings = collect($item['toppings'] ?? [])
+                ->filter(fn ($value) => trim((string) $value) !== '')
+                ->map(fn ($value) => trim((string) $value))
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return [
+            'size' => $rules['size'] ? $normalizeText($item['size'] ?? null) : null,
+            'sugar' => $rules['sugar'] ? $normalizeText($item['sugar'] ?? null) : null,
+            'ice' => $rules['ice'] ? $normalizeText($item['ice'] ?? null) : null,
+            'toppings' => $toppings,
+            'note' => $normalizeText($item['note'] ?? null),
+        ];
+    }
+
+    // Tạo key từ option đã chuẩn hóa để tránh tách item sai biến thể.
+    private function buildCartKey($productId, array $options): string
+    {
+        return implode('_', [
+            $productId,
+            $options['size'] ?? '-',
+            $options['sugar'] ?? '-',
+            $options['ice'] ?? '-',
+            implode(',', $options['toppings'] ?? []),
+        ]);
+    }
+
+    // Tính lại đơn giá sau khi loại các option không hợp lệ.
+    private function calculateCartItemPrice(Product $product, array $options): float
+    {
+        $sizeExtra = 0;
+        if (!empty($options['size'])) {
+            $size = Size::where('name', $options['size'])->first();
+            $sizeExtra = $size ? (float) $size->extra_price : 0;
+        }
+
+        $toppingPrice = 0;
+        if (!empty($options['toppings'])) {
+            $toppingPrice = (float) Extra::whereIn('name', $options['toppings'])->sum('price');
+        }
+
+        return (float) $product->price + $sizeExtra + $toppingPrice;
+    }
+
+    // Làm sạch cart hiện tại để sửa ngay các item đã lưu sai trong session.
+    private function normalizeCart(array $cart): array
+    {
+        if (empty($cart)) {
+            return [];
+        }
+
+        $productIds = collect($cart)
+            ->pluck('product_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $products = Product::with('category')
+            ->whereIn('id', $productIds)
+            ->get()
+            ->keyBy('id');
+
+        $normalizedCart = [];
+
+        foreach ($cart as $item) {
+            $product = $products->get($item['product_id'] ?? null);
+            if (!$product) {
+                continue;
+            }
+
+            $options = $this->normalizeCartOptions($product, is_array($item) ? $item : []);
+            $cartKey = $this->buildCartKey($product->id, $options);
+            $qty = max(1, (int) ($item['qty'] ?? 1));
+
+            if (isset($normalizedCart[$cartKey])) {
+                $normalizedCart[$cartKey]['qty'] += $qty;
+
+                if (empty($normalizedCart[$cartKey]['note']) && !empty($options['note'])) {
+                    $normalizedCart[$cartKey]['note'] = $options['note'];
+                }
+
+                continue;
+            }
+
+            $normalizedCart[$cartKey] = [
+                'product_id' => $product->id,
+                'name' => $product->name,
+                'price' => $this->calculateCartItemPrice($product, $options),
+                'size' => $options['size'],
+                'sugar' => $options['sugar'],
+                'ice' => $options['ice'],
+                'toppings' => $options['toppings'],
+                'note' => $options['note'],
+                'qty' => $qty,
+                'image_url' => $product->image_url,
+            ];
+        }
+
+        return $normalizedCart;
+    }
+
     // Chuyển toàn bộ session cart thành order thật trong database.
     // Hàm này gom cả order, order item, extra và payment vào chung một transaction.
     private function createOrderFromCart(array $cart, float $total, array $orderData, ?array $paymentData = null): Order
@@ -75,11 +233,19 @@ class CartController extends Controller
             // Mỗi item trong giỏ trở thành một dòng order item riêng.
             foreach ($cart as $item) {
                 // Gộp option của món vào note để staff/admin xem lại dễ hơn.
-                $itemNoteParts = [
-                    'Size: ' . ($item['size'] ?? '-'),
-                    'Đường: ' . ($item['sugar'] ?? '-'),
-                    'Đá: ' . ($item['ice'] ?? '-'),
-                ];
+                $itemNoteParts = [];
+
+                if (!empty($item['size'])) {
+                    $itemNoteParts[] = 'Size: ' . $item['size'];
+                }
+
+                if (!empty($item['sugar'])) {
+                    $itemNoteParts[] = 'Đường: ' . $item['sugar'];
+                }
+
+                if (!empty($item['ice'])) {
+                    $itemNoteParts[] = 'Đá: ' . $item['ice'];
+                }
 
                 if (!empty($item['note'])) {
                     $itemNoteParts[] = 'Ghi chú: ' . $item['note'];
@@ -90,7 +256,7 @@ class CartController extends Controller
                     'product_id' => $item['product_id'],
                     'quantity' => $item['qty'],
                     'unit_price' => $item['price'],
-                    'note' => implode(' | ', $itemNoteParts),
+                    'note' => !empty($itemNoteParts) ? implode(' | ', $itemNoteParts) : null,
                 ]);
 
                 // Tách topping ra để lưu ở bảng order_item_extras.
@@ -148,7 +314,7 @@ class CartController extends Controller
         }
 
         // Lấy sản phẩm từ database để chắc chắn id hợp lệ.
-        $product = Product::find($request->product_id);
+        $product = Product::with('category')->find($request->product_id);
 
         if (!$product) {
             return response()->json([
@@ -158,34 +324,9 @@ class CartController extends Controller
         }
 
         $cart = session()->get('cart', []);
-
-        // Gộp topping thành chuỗi để tạo key phân biệt các biến thể cùng một món.
-        $toppingsStr = is_array($request->toppings)
-            ? implode(',', $request->toppings)
-            : '';
-
-        // Key cart được ghép từ product + toàn bộ option để tránh đè nhầm biến thể khác nhau.
-        $cartKey = $request->product_id . '_'
-                   . $request->size . '_'
-                   . $request->sugar . '_'
-                   . $request->ice . '_'
-                   . $toppingsStr;
-
-        // Tính phụ thu của size đã chọn.
-        $size = Size::where('name', $request->size)->first();
-        $extraPrice = $size ? (float)$size->extra_price : 0;
-
-        // Tính tổng giá topping đã chọn.
-        $toppingPrice = 0;
-        if (!empty($request->toppings) && is_array($request->toppings)) {
-            $toppingObjs = Extra::whereIn('name', $request->toppings)->get();
-            foreach ($toppingObjs as $tp) {
-                $toppingPrice += (float)$tp->price;
-            }
-        }
-
-        // Giá 1 đơn vị món sau khi cộng option.
-        $price = $product->price + $extraPrice + $toppingPrice;
+        $options = $this->normalizeCartOptions($product, $request->all());
+        $cartKey = $this->buildCartKey($request->product_id, $options);
+        $price = $this->calculateCartItemPrice($product, $options);
 
         // Nếu biến thể món đã có trong giỏ thì cộng dồn số lượng.
         if (isset($cart[$cartKey])) {
@@ -196,11 +337,11 @@ class CartController extends Controller
                 'product_id' => $request->product_id,
                 'name' => $product->name,
                 'price' => $price,
-                'size' => $request->size,
-                'sugar' => $request->sugar,
-                'ice' => $request->ice,
-                'toppings' => $request->toppings,
-                'note' => $request->note,
+                'size' => $options['size'],
+                'sugar' => $options['sugar'],
+                'ice' => $options['ice'],
+                'toppings' => $options['toppings'],
+                'note' => $options['note'],
                 'qty' => $request->qty,
                 'image_url' => $product->image_url,
             ];
@@ -231,7 +372,8 @@ class CartController extends Controller
         // Mỗi lần mở cart đều đồng bộ lại trạng thái đơn QR cũ trước.
         $this->syncPendingQrOrderCart();
 
-        $cart = session()->get('cart', []);
+        $cart = $this->normalizeCart(session()->get('cart', []));
+        session()->put('cart', $cart);
         $cartCount = array_sum(array_column($cart, 'qty'));
 
         return view('cart', compact('cart', 'cartCount'));
@@ -328,7 +470,8 @@ class CartController extends Controller
             ], 401);
         }
 
-        $cart = session()->get('cart', []);
+        $cart = $this->normalizeCart(session()->get('cart', []));
+        session()->put('cart', $cart);
 
         if (empty($cart)) {
             return response()->json([
@@ -375,7 +518,8 @@ class CartController extends Controller
             ], 401);
         }
 
-        $cart = session()->get('cart', []);
+        $cart = $this->normalizeCart(session()->get('cart', []));
+        session()->put('cart', $cart);
 
         if (empty($cart)) {
             return response()->json([
