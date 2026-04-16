@@ -33,6 +33,7 @@
         $initialCartTotal = collect($cart)->sum(fn ($item) => ((float) ($item['price'] ?? 0)) * ((int) ($item['qty'] ?? 0)));
     @endphp
     <script>
+        // Seed state ban đầu từ server để các thao tác AJAX có thể sync lại UI mà không cần reload trang.
         window.hasPendingQrOrder = {{ $hasPendingQrOrder ? 'true' : 'false' }};
         window.initialCartState = @json($cart);
         window.initialCartTotal = {{ json_encode($initialCartTotal) }};
@@ -526,6 +527,7 @@
                                         }, 0);
                                     }
 
+                                    // Giữ hàng "giỏ trống" trong bảng luôn khớp với state cart hiện tại.
                                     function syncCartTableEmptyState(cart) {
                                         var tbody = document.getElementById('cart-table-body');
                                         if (!tbody) {
@@ -550,6 +552,7 @@
                                         }
                                     }
 
+                                    // Khi cart rỗng thì ẩn block thanh toán và đóng các modal đang mở.
                                     function syncSummaryVisibility(cart) {
                                         var hasItems = getCartEntries(cart).length > 0;
                                         var summarySection = document.getElementById('cart-summary-section');
@@ -565,6 +568,7 @@
                                         }
                                     }
 
+                                    // Bill modal được dựng lại từ JS state để luôn bám theo cart mới nhất sau update/remove.
                                     function syncBillItems(cart) {
                                         var billItems = document.getElementById('bill-items');
                                         if (!billItems) {
@@ -602,6 +606,7 @@
                                         }).join('');
                                     }
 
+                                    // Đồng bộ tất cả phần phụ thuộc cart: tổng tiền, bill và ảnh QR thanh toán.
                                     function syncPaymentSummary(cart, total) {
                                         var resolvedTotal = typeof total === 'number' ? total : calculateCartTotalFromState(cart);
                                         var serviceTotal = document.getElementById('bill-service-total');
@@ -635,6 +640,7 @@
                                         }
                                     }
 
+                                    // Mọi response cart từ backend đều đi qua đây để tránh mỗi nơi update UI một kiểu.
                                     function syncCartState(cart, total) {
                                         window.currentCartState = cart || {};
                                         window.currentCartTotal = typeof total === 'number' ? total : calculateCartTotalFromState(window.currentCartState);
@@ -644,7 +650,7 @@
                                         syncPaymentSummary(window.currentCartState, window.currentCartTotal);
                                     }
 
-                                    // Ajax cập nhật số lượng
+                                    // Khởi tạo state client và gắn luồng tăng/giảm số lượng bằng AJAX.
                                     document.addEventListener('DOMContentLoaded', function() {
                                         window.currentCartState = window.initialCartState || {};
                                         window.currentCartTotal = Number(window.initialCartTotal || 0);
@@ -693,7 +699,8 @@
                                             });
                                         });
                                     });
-                                    // Ajax xóa sản phẩm khỏi giỏ hàng
+
+                                    // Xóa item cũng gọi cùng endpoint update với qty=0 để backend chỉ có một luồng xử lý.
                                     document.querySelectorAll('.btn-remove-item').forEach(function(btn) {
                                         btn.addEventListener('click', function() {
                                             var key = this.getAttribute('data-key');
@@ -718,6 +725,8 @@
                                             });
                                         });
                                     });
+
+                                    // Poll trạng thái đơn QR pending cho tới khi staff xác nhận thanh toán.
                                     var qrStatusPoller = null;
 
                                     function stopQrStatusPolling() {
@@ -799,6 +808,8 @@
                                             showToast('Không thể gửi xác nhận thanh toán. Vui lòng thử lại.');
                                         });
                                     }
+
+                                    // Tiền mặt mở bill xác nhận trước, còn API checkout chỉ được gọi ở bước cuối.
                                     function handleCashPayment() {
                                         if (getCartEntries(window.currentCartState).length === 0) {
                                             showToast('Giỏ hàng đang trống.');
@@ -842,6 +853,8 @@
                                             showToast('Không thể thanh toán. Vui lòng thử lại.');
                                         });
                                     }
+
+                                    // QR modal luôn lấy tổng tiền mới nhất từ currentCartState đã được sync ở trên.
                                     function showQRModal() {
                                         if (getCartEntries(window.currentCartState).length === 0) {
                                             showToast('Giỏ hàng đang trống.');
