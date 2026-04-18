@@ -210,6 +210,24 @@ class CartController extends Controller
         return $normalizedCart;
     }
 
+    // Đọc cart từ session theo một chuẩn duy nhất để các API không bị lệch state.
+    private function getNormalizedSessionCart(bool $persist = false): array
+    {
+        $cart = $this->normalizeCart(session()->get('cart', []));
+
+        if ($persist) {
+            session()->put('cart', $cart);
+        }
+
+        return $cart;
+    }
+
+    // Tính badge/cart count từ cart đã normalize.
+    private function getCartCount(array $cart): int
+    {
+        return array_sum(array_column($cart, 'qty'));
+    }
+
     // Chuyển toàn bộ session cart thành order thật trong database.
     // Hàm này gom cả order, order item, extra và payment vào chung một transaction.
     private function createOrderFromCart(array $cart, float $total, array $orderData, ?array $paymentData = null): Order
@@ -323,7 +341,7 @@ class CartController extends Controller
             ], 404);
         }
 
-        $cart = session()->get('cart', []);
+        $cart = $this->getNormalizedSessionCart(true);
         $options = $this->normalizeCartOptions($product, $request->all());
         $cartKey = $this->buildCartKey($request->product_id, $options);
         $price = $this->calculateCartItemPrice($product, $options);
@@ -351,7 +369,7 @@ class CartController extends Controller
         session()->put('cart', $cart);
 
         // Tính badge số lượng món để update UI.
-        $cartCount = array_sum(array_column($cart, 'qty'));
+        $cartCount = $this->getCartCount($cart);
 
         // Nếu frontend gọi AJAX thì trả JSON để update popup/cart badge mà không reload.
         if ($request->expectsJson() || $request->isJson() || $request->wantsJson()) {
@@ -372,9 +390,8 @@ class CartController extends Controller
         // Mỗi lần mở cart đều đồng bộ lại trạng thái đơn QR cũ trước.
         $this->syncPendingQrOrderCart();
 
-        $cart = $this->normalizeCart(session()->get('cart', []));
-        session()->put('cart', $cart);
-        $cartCount = array_sum(array_column($cart, 'qty'));
+        $cart = $this->getNormalizedSessionCart(true);
+        $cartCount = $this->getCartCount($cart);
 
         return view('cart', compact('cart', 'cartCount'));
     }
@@ -389,7 +406,7 @@ class CartController extends Controller
             ], 401);
         }
 
-        $cart = session()->get('cart', []);
+        $cart = $this->getNormalizedSessionCart(true);
 
         if (isset($cart[$id])) {
             unset($cart[$id]);
@@ -398,12 +415,9 @@ class CartController extends Controller
 
         // Trả cart mới cho frontend nếu đây là request AJAX.
         if (request()->expectsJson() || request()->isJson() || request()->wantsJson()) {
-            $cart = session()->get('cart', []);
-            $total = 0;
-            foreach ($cart as $item) {
-                $total += $item['price'] * $item['qty'];
-            }
-            $cartCount = array_sum(array_column($cart, 'qty'));
+            $cart = $this->getNormalizedSessionCart(true);
+            $total = $this->calculateCartTotal($cart);
+            $cartCount = $this->getCartCount($cart);
 
             return response()->json([
                 'success' => true,
@@ -426,7 +440,7 @@ class CartController extends Controller
             ], 401);
         }
 
-        $cart = session()->get('cart', []);
+        $cart = $this->getNormalizedSessionCart(true);
 
         // Nếu item tồn tại thì cập nhật qty hoặc xóa khi qty <= 0.
         if (isset($cart[$key])) {
@@ -442,12 +456,9 @@ class CartController extends Controller
 
         // AJAX sẽ nhận lại cart/tổng tiền mới để render lại ngay.
         if ($request->expectsJson() || $request->isJson() || $request->wantsJson()) {
-            $cart = session()->get('cart', []);
-            $total = 0;
-            foreach ($cart as $item) {
-                $total += $item['price'] * $item['qty'];
-            }
-            $cartCount = array_sum(array_column($cart, 'qty'));
+            $cart = $this->getNormalizedSessionCart(true);
+            $total = $this->calculateCartTotal($cart);
+            $cartCount = $this->getCartCount($cart);
 
             return response()->json([
                 'success' => true,
@@ -470,8 +481,7 @@ class CartController extends Controller
             ], 401);
         }
 
-        $cart = $this->normalizeCart(session()->get('cart', []));
-        session()->put('cart', $cart);
+        $cart = $this->getNormalizedSessionCart(true);
 
         if (empty($cart)) {
             return response()->json([
@@ -518,8 +528,7 @@ class CartController extends Controller
             ], 401);
         }
 
-        $cart = $this->normalizeCart(session()->get('cart', []));
-        session()->put('cart', $cart);
+        $cart = $this->getNormalizedSessionCart(true);
 
         if (empty($cart)) {
             return response()->json([
@@ -540,7 +549,7 @@ class CartController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Đơn QR của bạn đang chờ nhân viên xác nhận thanh toán.',
-                    'cart_count' => array_sum(array_column($cart, 'qty')),
+                    'cart_count' => $this->getCartCount($cart),
                 ]);
             }
         }
@@ -568,7 +577,7 @@ class CartController extends Controller
             'success' => true,
             'message' => 'Đã gửi yêu cầu xác nhận. Nhân viên sẽ kiểm tra và xác nhận sau khi đối chiếu thanh toán QR của bạn.',
             'order_id' => $order->id,
-            'cart_count' => array_sum(array_column($cart, 'qty')),
+            'cart_count' => $this->getCartCount($cart),
         ]);
     }
 
@@ -586,11 +595,13 @@ class CartController extends Controller
 
         // Không có đơn QR chờ trong session thì frontend dừng trạng thái chờ.
         if (!$pendingOrderId) {
+            $cart = $this->getNormalizedSessionCart(true);
+
             return response()->json([
                 'success' => true,
                 'has_pending_qr' => false,
                 'paid' => false,
-                'cart_count' => array_sum(array_column(session()->get('cart', []), 'qty')),
+                'cart_count' => $this->getCartCount($cart),
             ]);
         }
 
@@ -599,12 +610,13 @@ class CartController extends Controller
         // Nếu payment không tồn tại nữa thì xóa cờ pending trong session để tránh treo UI.
         if (!$payment) {
             session()->forget('pending_qr_order_id');
+            $cart = $this->getNormalizedSessionCart(true);
 
             return response()->json([
                 'success' => true,
                 'has_pending_qr' => false,
                 'paid' => false,
-                'cart_count' => array_sum(array_column(session()->get('cart', []), 'qty')),
+                'cart_count' => $this->getCartCount($cart),
             ]);
         }
 
@@ -623,11 +635,13 @@ class CartController extends Controller
         }
 
         // Trường hợp còn pending thì frontend tiếp tục giữ popup/trạng thái chờ xác nhận.
+        $cart = $this->getNormalizedSessionCart(true);
+
         return response()->json([
             'success' => true,
             'has_pending_qr' => true,
             'paid' => false,
-            'cart_count' => array_sum(array_column(session()->get('cart', []), 'qty')),
+            'cart_count' => $this->getCartCount($cart),
         ]);
     }
 }
