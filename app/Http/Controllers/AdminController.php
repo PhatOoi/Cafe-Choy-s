@@ -339,7 +339,7 @@ class AdminController extends Controller
 
         // Chọn nguồn dữ liệu biểu đồ phù hợp với period đang xem.
         $revenueData = match ($period) {
-            'day'   => $this->revenueByDay(),
+            'day' => $this->revenueByDay($request),
             'year'  => $this->revenueByYear(),
             default => $this->revenueByMonth(),
         };
@@ -358,12 +358,14 @@ class AdminController extends Controller
         return view('admin.reports', compact('revenueData', 'topProducts', 'period'));
     }
 
-    private function revenueByDay()
+        private function revenueByDay(Request $request = null)
     {
-        // Gom doanh thu delivered theo từng ngày trong 30 ngày gần nhất.
+        $from = $request?->input('from') ? now()->parse($request->input('from')) : now()->subDays(29)->startOfDay();
+        $to   = $request?->input('to')   ? now()->parse($request->input('to'))->endOfDay() : now()->endOfDay();
+
         return Order::where('status', 'delivered')
             ->selectRaw('DATE(created_at) as label, SUM(final_price) as total')
-            ->where('created_at', '>=', now()->subDays(29)->startOfDay())
+            ->whereBetween('created_at', [$from, $to])
             ->groupBy('label')
             ->orderBy('label')
             ->get();
