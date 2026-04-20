@@ -23,7 +23,7 @@ class StaffController extends Controller
         app(DailyRevenueSnapshotService::class)->syncLastDays(30);
     }
 
-    // Tập hợp toàn bộ dữ liệu dùng chung cho trang doanh thu ngày và doanh thu tháng.
+    // Tập hợp toàn bộ dữ liệu dùng cho trang doanh thu ngày của staff.
     private function getRevenueSnapshotData(): array
     {
         $historyStart = now()->subDays(29)->startOfDay();
@@ -77,24 +77,7 @@ class StaffController extends Controller
                 ->count(),
         ];
 
-            // Gộp dữ liệu riêng của tháng hiện tại từ collection snapshot 30 ngày.
-        $currentMonthRevenue = [
-            'month_label' => now()->translatedFormat('m/Y'),
-            'total_orders' => (int) $dailyRevenue
-                ->filter(fn ($day) => optional($day->revenue_date)?->format('Y-m') === now()->format('Y-m'))
-                ->sum('total_orders'),
-            'total_revenue' => (float) $dailyRevenue
-                ->filter(fn ($day) => optional($day->revenue_date)?->format('Y-m') === now()->format('Y-m'))
-                ->sum('total_revenue'),
-            'cash_revenue' => (float) $dailyRevenue
-                ->filter(fn ($day) => optional($day->revenue_date)?->format('Y-m') === now()->format('Y-m'))
-                ->sum('cash_revenue'),
-            'transfer_revenue' => (float) $dailyRevenue
-                ->filter(fn ($day) => optional($day->revenue_date)?->format('Y-m') === now()->format('Y-m'))
-                ->sum('transfer_revenue'),
-        ];
-
-            // Summary chung cho khối thống kê tổng quan của 30 ngày gần nhất.
+        // Summary chung cho khối thống kê tổng quan của 30 ngày gần nhất.
         $summary = [
             'combined_revenue' => (float) $dailyRevenue->sum('total_revenue'),
             'staff_created_revenue' => (float) $dailyRevenue->sum('staff_created_revenue'),
@@ -105,7 +88,7 @@ class StaffController extends Controller
             'range_label' => $historyStart->format('d/m/Y') . ' - ' . now()->format('d/m/Y'),
         ];
 
-        return compact('dailyRevenue', 'todayRevenue', 'todayOrderBreakdown', 'currentMonthRevenue', 'summary');
+        return compact('dailyRevenue', 'todayRevenue', 'todayOrderBreakdown', 'summary');
     }
 
     // ─── Dashboard ───────────────────────────────────────────────────────────
