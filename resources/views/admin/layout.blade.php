@@ -627,14 +627,23 @@
     <nav class="sidebar-nav">
         <div class="nav-label">Tổng quan</div>
         <a href="{{ route('admin.dashboard') }}"
-           class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+        class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="fas fa-chart-pie"></i> Dashboard
         </a>
-        <a href="{{ route('admin.reports') }}"
-           class="sidebar-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">
-            <i class="fas fa-chart-line"></i> Báo cáo & Thống kê
-        </a>
 
+        <div class="nav-label">Doanh thu</div>
+        <a href="{{ route('admin.reports', ['period' => 'day']) }}"
+        class="sidebar-link {{ request()->routeIs('admin.reports') && request('period','month') === 'day' ? 'active' : '' }}">
+            <i class="fas fa-calendar-day"></i> Theo ngày
+        </a>
+        <a href="{{ route('admin.reports', ['period' => 'month']) }}"
+        class="sidebar-link {{ request()->routeIs('admin.reports') && request('period','month') === 'month' ? 'active' : '' }}">
+            <i class="fas fa-calendar-alt"></i> Theo tháng
+        </a>
+        <a href="{{ route('admin.reports', ['period' => 'year']) }}"
+        class="sidebar-link {{ request()->routeIs('admin.reports') && request('period','month') === 'year' ? 'active' : '' }}">
+            <i class="fas fa-calendar"></i> Theo năm
+        </a>
         <div class="nav-label">Sản phẩm</div>
         <a href="{{ route('admin.products') }}"
            class="sidebar-link {{ request()->routeIs('admin.products*') ? 'active' : '' }}">

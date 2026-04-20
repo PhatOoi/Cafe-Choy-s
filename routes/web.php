@@ -149,4 +149,8 @@ if (app()->environment('local')) {
     Route::get('/test-db', fn() => DB::table('users')->get());
 }
 
+Route::get('/revenue',       [AdminController::class, 'reports'])->name('revenue');
+Route::get('/revenue/day',   fn(Request $r) => app(AdminController::class)->reports($r->merge(['period'=>'day'])))->name('revenue.day');
+Route::get('/revenue/month', fn(Request $r) => app(AdminController::class)->reports($r->merge(['period'=>'month'])))->name('revenue.month');
+Route::get('/revenue/year',  fn(Request $r) => app(AdminController::class)->reports($r->merge(['period'=>'year'])))->name('revenue.year');
 
