@@ -16,13 +16,15 @@ class SearchController extends Controller
         // Từ khóa tìm kiếm lấy từ query string trên thanh search.
         $q = $request->q;
 
-        // Chỉ lấy các category có ít nhất một sản phẩm khớp từ khóa.
+        // Chỉ lấy các category có ít nhất một sản phẩm khớp từ khóa và đang bán.
         $categories = Category::whereHas('products', function ($query) use ($q) {
-            $query->where('name', 'like', '%' . $q . '%');
+            $query->where('name', 'like', '%' . $q . '%')
+                  ->where('status', 'available');
         })
             ->with(['products' => function ($query) use ($q) {
-                // Trong mỗi category chỉ giữ các sản phẩm khớp từ khóa, đồng thời sắp xếp theo tên.
+                // Trong mỗi category chỉ giữ các sản phẩm khớp từ khóa, đang bán, đồng thời sắp xếp theo tên.
                 $query->where('name', 'like', '%' . $q . '%')
+                    ->where('status', 'available')
                     ->orderBy('name');
             }])
             ->orderBy('sort_order')

@@ -58,6 +58,13 @@
                     <label class="form-label">Hình ảnh sản phẩm</label>
                     <input type="file" name="image" class="form-control" accept="image/*"
                         onchange="previewFile(this)">
+                    <small style="color: var(--text-muted); margin-top: 4px; display: block;">Hoặc nhập URL hình ảnh bên dưới</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">URL hình ảnh (nếu không upload file)</label>
+                    <input type="url" name="image_url" class="form-control" 
+                           value="{{ old('image_url', $product->image_url) }}" placeholder="https://example.com/image.jpg">
+                    @error('image_url')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="form-group">

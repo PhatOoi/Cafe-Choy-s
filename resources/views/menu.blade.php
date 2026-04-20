@@ -266,7 +266,13 @@
                         @foreach($group['products'] as $product)
                             <div class="product-card">
                                 <div class="card-image-wrap">
-                                    <img src="{{ asset('images/' . $product->image_url) }}"
+                                    @php
+                                        // Nếu image_url là URL (bắt đầu bằng http), dùng trực tiếp; nếu không, thêm đường dẫn local
+                                        $imageUrl = str_starts_with($product->image_url, 'http') 
+                                            ? $product->image_url 
+                                            : asset('images/' . $product->image_url);
+                                    @endphp
+                                    <img src="{{ $imageUrl }}"
                                         onerror="this.src='https://via.placeholder.com/400x280/c8b8a8/ffffff?text=Coffee'"
                                         alt="{{ $product->name }}" class="card-img">
                                     <div class="card-shine"></div>
@@ -287,12 +293,17 @@
                                             {{ number_format($product->price) }}<span class="price-unit">đ</span>
                                         </span>
                                         @auth
+                                            @php
+                                                $buttonImageUrl = str_starts_with($product->image_url, 'http') 
+                                                    ? $product->image_url 
+                                                    : asset('images/' . $product->image_url);
+                                            @endphp
                                             <button class="btn-add-cart" onclick='openModal(
                                                             {{ $product->id }},
                                                             @json($product->name),
                                                             {{ $product->price }},
                                                             @json($category->name),
-                                                            @json(asset('images/' . $product->image_url)),
+                                                            @json($buttonImageUrl),
                                                             @json(\Illuminate\Support\Str::slug($category->name)),
                                                             @json($product->description ?? "")
                                                         )'>

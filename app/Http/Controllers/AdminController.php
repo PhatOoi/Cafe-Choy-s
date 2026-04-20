@@ -89,17 +89,39 @@ class AdminController extends Controller
     public function storeProduct(Request $request)
     {
         // Validate dữ liệu đầu vào của form tạo sản phẩm.
-        $data = $request->validate([
+        $request->validate([
             'name'        => 'required|string|max:200',
             'category_id' => 'required|exists:categories,id',
             'price'       => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'status'      => 'required|in:available,unavailable',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'image_url'   => 'nullable|url|max:500',
         ]);
 
+        $imagePath = null;
+
+        // ✅ Ưu tiên upload file
+        if ($request->hasFile('image')) {
+            // Ảnh upload local sẽ được lưu vào public/images và chỉ lưu tên file trong database.
+            $imageName = time() . '.' . $request->image->extension();
+            $request->image->move(public_path('images'), $imageName);
+            $imagePath = $imageName;
+        }
+        // ✅ Nếu nhập URL
+        elseif ($request->image_url) {
+            $imagePath = $request->image_url;
+        }
+
         // Tạo record sản phẩm mới trong menu.
-        Product::create($data);
+        Product::create([
+            'name'        => $request->name,
+            'category_id' => $request->category_id,
+            'price'       => $request->price,
+            'description' => $request->description,
+            'status'      => $request->status,
+            'image_url'   => $imagePath,
+        ]);
 
         return redirect()->route('admin.products')->with('success', 'Thêm sản phẩm thành công!');
     }
@@ -117,16 +139,46 @@ class AdminController extends Controller
         // Tìm sản phẩm và validate dữ liệu mới trước khi update.
         $product = Product::findOrFail($id);
 
-        $data = $request->validate([
+        $request->validate([
             'name'        => 'required|string|max:200',
             'category_id' => 'required|exists:categories,id',
             'price'       => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'status'      => 'required|in:available,unavailable',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'image_url'   => 'nullable|url|max:500',
         ]);
 
-        $product->update($data);
+        $imagePath = $product->image_url;
+
+        // ✅ Nếu upload ảnh mới
+        if ($request->hasFile('image')) {
+            // Xóa ảnh cũ nếu là ảnh local
+            if ($product->image_url && !str_starts_with($product->image_url, ['http://', 'https://'])) {
+                $oldPath = public_path('images/' . $product->image_url);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+
+            // Lưu ảnh local mới
+            $imageName = time() . '.' . $request->image->extension();
+            $request->image->move(public_path('images'), $imageName);
+            $imagePath = $imageName;
+        }
+        // ✅ Nếu nhập URL mới
+        elseif ($request->image_url) {
+            $imagePath = $request->image_url;
+        }
+
+        $product->update([
+            'name'        => $request->name,
+            'category_id' => $request->category_id,
+            'price'       => $request->price,
+            'description' => $request->description,
+            'status'      => $request->status,
+            'image_url'   => $imagePath,
+        ]);
 
         return redirect()->route('admin.products')->with('success', 'Cập nhật sản phẩm thành công!');
     }

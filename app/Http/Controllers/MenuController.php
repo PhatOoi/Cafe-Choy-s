@@ -19,10 +19,12 @@ class MenuController extends Controller
             return redirect()->route('staff.dashboard')->with('error', 'Nhân viên không có quyền truy cập trang menu.');
         }
 
-        // Chỉ lấy các category thật sự có sản phẩm để giao diện không hiện mục rỗng.
-        $categories = Category::whereHas('products')->with(['products' => function ($q) {
-            // Sắp xếp sản phẩm theo tên để thứ tự hiển thị ổn định.
-            $q->orderBy('name');
+        // Chỉ lấy các category thật sự có sản phẩm đang bán để giao diện không hiện mục rỗng.
+        $categories = Category::whereHas('products', function ($q) {
+            $q->where('status', 'available');
+        })->with(['products' => function ($q) {
+            // Chỉ lấy sản phẩm đang bán và sắp xếp theo tên để thứ tự hiển thị ổn định.
+            $q->where('status', 'available')->orderBy('name');
         }])->orderBy('sort_order')->get();
 
         // Lấy các nhóm option dùng trong modal chọn topping/đường/đá/kích cỡ.

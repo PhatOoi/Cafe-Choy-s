@@ -13,37 +13,39 @@ class ProductController extends Controller
 {
     // 🔍 SEARCH
     public function search(Request $request)
-{
-    // Nhận từ khóa tìm kiếm từ query string.
-    $q = $request->q;
+    {
+        // Nhận từ khóa tìm kiếm từ query string.
+        $q = $request->q;
 
-    // Chỉ lấy category có sản phẩm khớp với từ khóa.
-    $categories = Category::whereHas('products', function ($query) use ($q) {
-        $query->where('name', 'like', '%' . $q . '%');
-    })
-    ->with(['products' => function ($query) use ($q) {
-        // Trong mỗi category, chỉ giữ lại các sản phẩm khớp và sắp xếp theo tên.
-        $query->where('name', 'like', '%' . $q . '%')
-              ->orderBy('name');
-    }])
-    ->orderBy('sort_order')
-    ->get();
+        // Chỉ lấy category có sản phẩm khớp với từ khóa và đang bán.
+        $categories = Category::whereHas('products', function ($query) use ($q) {
+            $query->where('name', 'like', '%' . $q . '%')
+                  ->where('status', 'available');
+        })
+        ->with(['products' => function ($query) use ($q) {
+            // Trong mỗi category, chỉ giữ lại các sản phẩm khớp, đang bán và sắp xếp theo tên.
+            $query->where('name', 'like', '%' . $q . '%')
+                  ->where('status', 'available')
+                  ->orderBy('name');
+        }])
+        ->orderBy('sort_order')
+        ->get();
 
-    // Nạp đủ option để trang search có thể tái sử dụng modal chọn món giống trang menu.
-    $toppings = Extra::topping()->get();
-    $sugars   = Extra::sugar()->get();
-    $ices     = Extra::ice()->get();
-    $sizes    = Size::all();
+        // Nạp đủ option để trang search có thể tái sử dụng modal chọn món giống trang menu.
+        $toppings = Extra::topping()->get();
+        $sugars   = Extra::sugar()->get();
+        $ices     = Extra::ice()->get();
+        $sizes    = Size::all();
 
-    return view('search', compact(
-        'categories',
-        'toppings',
-        'sugars',
-        'ices',
-        'sizes',
-        'q'
-    ));
-}
+        return view('search', compact(
+            'categories',
+            'toppings',
+            'sugars',
+            'ices',
+            'sizes',
+            'q'
+        ));
+    }
     // ➕ CREATE
     public function store(Request $request)
     {
