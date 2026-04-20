@@ -185,16 +185,20 @@ class StaffController extends Controller
         $orders = Order::query()
             ->whereIn('id', $ids)
             ->get(['id', 'status'])
-            ->mapWithKeys(fn ($order) => [(string) $order->id => $order->status]);
+            ->mapWithKeys(fn ($order) => [
+                (string) $order->id => [
+                    'status' => $order->status,
+                ],
+            ]);
 
         return response()->json(['orders' => $orders]);
     }
 
     public function confirmedOrderReminderIds()
     {
-        // Trả về tất cả id đơn đang ở trạng thái confirmed để đồng bộ nhắc việc giữa các tab.
+        // Trả về tất cả id đơn còn bước xử lý tiếp theo để đồng bộ nhắc việc giữa các tab.
         $ids = Order::query()
-            ->where('status', 'confirmed')
+            ->whereIn('status', ['pending', 'confirmed', 'processing', 'ready'])
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->values();
@@ -288,8 +292,8 @@ class StaffController extends Controller
 
     public function monthlyRevenueReport()
     {
-        // Trang doanh thu tháng/30 ngày gần nhất.
-        return view('staff.daily-revenue', $this->getRevenueSnapshotData());
+        // Giao diện staff đã bỏ mục doanh thu tháng, giữ route cũ và chuyển về trang doanh thu ngày.
+        return redirect()->route('staff.revenue.daily');
     }
 
     // ─── Chi tiết đơn hàng ───────────────────────────────────────────────────
@@ -385,11 +389,11 @@ class StaffController extends Controller
 
         $response = back()->with('success', 'Cập nhật trạng thái thành công!');
 
-        if ($nextStatus === 'confirmed') {
+        if (in_array($nextStatus, ['confirmed', 'processing', 'ready'], true)) {
             return $response->with('start_order_reminder_id', $order->id);
         }
 
-        if (in_array($nextStatus, ['processing', 'ready', 'delivered', 'cancelled', 'failed'], true)) {
+        if (in_array($nextStatus, ['delivered', 'cancelled', 'failed'], true)) {
             return $response->with('clear_order_reminder_id', $order->id);
         }
 

@@ -355,10 +355,6 @@
         <a href="{{ route('staff.revenue.daily') }}"
            class="sidebar-link {{ request()->routeIs('staff.revenue.daily') ? 'active' : '' }}">
                 <i class="fas fa-calendar-day"></i> Doanh thu ngày
-          </a>
-          <a href="{{ route('staff.revenue.monthly') }}"
-              class="sidebar-link {{ request()->routeIs('staff.revenue.monthly') ? 'active' : '' }}">
-            <i class="fas fa-chart-line"></i> Doanh thu tháng
         </a>
 
     </nav>
@@ -425,7 +421,9 @@
 <script>
 (() => {
     const storageKey = 'staffOrderStatusReminders';
-    const reminderDelay = 3000;
+    const audioMutedStorageKey = 'staffOrderReminderAudioMuted';
+    const reminderStatuses = ['pending', 'confirmed', 'processing', 'ready'];
+    const reminderDelay = 7000;
     const confirmedIdsUrl = @json(route('staff.orders.confirmed-reminder-ids'));
     const fetchUrl = @json(route('staff.orders.reminder-statuses'));
     const soundUrl = @json(asset('audio/order-reminder.wav'));
@@ -436,6 +434,7 @@
     let pollInFlight = false;
     let fallbackLoopTimer = null;
     let audioUnlocked = sessionStorage.getItem('staffReminderAudioUnlocked') === '1';
+    let audioMuted = localStorage.getItem(audioMutedStorageKey) === '1';
 
     function readReminders() {
         try {
@@ -461,15 +460,32 @@
         updateReminderAudioButton();
     }
 
+    function setAudioMuted(nextMuted) {
+        audioMuted = nextMuted;
+        localStorage.setItem(audioMutedStorageKey, nextMuted ? '1' : '0');
+
+        if (audioMuted) {
+            stopReminderSound();
+        }
+
+        updateReminderAudioButton();
+    }
+
     function updateReminderAudioButton() {
         const button = document.getElementById('enableReminderAudioButton');
         if (!button) {
             return;
         }
 
+        if (audioMuted) {
+            button.classList.remove('active');
+            button.innerHTML = '<i class="fas fa-volume-mute"></i> Âm thanh: Tắt';
+            return;
+        }
+
         if (audioUnlocked) {
             button.classList.add('active');
-            button.innerHTML = '<i class="fas fa-check-circle"></i> Âm thanh đã bật';
+            button.innerHTML = '<i class="fas fa-volume-up"></i> Âm thanh: Bật';
             return;
         }
 
@@ -494,7 +510,7 @@
 
     function registerVisibleConfirmedOrders() {
         const reminders = readReminders();
-        const forms = document.querySelectorAll('[data-status-reminder-form="true"][data-next-status="processing"]');
+        const forms = document.querySelectorAll('[data-status-reminder-form="true"]');
 
         forms.forEach((form) => {
             const orderId = form.dataset.orderId;
@@ -622,6 +638,10 @@
     }
 
     async function playReminderSound() {
+        if (audioMuted) {
+            return;
+        }
+
         const audio = getHtmlAudio();
         try {
             audio.pause();
@@ -666,6 +686,11 @@
     }
 
     async function startReminderSoundLoop() {
+        if (audioMuted) {
+            stopReminderSound();
+            return;
+        }
+
         const audio = getHtmlAudio();
         try {
             audio.loop = true;
@@ -709,14 +734,71 @@
         fallbackLoopTimer = null;
     }
 
-    function showBrowserNotification(orderIds) {
+    function buildReminderGroups(orderIds, statuses) {
+        const groupedOrderIds = orderIds.reduce((groups, id) => {
+            const statusInfo = statuses[id];
+            const status = typeof statusInfo === 'string' ? statusInfo : statusInfo?.status;
+
+            if (!reminderStatuses.includes(status)) {
+                return groups;
+            }
+
+            if (!groups[status]) {
+                groups[status] = [];
+            }
+
+            groups[status].push(id);
+            return groups;
+        }, {});
+
+        return reminderStatuses
+            .filter((status) => Array.isArray(groupedOrderIds[status]) && groupedOrderIds[status].length)
+            .map((status) => ({
+                status,
+                orderIds: groupedOrderIds[status],
+                ...getReminderContent(status, groupedOrderIds[status]),
+            }));
+    }
+
+    function getReminderContent(status, orderIds) {
+        const formattedIds = orderIds.join(', #');
+
+        return {
+            pending: {
+                title: 'Nhắc xác nhận đơn hàng',
+                body: 'Đơn #' + formattedIds + ' đang chờ xác nhận từ nhân viên.',
+                note: 'Vui lòng kiểm tra và xác nhận đơn mới để tiếp tục xử lý.',
+            },
+            confirmed: {
+                title: 'Nhắc bắt đầu chuẩn bị',
+                body: 'Đơn #' + formattedIds + ' đã được xác nhận và cần chuyển sang Đang chuẩn bị.',
+                note: 'Hãy cập nhật trạng thái khi bạn bắt đầu thực hiện đơn hàng.',
+            },
+            processing: {
+                title: 'Nhắc chuyển sang Sẵn sàng',
+                body: 'Đơn #' + formattedIds + ' đã sẵn sàng giao đến khách hàng.',
+                note: 'Nếu đã chuẩn bị xong, vui lòng cập nhật trạng thái sang Sẵn sàng.',
+            },
+            ready: {
+                title: 'Nhắc hoàn thành đơn hàng',
+                body: 'Đơn #' + formattedIds + ' đang ở trạng thái Sẵn sàng.',
+                note: 'Vui lòng xác nhận hoàn thành đơn hàng.',
+            },
+        }[status] || {
+            title: 'Nhắc cập nhật đơn hàng',
+            body: 'Đơn #' + formattedIds + ' cần được cập nhật trạng thái.',
+            note: 'Vui lòng kiểm tra và xử lý đơn hàng.',
+        };
+    }
+
+    function showBrowserNotification(reminderGroups) {
         if (!('Notification' in window) || Notification.permission !== 'granted') {
             return;
         }
 
-        const message = orderIds.length === 1
-            ? 'Đơn #' + orderIds[0] + ' vẫn chưa được chuyển sang chuẩn bị.'
-            : 'Các đơn #' + orderIds.join(', #') + ' vẫn chưa được chuyển sang chuẩn bị.';
+        const message = reminderGroups.length === 1
+            ? reminderGroups[0].body
+            : 'Có ' + reminderGroups.reduce((sum, group) => sum + group.orderIds.length, 0) + ' đơn hàng đang cần cập nhật trạng thái.';
 
         const notification = new Notification('Nhắc chuẩn bị đơn', {
             body: message,
@@ -731,7 +813,8 @@
         };
     }
 
-    function showReminderBanner(orderIds) {
+    function showReminderBanner(reminderGroups) {
+        const allOrderIds = reminderGroups.flatMap((group) => group.orderIds);
         let banner = document.getElementById('staffReminderBanner');
 
         if (!banner) {
@@ -776,20 +859,44 @@
         content.style.flex = '1';
 
         const title = document.createElement('div');
-        title.textContent = 'Nhắc chuẩn bị đơn';
+        title.textContent = 'Nhắc cập nhật trạng thái đơn';
         title.style.fontSize = '15px';
         title.style.fontWeight = '700';
-        title.style.marginBottom = '4px';
+        title.style.marginBottom = '8px';
 
-        const body = document.createElement('div');
-        body.textContent = 'Đơn #' + orderIds.join(', #') + ' vẫn chưa được chuyển sang mục Đang chuẩn bị.';
-        body.style.lineHeight = '1.45';
+        const messageList = document.createElement('div');
+        messageList.style.display = 'flex';
+        messageList.style.flexDirection = 'column';
+        messageList.style.gap = '10px';
 
-        const note = document.createElement('div');
-        note.textContent = 'Hãy cập nhật trạng thái nếu bạn đã bắt đầu làm đơn.';
-        note.style.marginTop = '8px';
-        note.style.fontSize = '12px';
-        note.style.color = '#9b6d00';
+        reminderGroups.forEach((group, index) => {
+            const messageItem = document.createElement('div');
+            if (index < reminderGroups.length - 1) {
+                messageItem.style.paddingBottom = '10px';
+                messageItem.style.borderBottom = '1px dashed rgba(155, 109, 0, 0.25)';
+            }
+
+            const messageTitle = document.createElement('div');
+            messageTitle.textContent = group.title;
+            messageTitle.style.fontSize = '13px';
+            messageTitle.style.fontWeight = '700';
+
+            const messageBody = document.createElement('div');
+            messageBody.textContent = group.body;
+            messageBody.style.marginTop = '4px';
+            messageBody.style.lineHeight = '1.45';
+
+            const messageNote = document.createElement('div');
+            messageNote.textContent = group.note;
+            messageNote.style.marginTop = '6px';
+            messageNote.style.fontSize = '12px';
+            messageNote.style.color = '#9b6d00';
+
+            messageItem.appendChild(messageTitle);
+            messageItem.appendChild(messageBody);
+            messageItem.appendChild(messageNote);
+            messageList.appendChild(messageItem);
+        });
 
         const actions = document.createElement('div');
         actions.style.marginTop = '12px';
@@ -797,10 +904,10 @@
         actions.style.justifyContent = 'flex-end';
         actions.style.gap = '8px';
 
-        if (!audioUnlocked) {
+        if (audioMuted || !audioUnlocked) {
             const enableAudioButton = document.createElement('button');
             enableAudioButton.type = 'button';
-            enableAudioButton.textContent = 'Bật âm thanh nhắc';
+            enableAudioButton.textContent = audioMuted ? 'Bật lại âm thanh' : 'Bật âm thanh nhắc';
             enableAudioButton.style.border = '1px solid #d9b067';
             enableAudioButton.style.borderRadius = '10px';
             enableAudioButton.style.padding = '8px 14px';
@@ -809,9 +916,10 @@
             enableAudioButton.style.fontWeight = '700';
             enableAudioButton.style.cursor = 'pointer';
             enableAudioButton.addEventListener('click', async () => {
+                setAudioMuted(false);
                 await primeAudio();
                 await startReminderSoundLoop();
-                showReminderBanner(orderIds);
+                showReminderBanner(reminderGroups);
             });
             actions.appendChild(enableAudioButton);
         }
@@ -826,13 +934,12 @@
         acknowledgeButton.style.color = '#fff';
         acknowledgeButton.style.fontWeight = '700';
         acknowledgeButton.style.cursor = 'pointer';
-        acknowledgeButton.addEventListener('click', () => acknowledgeReminders(orderIds));
+        acknowledgeButton.addEventListener('click', () => acknowledgeReminders(allOrderIds));
 
         actions.appendChild(acknowledgeButton);
 
         content.appendChild(title);
-        content.appendChild(body);
-        content.appendChild(note);
+        content.appendChild(messageList);
         content.appendChild(actions);
         banner.appendChild(icon);
         banner.appendChild(content);
@@ -884,8 +991,9 @@
             let shouldNotify = false;
 
             Object.keys(updatedReminders).forEach((id) => {
-                const status = statuses[id];
-                if (status !== 'confirmed') {
+                const statusInfo = statuses[id];
+                const status = typeof statusInfo === 'string' ? statusInfo : statusInfo?.status;
+                if (!reminderStatuses.includes(status)) {
                     delete updatedReminders[id];
                     return;
                 }
@@ -903,10 +1011,17 @@
             writeReminders(updatedReminders);
 
             if (dueOrderIds.length) {
-                showReminderBanner(dueOrderIds);
+                const reminderGroups = buildReminderGroups(dueOrderIds, statuses);
+                if (!reminderGroups.length) {
+                    hideReminderBanner();
+                    stopReminderSound();
+                    return;
+                }
+
+                showReminderBanner(reminderGroups);
                 startReminderSoundLoop();
                 if (shouldNotify) {
-                    showBrowserNotification(dueOrderIds);
+                    showBrowserNotification(reminderGroups);
                 }
             } else {
                 hideReminderBanner();
@@ -932,12 +1047,12 @@
             return;
         }
 
-        if (nextStatus === 'confirmed') {
+        if (['confirmed', 'processing', 'ready'].includes(nextStatus)) {
             setReminder(orderId);
             return;
         }
 
-        if (['processing', 'ready', 'delivered', 'cancelled', 'failed'].includes(nextStatus)) {
+        if (['delivered', 'cancelled', 'failed'].includes(nextStatus)) {
             clearReminder(orderId);
         }
     });
@@ -945,7 +1060,16 @@
     const enableReminderAudioButton = document.getElementById('enableReminderAudioButton');
     if (enableReminderAudioButton) {
         enableReminderAudioButton.addEventListener('click', async () => {
+            if (!audioMuted) {
+                setAudioMuted(true);
+                return;
+            }
+
+            setAudioMuted(false);
             await primeAudio();
+            if (getDueReminderOrderIds().length) {
+                await startReminderSoundLoop();
+            }
             updateReminderAudioButton();
         });
     }
