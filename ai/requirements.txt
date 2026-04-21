@@ -1,0 +1,2 @@
+# Phase 1 intentionally uses only the Python standard library.
+# Keep this file so the AI module can add external dependencies later if needed.

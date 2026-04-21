@@ -1,0 +1,47 @@
+{"text":"xin chao","intent":"greeting"}
+{"text":"hello shop oi","intent":"greeting"}
+{"text":"chao ban minh can tu van do uong","intent":"greeting"}
+{"text":"hi tro ly oi","intent":"greeting"}
+{"text":"shop co the goi y giup minh khong","intent":"greeting"}
+{"text":"cho minh xem menu","intent":"ask_menu"}
+{"text":"quan dang co nhung mon nao","intent":"ask_menu"}
+{"text":"gui minh danh sach do uong hien co","intent":"ask_menu"}
+{"text":"menu hom nay co gi","intent":"ask_menu"}
+{"text":"co may nhom mon vay","intent":"ask_menu"}
+{"text":"cho minh xem cac mon tra sua","intent":"ask_menu"}
+{"text":"quan co ban nuoc ep khong","intent":"ask_menu"}
+{"text":"co nhung loai ca phe nao","intent":"ask_menu"}
+{"text":"hom nay troi nang qua toi muon uong gi do mat mat","intent":"ask_recommendation"}
+{"text":"goi y cho minh mon thanh mat de giai nhiet","intent":"ask_recommendation"}
+{"text":"minh thich it ngot thi nen uong gi","intent":"ask_recommendation"}
+{"text":"ban oi co mon nao de uong khong bi ngot gắt","intent":"ask_recommendation"}
+{"text":"toi muon uong mon nao do tuoi mat","intent":"ask_recommendation"}
+{"text":"minh dang met muon uong gi cho de chiu","intent":"ask_recommendation"}
+{"text":"co mon nao hop ngay nong khong","intent":"ask_recommendation"}
+{"text":"goi y mon cho nguoi khong uong duoc ca phe","intent":"ask_recommendation"}
+{"text":"co mon nao duoi 30000 khong","intent":"ask_price_filter"}
+{"text":"tim giup minh nuoc tam 40k do lai","intent":"ask_price_filter"}
+{"text":"minh chi co 35 ngan thi nen chon mon nao","intent":"ask_price_filter"}
+{"text":"menu nao gia re cho sinh vien","intent":"ask_price_filter"}
+{"text":"co mon nao tu 25 den 45 nghin khong","intent":"ask_price_filter"}
+{"text":"tra sua nao de uong nhat","intent":"ask_product_info"}
+{"text":"mon nao it beo vay","intent":"ask_product_info"}
+{"text":"co mon nao khong sua khong","intent":"ask_product_info"}
+{"text":"nuoc ep nao de uong va thanh","intent":"ask_product_info"}
+{"text":"do uong nao hop nguoi so ngot","intent":"ask_product_info"}
+{"text":"mon nao la best seller cua quan","intent":"ask_product_info"}
+{"text":"dat lai mon cu cho minh","intent":"repeat_order"}
+{"text":"goi lai do uong lan truoc di","intent":"repeat_order"}
+{"text":"mua lai mon thuong dat cua toi","intent":"repeat_order"}
+{"text":"cho minh dat lai order cu","intent":"repeat_order"}
+{"text":"them peach tea vao gio hang","intent":"add_to_cart"}
+{"text":"minh chot nuoc ep cam nhe","intent":"add_to_cart"}
+{"text":"dat cho toi mot tra sua tran chau","intent":"add_to_cart"}
+{"text":"them giup minh 2 ly bac xiu","intent":"add_to_cart"}
+{"text":"lay cho minh mot ly nuoc ep dua hau","intent":"add_to_cart"}
+{"text":"cho size m it da","intent":"customize_order"}
+{"text":"them topping tran chau den cho minh","intent":"customize_order"}
+{"text":"ly nay chon size l va khong duong","intent":"customize_order"}
+{"text":"minh muon it da voi it duong","intent":"customize_order"}
+{"text":"them kem macchiato nhe","intent":"customize_order"}
+{"text":"cho mon nay da rieng","intent":"customize_order"}

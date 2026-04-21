@@ -1,0 +1,659 @@
+{
+  "source": "database/seeders/ProductSeeder.php",
+  "sizes": [
+    {
+      "name": "S",
+      "extra_price": 0
+    },
+    {
+      "name": "M",
+      "extra_price": 10000
+    },
+    {
+      "name": "L",
+      "extra_price": 15000
+    }
+  ],
+  "extras": [
+    {
+      "name": "Trân Châu Đen",
+      "price": 5000,
+      "type": "topping"
+    },
+    {
+      "name": "Trân Châu Hoàng Kim",
+      "price": 5000,
+      "type": "topping"
+    },
+    {
+      "name": "Thạch Cà Phê",
+      "price": 5000,
+      "type": "topping"
+    },
+    {
+      "name": "Kem Trứng",
+      "price": 12000,
+      "type": "topping"
+    },
+    {
+      "name": "Nhiều Sữa",
+      "price": 0,
+      "type": "sugar"
+    },
+    {
+      "name": "Ít Sữa",
+      "price": 0,
+      "type": "sugar"
+    },
+    {
+      "name": "Không Sữa",
+      "price": 0,
+      "type": "sugar"
+    },
+    {
+      "name": "Nhiều Đường",
+      "price": 0,
+      "type": "sugar"
+    },
+    {
+      "name": "Ít Đường",
+      "price": 0,
+      "type": "sugar"
+    },
+    {
+      "name": "Không Đường",
+      "price": 0,
+      "type": "sugar"
+    },
+    {
+      "name": "Nhiều Đá",
+      "price": 0,
+      "type": "ice"
+    },
+    {
+      "name": "Ít Đá",
+      "price": 0,
+      "type": "ice"
+    },
+    {
+      "name": "Đá Riêng",
+      "price": 0,
+      "type": "ice"
+    },
+    {
+      "name": "Phô Mai Tươi",
+      "price": 10000,
+      "type": "topping"
+    },
+    {
+      "name": "Kem Macchiato",
+      "price": 10000,
+      "type": "topping"
+    }
+  ],
+  "categories": [
+    {
+      "name": "Cà Phê",
+      "slug": "ca-phe",
+      "sort_order": 1,
+      "products": [
+        {
+          "name": "Cà Phê Đen",
+          "description": "Cà phê nguyên chất",
+          "price": 25000,
+          "status": "available",
+          "image_url": "cafe_den.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": true,
+            "ice": true
+          },
+          "ai_tags": [
+            "caffeine",
+            "morning",
+            "strong"
+          ]
+        },
+        {
+          "name": "Cà Phê Sữa",
+          "description": "Cà phê sữa truyền thống",
+          "price": 30000,
+          "status": "available",
+          "image_url": "cafe_sua.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": true,
+            "ice": true
+          },
+          "ai_tags": [
+            "caffeine",
+            "creamy",
+            "morning",
+            "strong"
+          ]
+        },
+        {
+          "name": "Bạc Xỉu",
+          "description": "Sữa nhiều cà phê ít",
+          "price": 32000,
+          "status": "available",
+          "image_url": "bacxiu.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": true,
+            "ice": true
+          },
+          "ai_tags": [
+            "caffeine",
+            "creamy",
+            "morning",
+            "strong"
+          ]
+        },
+        {
+          "name": "Cappuccino",
+          "description": "Cà phê Ý",
+          "price": 45000,
+          "status": "available",
+          "image_url": "cappuccino.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": true,
+            "ice": true
+          },
+          "ai_tags": [
+            "caffeine",
+            "morning",
+            "strong"
+          ]
+        },
+        {
+          "name": "Latte",
+          "description": "Cà phê sữa mịn",
+          "price": 45000,
+          "status": "available",
+          "image_url": "latte.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": true,
+            "ice": true
+          },
+          "ai_tags": [
+            "caffeine",
+            "creamy",
+            "morning",
+            "strong"
+          ]
+        },
+        {
+          "name": "Cà Phê Muối",
+          "description": "Cà phê muối truyền thống",
+          "price": 40000,
+          "status": "available",
+          "image_url": "cafemuoi.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": true,
+            "ice": true
+          },
+          "ai_tags": [
+            "caffeine",
+            "morning",
+            "strong"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trà Sữa",
+      "slug": "tra-sua",
+      "sort_order": 2,
+      "products": [
+        {
+          "name": "Trà Sữa Trân Châu",
+          "description": "Trà sữa truyền thống",
+          "price": 45000,
+          "status": "available",
+          "image_url": "tstranchau.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": true,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "creamy",
+            "milk-tea",
+            "sweet"
+          ]
+        },
+        {
+          "name": "Trà Sữa Thái Xanh",
+          "description": "Matcha Nhật",
+          "price": 50000,
+          "status": "available",
+          "image_url": "tsmatcha.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": true,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "milk-tea",
+            "sweet"
+          ]
+        },
+        {
+          "name": "Trà Sữa Thái Đỏ",
+          "description": "Thái đỏ đặc trưng",
+          "price": 52000,
+          "status": "available",
+          "image_url": "tsthaido.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": true,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "milk-tea",
+            "sweet"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Đá Xay",
+      "slug": "da-xay",
+      "sort_order": 3,
+      "products": [
+        {
+          "name": "Frappuccino Caramel",
+          "description": "Caramel đá xay",
+          "price": 55000,
+          "status": "available",
+          "image_url": "frappe_caramel.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "blended",
+            "dessert-drink"
+          ]
+        },
+        {
+          "name": "Đá Xay Matcha",
+          "description": "Matcha đá xay",
+          "price": 52000,
+          "status": "available",
+          "image_url": "daxay_matcha.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "blended",
+            "dessert-drink"
+          ]
+        },
+        {
+          "name": "Đá Xay Oreo",
+          "description": "Bánh Oreo",
+          "price": 55000,
+          "status": "available",
+          "image_url": "daxay_oreo.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "blended",
+            "dessert-drink"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Nước Ép & Sinh Tố",
+      "slug": "nuoc-ep",
+      "sort_order": 4,
+      "products": [
+        {
+          "name": "Nước Ép Cam",
+          "description": "Cam tươi",
+          "price": 35000,
+          "status": "available",
+          "image_url": "epcam.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Nước Ép Táo",
+          "description": "Táo đỏ",
+          "price": 35000,
+          "status": "available",
+          "image_url": "eptao.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Nước Ép Dưa Hấu",
+          "description": "Mát lạnh",
+          "price": 30000,
+          "status": "available",
+          "image_url": "epduahau.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Sinh Tố Bơ",
+          "description": "Bơ béo",
+          "price": 45000,
+          "status": "available",
+          "image_url": "sinhto_bo.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "cooling",
+            "creamy",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Sinh Tố Xoài",
+          "description": "Xoài chín",
+          "price": 40000,
+          "status": "available",
+          "image_url": "sinhto_xoai.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Sinh Tố Dâu",
+          "description": "Dâu tươi",
+          "price": 40000,
+          "status": "available",
+          "image_url": "sinhto_dau.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trà và Thức Uống Theo Mùa",
+      "slug": "tra-va-thuc-uong-theo-mua",
+      "sort_order": 5,
+      "products": [
+        {
+          "name": "Peach Tea",
+          "description": "Trà đào thanh mát ",
+          "price": 42000,
+          "status": "available",
+          "image_url": "tra_dao_cam_sa.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Trà Lài",
+          "description": "Trà lài thơm nhẹ ",
+          "price": 45000,
+          "status": "available",
+          "image_url": "tra_vai_hoa_hong.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Trà Olong thiết quan âm",
+          "description": "Trà Olong thiết quan âm tốt cho sức khỏe",
+          "price": 47000,
+          "status": "available",
+          "image_url": "tra_oolong_nhan.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Trà Dâu",
+          "description": "Trà dâu thanh mát chua ngọt đánh thức vị giác",
+          "price": 49000,
+          "status": "available",
+          "image_url": "tradau.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Trà Dưỡng Nhan",
+          "description": "Trà dưỡng nhan thanh nhẹ, ngọt dịu",
+          "price": 52000,
+          "status": "available",
+          "image_url": "tradn.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        },
+        {
+          "name": "Trà Trái Cây Nhiệt Đới",
+          "description": "Bùng nổ vị trái cây tươi mát, chua ngọt sảng khoái và thơm dịu như một kỳ nghỉ mùa hè trong từng ngụm",
+          "price": 53000,
+          "status": "available",
+          "image_url": "tratraicaynhietdoi.jpg",
+          "option_rules": {
+            "size": true,
+            "topping": false,
+            "sugar": false,
+            "ice": true
+          },
+          "ai_tags": [
+            "cooling",
+            "refreshing"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bánh & Snack",
+      "slug": "banh-snack",
+      "sort_order": 6,
+      "products": [
+        {
+          "name": "Bánh Sừng Bò",
+          "description": "Croissant",
+          "price": 35000,
+          "status": "available",
+          "image_url": "croissant.jpg",
+          "option_rules": {
+            "size": false,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "food",
+            "snack"
+          ]
+        },
+        {
+          "name": "Cookie Chocolate",
+          "description": "Cookie mềm",
+          "price": 7000,
+          "status": "available",
+          "image_url": "cookie.jpg",
+          "option_rules": {
+            "size": false,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "food",
+            "snack"
+          ]
+        },
+        {
+          "name": "Bánh Mì Bơ Tỏi",
+          "description": "Giòn thơm",
+          "price": 20000,
+          "status": "available",
+          "image_url": "banhmi.jpg",
+          "option_rules": {
+            "size": false,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "food",
+            "snack"
+          ]
+        },
+        {
+          "name": "Tiramisu",
+          "description": "Bánh Ý",
+          "price": 45000,
+          "status": "available",
+          "image_url": "tiramisu.jpg",
+          "option_rules": {
+            "size": false,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "food",
+            "snack"
+          ]
+        },
+        {
+          "name": "Cheesecake",
+          "description": "Bánh phô mai",
+          "price": 45000,
+          "status": "available",
+          "image_url": "cheesecake.jpg",
+          "option_rules": {
+            "size": false,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "food",
+            "snack"
+          ]
+        },
+        {
+          "name": "Donut",
+          "description": "Bánh vòng",
+          "price": 20000,
+          "status": "available",
+          "image_url": "donut.jpg",
+          "option_rules": {
+            "size": false,
+            "topping": false,
+            "sugar": false,
+            "ice": false
+          },
+          "ai_tags": [
+            "food",
+            "snack"
+          ]
+        }
+      ]
+    }
+  ]
+}

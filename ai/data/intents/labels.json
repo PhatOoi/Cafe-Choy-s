@@ -1,0 +1,47 @@
+{
+  "labels": [
+    {
+      "name": "greeting",
+      "description": "Cau chao, mo dau hoi thoai, xac nhan can ho tro"
+    },
+    {
+      "name": "ask_menu",
+      "description": "Hoi menu, danh sach mon, danh muc dang ban"
+    },
+    {
+      "name": "ask_recommendation",
+      "description": "Muon duoc goi y mon dua tren so thich, thoi tiet, tam trang hoac nhu cau"
+    },
+    {
+      "name": "ask_price_filter",
+      "description": "Tim mon theo muc gia hoac ngan sach"
+    },
+    {
+      "name": "ask_product_info",
+      "description": "Hoi thong tin nhom mon, vi du mon nao it ngot, mon nao it beo, mon nao mat lanh"
+    },
+    {
+      "name": "repeat_order",
+      "description": "Muon dat lai mon cu, goi lai mon da mua truoc do"
+    },
+    {
+      "name": "add_to_cart",
+      "description": "Chot mua, them mon vao gio hang, dat mon ngay"
+    },
+    {
+      "name": "customize_order",
+      "description": "Tuy chinh size, duong, da, topping, ghi chu"
+    }
+  ],
+  "entity_hints": [
+    "weather",
+    "temperature_preference",
+    "category",
+    "budget_max",
+    "sugar_level",
+    "ice_level",
+    "size",
+    "topping",
+    "repeat_previous"
+  ]
+}

@@ -1,0 +1,12 @@
+{"faq_id":"faq-001","intent":"store_location","question":"quán ở đâu","answer":"Choy's Cafe nằm tại địa chỉ Công viên phần mềm Quang Trung, Tòa nhà JPVE, Đường số 2, Trung Mỹ Tây, Quận 12, TP. Hồ Chí Minh.","needs_manual_review":true}
+{"faq_id":"faq-002","intent":"opening_hours","question":"quán mấy giờ mở cửa","answer":"Choy's Cafe mở cửa từ 7 giờ đến 22 giờ mỗi ngày.","needs_manual_review":false}
+{"faq_id":"faq-003","intent":"closing_hours","question":"quán mấy giờ đóng cửa","answer":"Choy's Cafe đóng cửa lúc 22 giờ mỗi ngày.","needs_manual_review":false}
+{"faq_id":"faq-004","intent":"contact_phone","question":"quán có số điện thoại không","answer":"Bạn có thể liên hệ quán qua số 0346901474.","needs_manual_review":false}
+{"faq_id":"faq-005","intent":"parking","question":"quán có chỗ gửi xe không","answer":"Quán có chỗ gửi xe cho khách.","needs_manual_review":false}
+{"faq_id":"faq-006","intent":"delivery_support","question":"quán có giao hàng không","answer":"Choy's Cafe có hỗ trợ đơn giao hàng và đơn mua tại quán. Bạn có thể đặt món online nếu hệ thống đã đăng nhập và chọn hình thức phù hợp.","needs_manual_review":false}
+{"faq_id":"faq-007","intent":"payment_methods","question":"quán nhận thanh toán bằng gì","answer":"Hiện hệ thống có các phương thức thanh toán như tiền mặt, chuyển khoản, MoMo, VNPay và ZaloPay. Bạn nên kiểm tra lại phương thức nào đang bật khi demo.","needs_manual_review":false}
+{"faq_id":"faq-008","intent":"online_ordering","question":"mình có thể đặt món online không","answer":"Có. Bạn có thể xem menu, thêm món vào giỏ và đặt hàng trực tiếp trên web của quán.","needs_manual_review":false}
+{"faq_id":"faq-009","intent":"customization","question":"quán có cho chọn size với topping không","answer":"Có. Nhiều món cho phép chọn size, mức đường, mức đá và thêm topping tùy loại đồ uống.","needs_manual_review":false}
+{"faq_id":"faq-010","intent":"best_seller","question":"quán có món nào bán chạy","answer":"Một số món nổi bật của quán là Trà Sữa Trân Châu, Peach Tea và Cà Phê Muối. Nếu cần demo chính xác hơn, bạn nên cập nhật thêm từ dữ liệu bán hàng thực tế.","needs_manual_review":true}
+{"faq_id":"faq-011","intent":"wifi","question":"quán có wifi không","answer":"Quán có wifi cho khách. Bạn vui lòng hỏi nhân viên để được cung cấp thông tin truy cập.","needs_manual_review":false}
+{"faq_id":"faq-012","intent":"invoice","question":"quán có xuất hóa đơn không","answer":"Sau khi thanh toán, quán sẽ cung cấp hóa đơn. Nếu bạn chưa nhận được hóa đơn, vui lòng liên hệ quản lý để được hỗ trợ.","needs_manual_review":true}

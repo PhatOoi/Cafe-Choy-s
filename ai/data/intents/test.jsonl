@@ -1,0 +1,8 @@
+{"text":"alo ban oi","intent":"greeting"}
+{"text":"menu quan co gi vay","intent":"ask_menu"}
+{"text":"troi nong qua goi y minh mon mat di","intent":"ask_recommendation"}
+{"text":"co mon nao gia duoi 40k khong","intent":"ask_price_filter"}
+{"text":"do uong nao it ngot de uong","intent":"ask_product_info"}
+{"text":"dat lai mon hom bua cho toi","intent":"repeat_order"}
+{"text":"them 1 peach tea vao gio","intent":"add_to_cart"}
+{"text":"size l it duong nhieu da","intent":"customize_order"}

@@ -1,0 +1,112 @@
+{"text": "cho minh 3 ly bánh mì bơ tỏi", "intent": "add_to_cart"}
+{"text": "goi y do uong khong co ca phe cho minh voi", "intent": "ask_recommendation"}
+{"text": "ly nay chon size l va them thạch cà phê", "intent": "customize_order"}
+{"text": "co mon nao it ngot de uong khong", "intent": "ask_recommendation"}
+{"text": "mua lai mon thuong dat cua toi", "intent": "repeat_order"}
+{"text": "them hai peach tea vao gio hang", "intent": "add_to_cart"}
+{"text": "neu minh thich mat mat thi nen chon mon nao", "intent": "ask_recommendation"}
+{"text": "cho minh hoi chut duoc khong", "intent": "greeting"}
+{"text": "trà dưỡng nhan co de uong khong", "intent": "ask_product_info"}
+{"text": "lay giup minh 2 donut", "intent": "add_to_cart"}
+{"text": "bánh sừng bò co de uong khong", "intent": "ask_product_info"}
+{"text": "lay giup minh 3 đá xay oreo", "intent": "add_to_cart"}
+{"text": "cho minh 3 ly nước ép táo", "intent": "add_to_cart"}
+{"text": "quan co nhung mon đá xay nao", "intent": "ask_menu"}
+{"text": "them 2 cappuccino vao gio hang", "intent": "add_to_cart"}
+{"text": "cho minh dat lai order cu", "intent": "repeat_order"}
+{"text": "trà trái cây nhiệt đới co de uong khong", "intent": "ask_product_info"}
+{"text": "tiramisu co hop nguoi so beo khong", "intent": "ask_product_info"}
+{"text": "cà phê sữa co hop nguoi so beo khong", "intent": "ask_product_info"}
+{"text": "them hai bánh mì bơ tỏi vao gio hang", "intent": "add_to_cart"}
+{"text": "them 3 cookie chocolate vao gio hang", "intent": "add_to_cart"}
+{"text": "chot hai mon trà lài", "intent": "add_to_cart"}
+{"text": "toi muon uong mon nao do tuoi mat", "intent": "ask_recommendation"}
+{"text": "chot một mon nước ép dưa hấu", "intent": "add_to_cart"}
+{"text": "chot 2 mon cà phê muối", "intent": "add_to_cart"}
+{"text": "dat một phan trà sữa trân châu nhe", "intent": "add_to_cart"}
+{"text": "lay giup minh 2 trà trái cây nhiệt đới", "intent": "add_to_cart"}
+{"text": "tim giup minh nuoc tam 40k do lai", "intent": "ask_price_filter"}
+{"text": "chot một mon bạc xỉu", "intent": "add_to_cart"}
+{"text": "them một cheesecake vao gio hang", "intent": "add_to_cart"}
+{"text": "donut co ngot qua khong", "intent": "ask_product_info"}
+{"text": "cheesecake co ngot qua khong", "intent": "ask_product_info"}
+{"text": "mon cà phê muối vi nhu the nao", "intent": "ask_product_info"}
+{"text": "them 1 donut vao gio hang", "intent": "add_to_cart"}
+{"text": "nước ép cam co de uong khong", "intent": "ask_product_info"}
+{"text": "mon frappuccino caramel vi nhu the nao", "intent": "ask_product_info"}
+{"text": "lay giup minh một trà sữa thái đỏ", "intent": "add_to_cart"}
+{"text": "cà phê đen co hop nguoi so beo khong", "intent": "ask_product_info"}
+{"text": "lay giup minh 1 trà sữa thái đỏ", "intent": "add_to_cart"}
+{"text": "cho minh hai ly nước ép dưa hấu", "intent": "add_to_cart"}
+{"text": "lay giup minh một peach tea", "intent": "add_to_cart"}
+{"text": "trà dưỡng nhan co phai mon ban chay khong", "intent": "ask_product_info"}
+{"text": "quan co nhung mon bánh & snack nao", "intent": "ask_menu"}
+{"text": "cho minh 1 ly donut", "intent": "add_to_cart"}
+{"text": "chot một mon sinh tố bơ", "intent": "add_to_cart"}
+{"text": "hello quan oi", "intent": "greeting"}
+{"text": "dat 1 phan bạc xỉu nhe", "intent": "add_to_cart"}
+{"text": "lay giup minh 1 trà lài", "intent": "add_to_cart"}
+{"text": "menu hom nay co gi", "intent": "ask_menu"}
+{"text": "dat 3 phan cà phê muối nhe", "intent": "add_to_cart"}
+{"text": "minh muon ít đường voi ít đá", "intent": "customize_order"}
+{"text": "chot 2 mon nước ép táo", "intent": "add_to_cart"}
+{"text": "trà olong thiết quan âm co ngot qua khong", "intent": "ask_product_info"}
+{"text": "size l va ít đá nhe", "intent": "customize_order"}
+{"text": "lay giup minh 1 cappuccino", "intent": "add_to_cart"}
+{"text": "cho size m ít sữa", "intent": "customize_order"}
+{"text": "chot hai mon đá xay matcha", "intent": "add_to_cart"}
+{"text": "hi choys cafe", "intent": "greeting"}
+{"text": "cho minh hai ly bánh mì bơ tỏi", "intent": "add_to_cart"}
+{"text": "them một bạc xỉu vao gio hang", "intent": "add_to_cart"}
+{"text": "lay giup minh 1 bánh sừng bò", "intent": "add_to_cart"}
+{"text": "cho minh 2 ly nước ép táo", "intent": "add_to_cart"}
+{"text": "trà dưỡng nhan co hop nguoi so beo khong", "intent": "ask_product_info"}
+{"text": "them 2 sinh tố dâu vao gio hang", "intent": "add_to_cart"}
+{"text": "them 2 đá xay oreo vao gio hang", "intent": "add_to_cart"}
+{"text": "trà trái cây nhiệt đới co phai mon ban chay khong", "intent": "ask_product_info"}
+{"text": "menu đá xay cua quan gom gi", "intent": "ask_menu"}
+{"text": "chot hai mon frappuccino caramel", "intent": "add_to_cart"}
+{"text": "dat một phan tiramisu nhe", "intent": "add_to_cart"}
+{"text": "dat 2 phan trà olong thiết quan âm nhe", "intent": "add_to_cart"}
+{"text": "chot một mon trà olong thiết quan âm", "intent": "add_to_cart"}
+{"text": "cappuccino co de uong khong", "intent": "ask_product_info"}
+{"text": "chot hai mon trà trái cây nhiệt đới", "intent": "add_to_cart"}
+{"text": "cho minh 3 ly bạc xỉu", "intent": "add_to_cart"}
+{"text": "chot một mon cà phê sữa", "intent": "add_to_cart"}
+{"text": "trà dâu co phai mon ban chay khong", "intent": "ask_product_info"}
+{"text": "tim giup minh do uong tam 50k", "intent": "ask_price_filter"}
+{"text": "mon nước ép dưa hấu vi nhu the nao", "intent": "ask_product_info"}
+{"text": "chot 1 mon donut", "intent": "add_to_cart"}
+{"text": "them thạch cà phê cho minh", "intent": "customize_order"}
+{"text": "dat một phan cà phê đen nhe", "intent": "add_to_cart"}
+{"text": "them giup minh 2 ly bac xiu", "intent": "add_to_cart"}
+{"text": "lay giup minh 2 peach tea", "intent": "add_to_cart"}
+{"text": "lay giup minh 3 trà dâu", "intent": "add_to_cart"}
+{"text": "cho minh 3 ly bánh sừng bò", "intent": "add_to_cart"}
+{"text": "chot một mon đá xay matcha", "intent": "add_to_cart"}
+{"text": "dat 1 phan frappuccino caramel nhe", "intent": "add_to_cart"}
+{"text": "chot 1 mon cà phê đen", "intent": "add_to_cart"}
+{"text": "lay giup minh 3 đá xay matcha", "intent": "add_to_cart"}
+{"text": "lay giup minh 3 cà phê đen", "intent": "add_to_cart"}
+{"text": "chot hai mon bánh mì bơ tỏi", "intent": "add_to_cart"}
+{"text": "chot 1 mon trà dâu", "intent": "add_to_cart"}
+{"text": "cho size s không sữa", "intent": "customize_order"}
+{"text": "chot 1 mon trà sữa trân châu", "intent": "add_to_cart"}
+{"text": "lay giup minh hai nước ép dưa hấu", "intent": "add_to_cart"}
+{"text": "dat 3 phan trà sữa trân châu nhe", "intent": "add_to_cart"}
+{"text": "latte co de uong khong", "intent": "ask_product_info"}
+{"text": "them một đá xay oreo vao gio hang", "intent": "add_to_cart"}
+{"text": "them 2 trà dưỡng nhan vao gio hang", "intent": "add_to_cart"}
+{"text": "them 2 sinh tố bơ vao gio hang", "intent": "add_to_cart"}
+{"text": "goi y do uong mat mat cho minh voi", "intent": "ask_recommendation"}
+{"text": "lay giup minh hai trà sữa thái xanh", "intent": "add_to_cart"}
+{"text": "cho minh mon ngon trong tam gia 50k", "intent": "ask_price_filter"}
+{"text": "chot hai mon sinh tố bơ", "intent": "add_to_cart"}
+{"text": "them hai trà sữa thái xanh vao gio hang", "intent": "add_to_cart"}
+{"text": "cho minh 3 ly đá xay oreo", "intent": "add_to_cart"}
+{"text": "cho minh 3 ly trà olong thiết quan âm", "intent": "add_to_cart"}
+{"text": "them 2 tiramisu vao gio hang", "intent": "add_to_cart"}
+{"text": "dat hai phan bạc xỉu nhe", "intent": "add_to_cart"}
+{"text": "cho minh 2 ly frappuccino caramel", "intent": "add_to_cart"}
+{"text": "minh chi co 35 ngan thi nen chon mon nao", "intent": "ask_price_filter"}
+{"text": "cho minh 1 ly cappuccino", "intent": "add_to_cart"}
