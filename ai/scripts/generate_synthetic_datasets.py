@@ -21,6 +21,7 @@ INTENT_DIR = AI_DIR / "data" / "intents"
 DIALOGUE_DIR = AI_DIR / "data" / "dialogue"
 FAQ_DIR = AI_DIR / "data" / "faq"
 MENU_PATH = AI_DIR / "data" / "menu" / "menu_catalog.json"
+DIALOGUE_TARGET = 10_000
 
 
 def load_menu() -> dict:
@@ -36,6 +37,34 @@ def unique_rows(rows: list[dict], key: str) -> list[dict]:
             continue
         seen.add(value)
         output.append(row)
+    return output
+
+
+def dialogue_signature(messages: list[dict]) -> str:
+    return "||".join(f"{message['role']}::{message['text']}" for message in messages)
+
+
+def unique_dialogues(rows: list[dict]) -> list[dict]:
+    seen: set[str] = set()
+    output: list[dict] = []
+    for row in rows:
+        signature = dialogue_signature(row["messages"])
+        if signature in seen:
+            continue
+        seen.add(signature)
+        output.append(row)
+    return output
+
+
+def assign_dialogue_ids(rows: list[dict]) -> list[dict]:
+    output: list[dict] = []
+    for index, row in enumerate(rows, start=1):
+        output.append(
+            {
+                **row,
+                "conversation_id": f"dlg-auto-{index:05d}",
+            }
+        )
     return output
 
 
@@ -62,57 +91,57 @@ def generate_intent_rows(menu: dict) -> list[dict]:
     rows: list[dict] = []
 
     greeting_templates = [
-        "xin chao shop",
-        "hello quan oi",
-        "chao ban nhe",
-        "tro ly oi tu van giup minh voi",
-        "ad oi hoi ti",
-        "shop oi minh can ho tro dat nuoc",
+        "xin chào shop",
+        "hello quán ơi",
+        "chào bạn nhé",
+        "trợ lý ơi tư vấn giúp mình với",
+        "ad ơi hỏi tí",
+        "shop ơi mình cần hỗ trợ đặt nước",
         "hi choys cafe",
-        "cho minh hoi chut duoc khong",
+        "cho mình hỏi chút được không",
     ]
     rows.extend({"text": text, "intent": "greeting"} for text in greeting_templates)
 
     menu_templates = [
-        "cho minh xem menu {category}",
-        "quan co nhung mon {category} nao",
-        "gui minh danh sach {category}",
-        "menu {category} cua quan gom gi",
-        "cho xem cac mon ben nhom {category}",
-        "co ban {category} khong",
+        "cho mình xem menu {category}",
+        "quán có những món {category} nào",
+        "gửi mình danh sách {category}",
+        "menu {category} của quán gồm gì",
+        "cho xem các món bên nhóm {category}",
+        "có bán {category} không",
     ]
     for category_name in categories.values():
         for template in menu_templates:
             rows.append({"text": template.format(category=category_name.lower()), "intent": "ask_menu"})
 
     recommend_templates = [
-        "hom nay troi nong qua goi y minh mon {style}",
-        "minh muon uong gi do {style}",
-        "co mon nao {style} de uong khong",
-        "goi y do uong {style} cho minh voi",
-        "neu minh thich {style} thi nen chon mon nao",
+        "hôm nay trời nóng quá gợi ý mình món {style}",
+        "mình muốn uống gì đó {style}",
+        "có món nào {style} dễ uống không",
+        "gợi ý đồ uống {style} cho mình với",
+        "nếu mình thích {style} thì nên chọn món nào",
     ]
     recommend_styles = [
-        "mat mat",
-        "thanh mat",
-        "it ngot",
-        "de uong",
-        "khong co ca phe",
-        "giai nhiet",
-        "nhat cho buoi chieu",
+        "mát mát",
+        "thanh mát",
+        "ít ngọt",
+        "dễ uống",
+        "không có cà phê",
+        "giải nhiệt",
+        "nhạt cho buổi chiều",
     ]
     for template in recommend_templates:
         for style in recommend_styles:
             rows.append({"text": template.format(style=style), "intent": "ask_recommendation"})
     for category_name in categories.values():
-        rows.append({"text": f"goi y cho minh mot mon ngon ben nhom {category_name.lower()}", "intent": "ask_recommendation"})
+        rows.append({"text": f"gợi ý cho mình một món ngon bên nhóm {category_name.lower()}", "intent": "ask_recommendation"})
 
     price_templates = [
-        "co mon nao duoi {price} khong",
-        "tim giup minh do uong tam {price}",
-        "minh co {price} thi nen chon gi",
-        "quan co mon nao gia khoang {price} khong",
-        "cho minh mon ngon trong tam gia {price}",
+        "có món nào dưới {price} không",
+        "tìm giúp mình đồ uống tầm {price}",
+        "mình có {price} thì nên chọn gì",
+        "quán có món nào giá khoảng {price} không",
+        "cho mình món ngon trong tầm giá {price}",
     ]
     budgets = ["25k", "30k", "35k", "40k", "45k", "50k"]
     for template in price_templates:
@@ -120,31 +149,31 @@ def generate_intent_rows(menu: dict) -> list[dict]:
             rows.append({"text": template.format(price=budget), "intent": "ask_price_filter"})
 
     product_info_templates = [
-        "{product} co de uong khong",
-        "mon {product} vi nhu the nao",
-        "{product} co ngot qua khong",
-        "{product} co hop nguoi so beo khong",
-        "{product} co phai mon ban chay khong",
+        "{product} có dễ uống không",
+        "món {product} vị như thế nào",
+        "{product} có ngọt quá không",
+        "{product} có hợp người sợ béo không",
+        "{product} có phải món bán chạy không",
     ]
     for product in products:
         for template in product_info_templates:
             rows.append({"text": template.format(product=product["name"].lower()), "intent": "ask_product_info"})
 
     repeat_templates = [
-        "dat lai mon cu cho minh",
-        "goi lai order hom truoc di",
-        "lap lai mon minh hay mua nhe",
-        "dat lai do uong thuong xuyen cua toi",
-        "minh muon mua lai mon lan truoc",
+        "đặt lại món cũ cho mình",
+        "gọi lại order hôm trước đi",
+        "lặp lại món mình hay mua nhé",
+        "đặt lại đồ uống thường xuyên của tôi",
+        "mình muốn mua lại món lần trước",
     ]
     rows.extend({"text": text, "intent": "repeat_order"} for text in repeat_templates)
 
     add_templates = [
-        "them {qty} {product} vao gio hang",
-        "cho minh {qty} ly {product}",
-        "dat {qty} phan {product} nhe",
-        "chot {qty} mon {product}",
-        "lay giup minh {qty} {product}",
+        "thêm {qty} {product} vào giỏ hàng",
+        "cho mình {qty} ly {product}",
+        "đặt {qty} phần {product} nhé",
+        "chốt {qty} món {product}",
+        "lấy giúp mình {qty} {product}",
     ]
     quantities = ["1", "2", "3", "một", "hai"]
     for product in products:
@@ -154,19 +183,19 @@ def generate_intent_rows(menu: dict) -> list[dict]:
 
     customize_templates = [
         "cho size {size} {sugar}",
-        "size {size} va {ice} nhe",
-        "them {topping} cho mon nay",
-        "minh muon {sugar} voi {ice}",
-        "ly nay chon size {size} va them {topping}",
+        "size {size} và {ice} nhé",
+        "thêm {topping} cho món này",
+        "mình muốn {sugar} với {ice}",
+        "ly này chọn size {size} và thêm {topping}",
     ]
     for size in sizes:
         for sugar in sugars[:4]:
             rows.append({"text": f"cho size {size.lower()} {sugar.lower()}", "intent": "customize_order"})
     for size in sizes:
         for ice in ices:
-            rows.append({"text": f"size {size.lower()} va {ice.lower()} nhe", "intent": "customize_order"})
+            rows.append({"text": f"size {size.lower()} và {ice.lower()} nhé", "intent": "customize_order"})
     for topping in toppings:
-        rows.append({"text": f"them {topping.lower()} cho minh", "intent": "customize_order"})
+        rows.append({"text": f"thêm {topping.lower()} cho mình", "intent": "customize_order"})
     for template in customize_templates:
         for size in sizes:
             for topping in toppings[:3]:
@@ -193,6 +222,60 @@ def generate_dialogues(menu: dict, intent_rows: list[dict]) -> list[dict]:
     intent_groups: dict[str, list[str]] = {}
     for row in intent_rows:
         intent_groups.setdefault(row["intent"], []).append(row["text"])
+
+    sizes = [size["name"] for size in menu["sizes"]]
+    toppings = [extra["name"] for extra in menu["extras"] if extra["type"] == "topping"]
+    sugars = [extra["name"] for extra in menu["extras"] if extra["type"] == "sugar"]
+    ices = [extra["name"] for extra in menu["extras"] if extra["type"] == "ice"]
+    category_items = list(categories.items())
+    product_names = [product["name"] for product in products]
+
+    styles = [
+        "mát mát",
+        "ít ngọt",
+        "dễ uống",
+        "giải nhiệt",
+        "không có cà phê",
+        "thơm trái cây",
+        "cho buổi sáng",
+        "cho buổi chiều",
+    ]
+    budgets = [25000, 30000, 35000, 40000, 45000, 50000]
+    openings = [
+        "xin chào shop",
+        "bạn ơi",
+        "cho mình hỏi với",
+        "helo quán",
+        "trợ lý ơi",
+    ]
+    closings = [
+        "nhé",
+        "giúp mình với",
+        "được không",
+        "cảm ơn nha",
+        "nha",
+    ]
+    relation_phrases = [
+        "món nào đang được gọi nhiều",
+        "món nào dễ uống nhất",
+        "món nào hợp người mới",
+        "có món nào nên thử",
+    ]
+
+    def assistant_product_summary(product: dict) -> str:
+        tags = product.get("ai_tags", [])
+        tag_text = ", ".join(tags[:2]) if tags else "de uong"
+        return (
+            f"{product['name']} thuộc nhóm {product['category_name']}, giá {product['price']} đồng, "
+            f"phong cách {tag_text}. Nếu bạn muốn, mình có thể gợi ý size và option phù hợp."
+        )
+
+    def build_dialogue(messages: list[dict], primary_intent: str, source: str = "synthetic_choys_cafe") -> dict:
+        return {
+            "source": source,
+            "messages": messages,
+            "primary_intent": primary_intent,
+        }
 
     responses = {
         "greeting": [
@@ -230,41 +313,156 @@ def generate_dialogues(menu: dict, intent_rows: list[dict]) -> list[dict]:
     }
 
     dialogues: list[dict] = []
-    index = 1
     for intent, utterances in intent_groups.items():
-        sample_size = min(80, len(utterances))
-        for utterance in utterances[:sample_size]:
+        for utterance in utterances:
             assistant_text = random.choice(responses[intent])
-            dialogues.append(
-                {
-                    "conversation_id": f"dlg-auto-{index:04d}",
-                    "source": "synthetic_choys_cafe",
-                    "messages": [
-                        {"role": "user", "text": utterance},
-                        {"role": "assistant", "text": assistant_text},
-                    ],
-                    "primary_intent": intent,
-                }
-            )
-            index += 1
+            dialogues.append(build_dialogue([
+                {"role": "user", "text": utterance},
+                {"role": "assistant", "text": assistant_text},
+            ], intent))
 
-    for product in random.sample(products, min(20, len(products))):
+    for product in products:
         dialogues.append(
-            {
-                "conversation_id": f"dlg-auto-{index:04d}",
-                "source": "synthetic_choys_cafe",
-                "messages": [
+            build_dialogue(
+                [
                     {"role": "user", "text": f"{product['name']} có ngon không"},
-                    {"role": "assistant", "text": f"{product['name']} thuộc nhóm {product['category_name']}, giá hiện tại là {product['price']} đồng. Nếu bạn muốn, mình có thể gợi ý thêm món tương tự."},
+                    {"role": "assistant", "text": assistant_product_summary(product)},
                 ],
-                "primary_intent": "ask_product_info",
-            }
+                "ask_product_info",
+            )
         )
-        index += 1
+
+    for opening in openings:
+        for category_slug, category_name in category_items:
+            category_products = [product for product in products if product["category_slug"] == category_slug]
+            featured = category_products[:3]
+            preview_text = ", ".join(product["name"] for product in featured)
+            answer = (
+                f"Nhóm {category_name} hiện có {preview_text}. "
+                f"Bạn muốn mình gợi ý thêm theo vị dễ uống, ít ngọt hay theo ngân sách không?"
+            )
+            question = f"{opening} cho mình xem menu {category_name.lower()}"
+            dialogues.append(
+                build_dialogue(
+                    [
+                        {"role": "user", "text": question},
+                        {"role": "assistant", "text": answer},
+                    ],
+                    "ask_menu",
+                )
+            )
+
+    for category_slug, category_name in category_items:
+        category_products = [product for product in products if product["category_slug"] == category_slug]
+        preview = ", ".join(product["name"] for product in category_products[:3])
+        for style in styles:
+            for phrase in relation_phrases:
+                recommended = random.choice(category_products)
+                dialogues.append(
+                    build_dialogue(
+                        [
+                            {"role": "user", "text": f"cho mình xem menu {category_name.lower()}"},
+                            {"role": "assistant", "text": f"Nhóm {category_name} có các món như {preview}. Bạn đang ưu tiên vị nào?"},
+                            {"role": "user", "text": f"mình muốn {style}, {phrase} trong nhóm này"},
+                            {"role": "assistant", "text": f"Nếu bạn ưu tiên {style} thì mình gợi ý {recommended['name']}. Món này giá {recommended['price']} đồng và thuộc nhóm {category_name}."},
+                        ],
+                        "ask_recommendation",
+                    )
+                )
+
+    for product in products:
+        related = [item for item in products if item["category_slug"] == product["category_slug"] and item["name"] != product["name"]]
+        fallback = related[0] if related else product
+        for budget in budgets:
+            result_text = (
+                f"{product['name']} giá {product['price']} đồng nên "
+                + ("vẫn trong tầm ngân sách của bạn." if product["price"] <= budget else f"hơi vượt mức {budget} đồng. Bạn có thể cân nhắc {fallback['name']} giá {fallback['price']} đồng.")
+            )
+            dialogues.append(
+                build_dialogue(
+                    [
+                        {"role": "user", "text": f"mình có tầm {budget} đồng, {product['name']} có hợp không"},
+                        {"role": "assistant", "text": result_text},
+                    ],
+                    "ask_price_filter",
+                )
+            )
+
+    for product in products:
+        for qty in ["1", "2"]:
+            for size in sizes:
+                for sugar in sugars:
+                    for ice in ices:
+                        for topping in toppings:
+                            for closing in closings:
+                                dialogues.append(
+                                    build_dialogue(
+                                        [
+                                            {"role": "user", "text": f"cho mình {qty} {product['name'].lower()} {closing}"},
+                                            {"role": "assistant", "text": f"Mình đã ghi nhận {qty} {product['name']}. Bạn muốn chọn thêm size, đường, đá hay topping nào?"},
+                                            {"role": "user", "text": f"size {size.lower()}, {sugar.lower()}, {ice.lower()} và thêm {topping.lower()}"},
+                                            {"role": "assistant", "text": f"Ok, mình đã cập nhật {product['name']} size {size}, {sugar.lower()}, {ice.lower()} và thêm {topping}."},
+                                        ],
+                                        "add_to_cart",
+                                    )
+                                )
+
+    for product in products:
+        style_tags = product.get("ai_tags", [])
+        style_text = style_tags[0] if style_tags else "de uong"
+        for opening in openings:
+            for closing in closings:
+                dialogues.append(
+                    build_dialogue(
+                        [
+                            {"role": "user", "text": f"{opening} {product['name'].lower()} vị như thế nào {closing}"},
+                            {"role": "assistant", "text": assistant_product_summary(product)},
+                            {"role": "user", "text": f"nếu mình thích món {style_text} thì món này hợp không"},
+                            {"role": "assistant", "text": f"Món này khá hợp nếu bạn thích phong cách {style_text}. Nếu cần mình có thể gợi ý thêm 1 món cùng nhóm để bạn so sánh."},
+                        ],
+                        "ask_product_info",
+                    )
+                )
+
+    for style in styles:
+        for category_slug, category_name in category_items:
+            category_products = [product for product in products if product["category_slug"] == category_slug]
+            best_fit = random.choice(category_products)
+            size = random.choice(sizes)
+            sugar = random.choice(sugars)
+            ice = random.choice(ices)
+            dialogues.append(
+                build_dialogue(
+                    [
+                        {"role": "user", "text": f"hôm nay mình muốn món {style} trong nhóm {category_name.lower()}"},
+                        {"role": "assistant", "text": f"Trong nhóm {category_name}, mình gợi ý {best_fit['name']} giá {best_fit['price']} đồng. Bạn có muốn mình thêm vào giỏ luôn không?"},
+                        {"role": "user", "text": f"ok thêm 1 ly và chọn size {size.lower()}, {sugar.lower()}, {ice.lower()}"},
+                        {"role": "assistant", "text": f"Mình đã ghi nhận 1 {best_fit['name']} size {size}, {sugar.lower()} và {ice.lower()}."},
+                    ],
+                    "ask_recommendation",
+                )
+            )
 
     seed_dialogues = load_jsonl(DIALOGUE_DIR / "dialogue_seed.jsonl")
-    dialogues.extend(seed_dialogues)
-    return unique_rows(dialogues, "conversation_id")
+    for row in seed_dialogues:
+        dialogues.append(
+            build_dialogue(
+                row["messages"],
+                row["primary_intent"],
+                row.get("source", "adapted_for_choys_cafe"),
+            )
+        )
+
+    dialogues = unique_dialogues(dialogues)
+
+    if len(dialogues) < DIALOGUE_TARGET:
+        raise SystemExit(
+            f"Only generated {len(dialogues)} dialogue rows, expected at least {DIALOGUE_TARGET}."
+        )
+
+    random.shuffle(dialogues)
+    dialogues = dialogues[:DIALOGUE_TARGET]
+    return assign_dialogue_ids(dialogues)
 
 
 def generate_faq_paraphrases() -> list[dict]:

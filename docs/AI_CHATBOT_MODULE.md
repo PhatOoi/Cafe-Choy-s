@@ -8,6 +8,7 @@ Tai lieu nay mo ta module AI duoc tach rieng khoi web Laravel de tranh anh huong
 - Trich xuat tri thuc menu tu chinh repo nay de lam nguon du lieu.
 - Chua tich hop truc tiep vao route/controller hien co.
 - Khong can thu vien AI native, mo hinh train bang Python standard library.
+- Co them pipeline PyTorch rieng de train theo epoch/batch va co the dung GPU NVIDIA.
 
 ## Nguon du lieu
 
@@ -24,6 +25,15 @@ Tai lieu nay mo ta module AI duoc tach rieng khoi web Laravel de tranh anh huong
 1. Nhom web tiep tuc sua Blade, controller, route nhu binh thuong.
 2. Nhom AI lam viec ben trong thu muc `ai/` va chi doc du lieu tu repo.
 3. Khi can tich hop, chi them mot lop giao tiep mong giua Laravel va module AI.
+
+## Huong train GPU
+
+Module AI hien co 2 cach train:
+
+1. `ai/scripts/train_intent_model.py`: mo hinh Naive Bayes thuan Python, de chay o moi truong nao cung duoc.
+2. `ai/scripts/train_intent_model_torch.py`: mo hinh BiLSTM PyTorch, train theo `epoch`, chia `batch` bang `DataLoader`, uu tien chay tren `cuda` neu co.
+
+Huong PyTorch duoc tach rieng de khong pha vo pipeline hien tai va de phu hop yeu cau train GPU ve sau.
 
 ## Hop dong tich hop de xai sau
 

@@ -32,11 +32,18 @@ ai/
     export_menu_dataset.py  # Xuat dataset menu tu tri thuc da trich xuat
     generate_synthetic_datasets.py # Sinh dataset mo rong tu menu va FAQ
     train_intent_model.py   # Train model phan loai intent
+    train_intent_model_torch.py # Train intent bang PyTorch + GPU
     predict_intent.py       # Thu nghiem du doan tu command line
+    predict_intent_torch.py # Thu nghiem model PyTorch
   src/chatbot_ml/
     data.py                 # Doc/ghi dataset JSONL
     model.py                # Build pipeline va train/evaluate
+  src/chatbot_ml_torch/
+    text.py                 # Tokenizer va vocabulary cho PyTorch
+    dataset.py              # Dataset/collate_fn cho DataLoader
+    model.py                # BiLSTM classifier train theo epoch/batch
   requirements.txt          # Hien tai khong can thu vien ngoai
+  requirements-gpu.txt      # PyTorch GPU cho Python 3.12
 ```
 
 ## Cac intent ban dau
@@ -63,6 +70,14 @@ pip install -r requirements.txt
 
 Neu `requirements.txt` dang de trong hoac chi chua comment thi ban co the bo qua buoc cai thu vien.
 
+Neu muon train giong huong PyTorch/DataLoader trong bai Viblo, tao moi truong Python 3.12 rieng cho GPU:
+
+```powershell
+py -3.12 -m venv ai/.venv-gpu
+ai/.venv-gpu/Scripts/Activate.ps1
+pip install -r ai/requirements-gpu.txt
+```
+
 Sinh menu snapshot tu repo:
 
 ```powershell
@@ -70,6 +85,8 @@ python scripts/build_repo_knowledge.py
 python scripts/export_menu_dataset.py
 python scripts/generate_synthetic_datasets.py
 ```
+
+Mac dinh, script sinh du lieu mo rong se tao khoang 10,000 hoi thoai trong `ai/data/dialogue/dialogue_expanded.jsonl` de tang do phu cac tinh huong tu van va dat mon.
 
 Sau khi da co file `train_expanded.jsonl` va `test_expanded.jsonl`, script train se uu tien dung bo du lieu mo rong nay.
 
@@ -79,10 +96,30 @@ Train model intent:
 python scripts/train_intent_model.py
 ```
 
+Neu muon goi nhanh theo kieu cu tu goc repo, ban cung co the chay:
+
+```powershell
+python train.py
+```
+
+Lenh nay se tu dong uu tien trainer PyTorch neu moi truong hien tai co `torch`, nguoc lai se roi ve trainer thuan Python.
+
+Train model intent bang PyTorch tren GPU (neu `torch.cuda.is_available()` la `True`):
+
+```powershell
+py -3.12 ai/scripts/train_intent_model_torch.py --device cuda --epochs 20 --batch-size 64
+```
+
 Thu nghiem nhanh:
 
 ```powershell
 python scripts/predict_intent.py "hom nay troi nang qua toi muon uong gi do mat mat"
+```
+
+Thu nghiem model PyTorch:
+
+```powershell
+py -3.12 ai/scripts/predict_intent_torch.py "hôm nay trời nóng quá mình muốn uống gì đó thanh mát"
 ```
 
 ## Ket qua sau khi train
@@ -91,6 +128,9 @@ python scripts/predict_intent.py "hom nay troi nang qua toi muon uong gi do mat 
 - `artifacts/order_seed_snapshot.json`: mau lich su don tu `database/seeders/OrderSeeder.php`
 - `artifacts/intent_model.json`: model da train
 - `artifacts/intent_metrics.json`: tong hop chi so danh gia
+- `artifacts/intent_torch_model.pt`: trong so PyTorch cho train GPU
+- `artifacts/intent_torch_metadata.json`: vocab, nhan intent, config model PyTorch
+- `artifacts/intent_torch_metrics.json`: history theo epoch va ket qua test
 
 ## Cach tich hop ve sau
 
