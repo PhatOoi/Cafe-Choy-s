@@ -67,6 +67,7 @@
                             <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>
                         </li>
                     @endguest
+                    <li class="nav-item"><a href="{{ route('support') }}" class="nav-link">Hỗ trợ</a></li>
                     <!-- SPACER -->
                     <li class="nav-item flex-spacer"></li>
 
@@ -147,6 +148,7 @@
     </nav>
     <!-- END nav -->
 
+    {{-- ── Hero slider: 3 slide cà phê banner với nền nh chất lượng cao ── --}}
     <section class="home-slider owl-carousel">
         <div class="slider-item" style="background-image: url(images/bg_1.jpg);">
             <div class="overlay"></div>
@@ -205,6 +207,7 @@
 
     
 
+    {{-- ── Giới thiệu quán: ảnh nền + mô tả Choy's Cafe ── --}}
     <section class="ftco-about d-md-flex">
         <div class="one-half img" style="background-image: url(images/about.jpg);"></div>
         <div class="one-half ftco-animate">
@@ -225,6 +228,7 @@
         </div>
     </section>
 
+    {{-- ── 3 ứng dụng chọn: đặt hàng dễ, giao nhanh, phục vụ tốt ── --}}
     <section class="ftco-section ftco-services">
         <div class="container">
             <div class="row">

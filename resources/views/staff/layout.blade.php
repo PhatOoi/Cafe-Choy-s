@@ -357,6 +357,15 @@
                 <i class="fas fa-calendar-day"></i> Doanh thu ngày
         </a>
 
+        <div class="nav-section-label">Hỗ trợ</div>
+        <a href="{{ route('staff.support') }}"
+           class="sidebar-link {{ request()->routeIs('staff.support') ? 'active' : '' }}"
+           style="position:relative;">
+            <i class="fas fa-headset"></i> Chat khách hàng
+            <span id="sidebarUnread" style="display:none;background:#d4813a;color:#fff;border-radius:10px;
+                padding:1px 7px;font-size:10px;font-weight:700;position:absolute;right:14px;"></span>
+        </a>
+
     </nav>
 
     <div class="sidebar-footer">
@@ -1096,5 +1105,25 @@
 })();
 </script>
 @yield('scripts')
+
+<script>
+// Badge số tin nhắn chưa đọc trên sidebar
+(function pollUnread() {
+    fetch('{{ route("staff.chat.unread") }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(r => r.json())
+    .then(function(data) {
+        var badge = document.getElementById('sidebarUnread');
+        if (!badge) return;
+        if (data.count > 0) {
+            badge.style.display = 'inline-flex';
+            badge.textContent = data.count;
+        } else {
+            badge.style.display = 'none';
+        }
+    })
+    .catch(function(){});
+    setTimeout(pollUnread, 6000);
+})();
+</script>
 </body>
 </html>

@@ -66,6 +66,7 @@
                             <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>
                         </li>
                     @endguest
+                    <li class="nav-item"><a href="{{ route('support') }}" class="nav-link">Hỗ trợ</a></li>
                     <!-- SPACER -->
                     <li class="nav-item flex-spacer"></li>
 
@@ -491,6 +492,22 @@
             </svg>
         </div>
         <span id="toastMsg"></span>
+    </div>
+
+    {{-- Dialog cảnh báo khi vượt quá số lượng tối đa và cần chuyển sang trang hỗ trợ. --}}
+    <div class="limit-dialog-backdrop" id="limitDialogBackdrop" onclick="closeLimitDialog(event)">
+        <div class="limit-dialog-card" role="dialog" aria-modal="true" aria-labelledby="limitDialogTitle">
+            <div class="limit-dialog-icon">
+                <i class="fas fa-headset"></i>
+            </div>
+            <p class="limit-dialog-kicker">Hỗ trợ đơn hàng</p>
+            <h3 class="limit-dialog-title" id="limitDialogTitle">Vượt quá số lượng cho phép</h3>
+            <p class="limit-dialog-copy" id="limitDialogMessage">Bạn đã vượt quá số lượng cho phép cho sản phẩm này.</p>
+            <div class="limit-dialog-actions">
+                <button type="button" class="limit-dialog-btn limit-dialog-btn-muted" onclick="hideLimitDialog()">Đã hiểu</button>
+                <button type="button" class="limit-dialog-btn limit-dialog-btn-primary" id="limitDialogSupportBtn">Đến trang hỗ trợ</button>
+            </div>
+        </div>
     </div>
 
     <button type="button" class="back-to-top-btn" id="backToTopBtn" aria-label="Trở về đầu trang">
@@ -1900,6 +1917,119 @@
             flex-shrink: 0;
         }
 
+        .limit-dialog-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 6, 3, .58);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .24s ease, visibility .24s ease;
+            z-index: 100000;
+        }
+
+        .limit-dialog-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .limit-dialog-card {
+            width: min(100%, 420px);
+            padding: 28px 24px 22px;
+            border-radius: 26px;
+            background: linear-gradient(180deg, #fff8f1 0%, #f8ebdb 100%);
+            border: 1px solid rgba(201, 169, 110, .36);
+            box-shadow: 0 28px 54px rgba(26, 17, 13, .28);
+            text-align: center;
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transform: translateY(16px) scale(.98);
+            transition: transform .24s ease;
+        }
+
+        .limit-dialog-backdrop.show .limit-dialog-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .limit-dialog-icon {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 14px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #c9a96e, #b8844f);
+            color: #fff7ed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 16px 28px rgba(201, 169, 110, .26);
+        }
+
+        .limit-dialog-kicker {
+            margin: 0 0 8px;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: 11px;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: #9a7b61;
+        }
+
+        .limit-dialog-title {
+            margin: 0 0 10px;
+            font-family: inherit;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #1a110d;
+        }
+
+        .limit-dialog-copy {
+            margin: 0;
+            font-family: inherit;
+            font-weight: 400;
+            color: #755d4f;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .limit-dialog-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .limit-dialog-btn {
+            flex: 1;
+            border: none;
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .limit-dialog-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .limit-dialog-btn-muted {
+            background: #efe2d4;
+            color: #6f584a;
+        }
+
+        .limit-dialog-btn-primary {
+            background: linear-gradient(135deg, #1a110d, #38231a);
+            color: #f7ebd7;
+            box-shadow: 0 14px 24px rgba(26, 17, 13, .18);
+        }
+
         .back-to-top-btn {
             position: fixed;
             right: 24px;
@@ -1940,6 +2070,10 @@
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
+            .limit-dialog-actions {
+                flex-direction: column;
+            }
+
             .modal-backdrop {
                 align-items: flex-end;
                 padding: 0;
@@ -2246,7 +2380,12 @@
                 .then(data => {
 
                     if (!data.success) {
-                        showToast('❌ ' + (data.message || 'Lỗi server'));
+                        // Nếu vượt quá giới hạn số lượng
+                        if (data.is_limit_exceeded) {
+                            showLimitDialog(data.message || 'Số lượng sản phẩm đã vượt quá mức cho phép.', data.support_url);
+                        } else {
+                            showToast('❌ ' + (data.message || 'Lỗi server'));
+                        }
                         return;
                     }
 
@@ -2264,6 +2403,44 @@
             var t = document.getElementById('toastWrap');
             t.classList.add('show');
             setTimeout(function () { t.classList.remove('show'); }, 2800);
+        }
+
+        // Dùng dialog tùy biến để đồng bộ giao diện thay cho confirm() mặc định.
+        function showLimitDialog(message, supportUrl) {
+            var backdrop = document.getElementById('limitDialogBackdrop');
+            var messageNode = document.getElementById('limitDialogMessage');
+            var supportBtn = document.getElementById('limitDialogSupportBtn');
+
+            if (!backdrop || !messageNode || !supportBtn) {
+                return;
+            }
+
+            messageNode.textContent = message + ' Bạn có muốn truy cập trang hỗ trợ để liên hệ nhân viên không?';
+            supportBtn.onclick = function () {
+                hideLimitDialog();
+                if (supportUrl) {
+                    window.location.href = supportUrl;
+                }
+            };
+
+            backdrop.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideLimitDialog() {
+            var backdrop = document.getElementById('limitDialogBackdrop');
+            if (!backdrop) {
+                return;
+            }
+
+            backdrop.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function closeLimitDialog(event) {
+            if (event.target.id === 'limitDialogBackdrop') {
+                hideLimitDialog();
+            }
         }
 
         function fmtPrice(n) {

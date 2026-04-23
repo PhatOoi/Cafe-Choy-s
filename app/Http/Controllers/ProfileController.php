@@ -5,6 +5,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -77,5 +78,30 @@ class ProfileController extends Controller
         $user->save();
 
         return redirect()->route('profile.index')->with('success', 'Đổi mật khẩu thành công!');
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'avatar.required' => 'Vui lòng chọn ảnh.',
+            'avatar.image'    => 'File phải là ảnh.',
+            'avatar.mimes'    => 'Chỉ chấp nhận jpg, jpeg, png, webp.',
+            'avatar.max'      => 'Ảnh không được vượt quá 2MB.',
+        ]);
+
+        $user = Auth::user();
+
+        // Xóa avatar cũ nếu có
+        if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
+            Storage::disk('public')->delete($user->avatar_url);
+        }
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->avatar_url = $path;
+        $user->save();
+
+        return redirect()->route('profile.index')->with('success', 'Cập nhật ảnh đại diện thành công!');
     }
 }

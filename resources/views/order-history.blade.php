@@ -52,6 +52,7 @@
                     @guest
                         <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
                     @endguest
+                    <li class="nav-item"><a href="{{ route('support') }}" class="nav-link">Hỗ trợ</a></li>
                     <li class="nav-item flex-spacer"></li>
                     <li class="nav-item cart">
                         <a href="/cart" class="nav-link">

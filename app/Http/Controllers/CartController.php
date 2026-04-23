@@ -346,6 +346,21 @@ class CartController extends Controller
         $cartKey = $this->buildCartKey($request->product_id, $options);
         $price = $this->calculateCartItemPrice($product, $options);
 
+        // Kiểm tra giới hạn số lượng (tối đa 10 sản phẩm)
+        $newQty = $request->qty;
+        if (isset($cart[$cartKey])) {
+            $newQty += $cart[$cartKey]['qty'];
+        }
+
+        if ($newQty > 10) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Số lượng sản phẩm này không được vượt quá 10!',
+                'is_limit_exceeded' => true,
+                'support_url' => route('support')
+            ], 400);
+        }
+
         // Nếu biến thể món đã có trong giỏ thì cộng dồn số lượng.
         if (isset($cart[$cartKey])) {
             $cart[$cartKey]['qty'] += $request->qty;
@@ -445,6 +460,20 @@ class CartController extends Controller
         // Nếu item tồn tại thì cập nhật qty hoặc xóa khi qty <= 0.
         if (isset($cart[$key])) {
             $qty = (int) $request->input('qty', 1);
+
+            // Kiểm tra giới hạn (tối đa 10)
+            if ($qty > 10) {
+                if ($request->expectsJson() || $request->isJson() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Số lượng sản phẩm này không được vượt quá 10!',
+                        'is_limit_exceeded' => true,
+                        'support_url' => route('support')
+                    ], 400);
+                }
+                return back()->with('error', 'Số lượng sản phẩm này không được vượt quá 10!');
+            }
+
             if ($qty > 0) {
                 $cart[$key]['qty'] = $qty;
                 session()->put('cart', $cart);

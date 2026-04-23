@@ -52,6 +52,7 @@
                     @guest
                         <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
                     @endguest
+                    <li class="nav-item"><a href="{{ route('support') }}" class="nav-link">Hỗ trợ</a></li>
                     <li class="nav-item flex-spacer"></li>
                     <li class="nav-item cart">
                         <a href="/cart" class="nav-link">
@@ -64,8 +65,8 @@
                         <li class="nav-item user-dropdown-wrapper">
                             <div class="user-dropdown-container">
                                 <button class="user-avatar-btn" type="button" id="userMenuBtn">
-                                    @if(Auth::user()->avatar)
-                                        <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
+                                    @if(Auth::user()->avatar_url)
+                                        <img src="{{ asset('storage/' . Auth::user()->avatar_url) }}" class="user-avatar">
                                     @else
                                         <img src="{{ asset('images/user.jpg') }}" class="user-avatar">
                                     @endif
@@ -73,7 +74,7 @@
 
                                 <div class="user-dropdown-menu" id="userDropdownMenu">
                                     <div class="dropdown-header-info">
-                                        <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('images/user.jpg') }}" class="dropdown-avatar">
+                                        <img src="{{ Auth::user()->avatar_url ? asset('storage/' . Auth::user()->avatar_url) : asset('images/user.jpg') }}" class="dropdown-avatar">
 
                                         <div class="user-details">
                                             <p class="user-name">{{ Auth::user()->name }}</p>
@@ -123,12 +124,19 @@
             <div class="profile-shell">
                 <aside class="profile-side-card">
                     <div class="profile-side-top">
-                        <div class="avatar-frame">
-                            @if($user->avatar)
-                                <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="profile-avatar">
+                        <div class="avatar-frame" style="position:relative;">
+                            @if($user->avatar_url)
+                                <img src="{{ asset('storage/' . $user->avatar_url) }}" alt="{{ $user->name }}" class="profile-avatar" id="avatarPreview">
                             @else
-                                <img src="{{ asset('images/user.jpg') }}" alt="{{ $user->name }}" class="profile-avatar">
+                                <img src="{{ asset('images/user.jpg') }}" alt="{{ $user->name }}" class="profile-avatar" id="avatarPreview">
                             @endif
+                            <form action="{{ route('profile.avatar') }}" method="POST" enctype="multipart/form-data" id="avatarForm">
+                                @csrf
+                                <label for="avatarInput" title="Thay đổi ảnh đại diện" style="position:absolute;bottom:6px;right:6px;background:#c8a26b;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);">
+                                    <i class="fas fa-camera" style="color:#fff;font-size:13px;"></i>
+                                </label>
+                                <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display:none;" onchange="document.getElementById('avatarForm').submit();">
+                            </form>
                         </div>
                         <p class="profile-role-label">{{ $user->role->name ?? 'Khách hàng' }}</p>
                         <h2 class="profile-user-name">{{ $user->name }}</h2>
@@ -150,6 +158,7 @@
                         </div>
                     </div>
 
+                    {{-- ── Nút hành động nhanh: đến menu và lịch sử đơn ── --}}
                     <div class="profile-side-actions">
                         <a href="{{ url('/menu') }}" class="profile-action-btn primary-btn">
                             <i class="fas fa-mug-hot"></i>
@@ -166,7 +175,17 @@
 
                 <div class="profile-main-grid">
                     @if(session('success'))
-                        <div class="profile-alert success-alert">{{ session('success') }}</div>
+                        <div class="profile-alert success-alert" id="successAlert">{{ session('success') }}</div>
+                        <script>
+                            setTimeout(function () {
+                                var el = document.getElementById('successAlert');
+                                if (el) {
+                                    el.style.transition = 'opacity 0.5s ease';
+                                    el.style.opacity = '0';
+                                    setTimeout(function () { el.remove(); }, 500);
+                                }
+                            }, 3000);
+                        </script>
                     @endif
 
                     @if($errors->any())
@@ -180,6 +199,7 @@
                         </div>
                     @endif
 
+                    {{-- ── Panel thông tin cơ bản: email, phone, role ── --}}
                     <section class="profile-panel panel-wide">
                         <div class="panel-heading">
                             <span class="panel-kicker">Thông tin chính</span>
@@ -242,6 +262,7 @@
                         </div>
                     </section>
 
+                    {{-- ── Panel đổi mật khẩu: validate mật khẩu mạnh + xác nhận ── --}}
                     <section class="profile-panel panel-wide" id="password-panel">
                         <div class="panel-heading">
                             <span class="panel-kicker">Bảo mật</span>

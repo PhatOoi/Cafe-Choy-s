@@ -19,17 +19,19 @@ class Extra extends Model
         'type'
     ];
 
-    // Scopes để phân loại topping, sugar, ice
+    // Scope lọc chỉ lấy các extra là topping.
     public function scopeTopping($query)
     {
         return $query->where('type', 'topping');
     }
 
+    // Scope lọc chỉ lấy các extra là mức đường.
     public function scopeSugar($query)
     {
         return $query->where('type', 'sugar');
     }
 
+    // Scope lọc chỉ lấy các extra là mức đá.
     public function scopeIce($query)
     {
         return $query->where('type', 'ice');

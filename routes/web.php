@@ -11,6 +11,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\ChatController;
 
 // ── PUBLIC ────────────────────────────────────────────────────
 // Các route mở cho khách chưa đăng nhập hoặc mọi người dùng truy cập.
@@ -41,7 +42,9 @@ Route::post('/cart/checkout/qr', [CartController::class, 'confirmQrPayment'])->m
 Route::get('/cart/qr-status', [CartController::class, 'qrPaymentStatus'])->middleware('auth')->name('cart.qr-status');
 Route::get('/orders/history', [OrderHistoryController::class, 'index'])->middleware('auth')->name('orders.history');
 Route::post('/orders/{id}/cancel', [OrderHistoryController::class, 'cancel'])->middleware('auth')->name('orders.cancel');
+Route::get('/support', fn() => view('support'))->name('support');
 
+// Route debug test DB — chỉ bật ở local, không dùng trên production.
 Route::get('/test-db', function () {
     $users = DB::table('users')->get();
     return $users;
@@ -78,9 +81,14 @@ Route::middleware(['auth'])->group(function () {
     // FIX: route PUT profile bị thiếu hoàn toàn
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
     // FIX: thêm route payment
     Route::get('/payment', fn() => view('payment'))->name('payment');
+
+    // Chat hỗ trợ khách hàng — 2 route cho cả polling lấy tin và gửi tin.
+    Route::get('/chat/messages',  [ChatController::class, 'messages'])->name('chat.messages');
+    Route::post('/chat/send',     [ChatController::class, 'send'])->name('chat.send');
 });
 
 // ── STAFF ─────────────────────────────────────────────────────
@@ -88,6 +96,12 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(function () {
     Route::get('/',        [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/orders',  [StaffController::class, 'orders'])->name('orders');
+    // Chat hỗ trợ khách hàng
+    Route::get('/support',                      fn() => view('staff.support'))->name('support');
+    Route::get('/chat/conversations',           [ChatController::class, 'conversations'])->name('chat.conversations');
+    Route::get('/chat/conversation/{userId}',   [ChatController::class, 'conversation'])->name('chat.conversation');
+    Route::post('/chat/reply/{userId}',         [ChatController::class, 'reply'])->name('chat.reply');
+    Route::get('/chat/unread',                  [ChatController::class, 'unreadCount'])->name('chat.unread');
     Route::get('/orders/confirmed-reminder-ids', [StaffController::class, 'confirmedOrderReminderIds'])->name('orders.confirmed-reminder-ids');
     Route::get('/orders/reminder-statuses', [StaffController::class, 'orderReminderStatuses'])->name('orders.reminder-statuses');
     Route::get('/orders/created-history', [StaffController::class, 'createdOrderHistory'])->name('orders.created-history');
