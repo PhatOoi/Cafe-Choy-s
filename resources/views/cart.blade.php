@@ -91,8 +91,8 @@
                                         <div class="user-dropdown-container">
 
                                             <button class="user-avatar-btn" type="button" id="userMenuBtn">
-                                                @if(Auth::user()->avatar)
-                                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
+                                                @if(Auth::user()->avatar_url)
+                                                    <img src="{{ asset('storage/' . Auth::user()->avatar_url) }}" class="user-avatar">
                                                 @else
                                                     <img src="{{ asset('images/user.jpg') }}" class="user-avatar">
                                                 @endif
@@ -100,8 +100,8 @@
 
                                             <div class="user-dropdown-menu" id="userDropdownMenu">
                                                 <div class="dropdown-header-info">
-                                                    <img src="{{ Auth::user()->avatar
-                        ? asset('storage/' . Auth::user()->avatar)
+                                                    <img src="{{ Auth::user()->avatar_url
+                        ? asset('storage/' . Auth::user()->avatar_url)
                         : asset('images/user.jpg') }}" class="dropdown-avatar">
 
                                                     <div class="user-details">
@@ -506,7 +506,7 @@
                                         supportBtn.onclick = function() {
                                             hideLimitDialog();
                                             if (supportUrl) {
-                                                window.location.href = supportUrl;
+                                                clearCartAndGoSupport(supportUrl);
                                             }
                                         };
 
@@ -522,6 +522,25 @@
 
                                         backdrop.classList.remove('show');
                                         document.body.style.overflow = '';
+                                    }
+
+                                    // Khi khách chọn sang hỗ trợ, reset session cart trước rồi mới chuyển trang.
+                                    function clearCartAndGoSupport(supportUrl) {
+                                        fetch('{{ route("cart.clear-for-support") }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                                'X-Requested-With': 'XMLHttpRequest'
+                                            },
+                                            body: JSON.stringify({ reason: 'quantity_limit_support_redirect' })
+                                        })
+                                        .catch(function() {
+                                            // Dù clear cart lỗi vẫn ưu tiên điều hướng sang trang hỗ trợ.
+                                        })
+                                        .finally(function() {
+                                            window.location.href = supportUrl;
+                                        });
                                     }
 
                                     function closeLimitDialog(event) {

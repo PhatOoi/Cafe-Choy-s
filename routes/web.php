@@ -76,6 +76,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cart',               [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add',          [CartController::class, 'add'])->name('cart.add');
     Route::post('/cart/update/{key}', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/clear-for-support', [CartController::class, 'clearForSupport'])->name('cart.clear-for-support');
     Route::get('/cart/remove/{id}',   [CartController::class, 'remove'])->name('cart.remove');
 
     // FIX: route PUT profile bị thiếu hoàn toàn

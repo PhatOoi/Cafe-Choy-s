@@ -445,6 +445,25 @@ class CartController extends Controller
         return redirect('/cart');
     }
 
+    // Xóa toàn bộ giỏ hàng khi khách chọn chuyển sang trang hỗ trợ.
+    public function clearForSupport(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        session()->forget(['cart', 'pending_qr_order_id']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã làm mới giỏ hàng.',
+            'cart_count' => 0,
+        ]);
+    }
+
     // Cập nhật số lượng của một item trong giỏ.
     public function update(Request $request, $key)
     {

@@ -75,8 +75,8 @@
                                         <div class="user-dropdown-container">
 
                                             <button class="user-avatar-btn" type="button" id="userMenuBtn">
-                                                @if(Auth::user()->avatar)
-                                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" class="user-avatar">
+                                                @if(Auth::user()->avatar_url)
+                                                    <img src="{{ asset('storage/' . Auth::user()->avatar_url) }}" class="user-avatar">
                                                 @else
                                                     <img img src="{{ asset('images/user.jpg') }}" 
                                                         class="user-avatar">
@@ -85,8 +85,8 @@
 
                                             <div class="user-dropdown-menu" id="userDropdownMenu">
                                                 <div class="dropdown-header-info">
-                                                    <img src="{{ Auth::user()->avatar
-                                                        ? asset('storage/' . Auth::user()->avatar)
+                                                    <img src="{{ Auth::user()->avatar_url
+                                                        ? asset('storage/' . Auth::user()->avatar_url)
                                                         : asset('images/user.jpg') }}"
                                                         class="dropdown-avatar">
 

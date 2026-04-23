@@ -661,6 +661,18 @@
         var supportChatLastId = 0;
         var supportChatPoller = null;
 
+        function renderSupportChatEmpty() {
+            return '<div class="support-chat-empty">Bắt đầu hội thoại. Nhân viên sẽ phản hồi sớm nhất có thể.</div>';
+        }
+
+        function resetSupportChatView() {
+            var container = document.getElementById('supportChatMessages');
+            if (!container) return;
+
+            supportChatLastId = 0;
+            container.innerHTML = renderSupportChatEmpty();
+        }
+
         function appendSupportMessage(msg) {
             var container = document.getElementById('supportChatMessages');
             if (!container) return;
@@ -692,8 +704,18 @@
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(function (res) { return res.json(); })
-            .then(function (messages) {
-                messages.forEach(function (msg) {
+            .then(function (payload) {
+                // Tương thích ngược nếu endpoint cũ vẫn trả mảng thuần.
+                if (Array.isArray(payload)) {
+                    payload = { reset: false, messages: payload };
+                }
+
+                if (payload.reset) {
+                    resetSupportChatView();
+                    return;
+                }
+
+                (payload.messages || []).forEach(function (msg) {
                     appendSupportMessage(msg);
                     if (msg.id > supportChatLastId) supportChatLastId = msg.id;
                 });

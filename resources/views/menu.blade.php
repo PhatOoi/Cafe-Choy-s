@@ -83,8 +83,8 @@
                     <!-- USER DROPDOWN -->
                     @if(Auth::check())
                                     @php
-                                        $menuUserAvatar = Auth::user()->avatar
-                                            ? asset('storage/' . Auth::user()->avatar)
+                                        $menuUserAvatar = Auth::user()->avatar_url
+                                            ? asset('storage/' . Auth::user()->avatar_url)
                                             : asset('images/user.jpg');
                                     @endphp
                                     <li class="nav-item user-dropdown-wrapper">
@@ -2419,7 +2419,7 @@
             supportBtn.onclick = function () {
                 hideLimitDialog();
                 if (supportUrl) {
-                    window.location.href = supportUrl;
+                    clearCartAndGoSupport(supportUrl);
                 }
             };
 
@@ -2435,6 +2435,25 @@
 
             backdrop.classList.remove('show');
             document.body.style.overflow = '';
+        }
+
+        // Khi khách chọn sang hỗ trợ, reset session cart trước rồi mới chuyển trang.
+        function clearCartAndGoSupport(supportUrl) {
+            fetch('{{ route("cart.clear-for-support") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ reason: 'quantity_limit_support_redirect' })
+            })
+            .catch(function () {
+                // Dù clear cart lỗi vẫn ưu tiên điều hướng sang trang hỗ trợ.
+            })
+            .finally(function () {
+                window.location.href = supportUrl;
+            });
         }
 
         function closeLimitDialog(event) {

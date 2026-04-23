@@ -15,12 +15,17 @@ class ChatController extends Controller
     public function messages(Request $request)
     {
         $userId = Auth::id();
-        $after  = $request->query('after', 0);
+        $after  = (int) $request->query('after', 0);
 
         $messages = ChatMessage::where('user_id', $userId)
             ->where('id', '>', $after)
             ->orderBy('id')
             ->get(['id', 'message', 'sender', 'created_at']);
+
+        // Nếu client đang giữ lịch sử (after > 0) nhưng DB đã không còn tin nào,
+        // trả cờ reset để frontend xóa ngay lịch sử cũ đang hiển thị.
+        $hasAnyMessages = ChatMessage::where('user_id', $userId)->exists();
+        $shouldReset = $after > 0 && $messages->isEmpty() && !$hasAnyMessages;
 
         // Đánh dấu tin nhắn của staff là đã đọc
         ChatMessage::where('user_id', $userId)
@@ -28,7 +33,10 @@ class ChatController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true]);
 
-        return response()->json($messages);
+        return response()->json([
+            'reset' => $shouldReset,
+            'messages' => $messages,
+        ]);
     }
 
     // Khách hàng gửi tin nhắn
