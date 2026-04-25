@@ -334,6 +334,10 @@
            class="sidebar-link {{ request()->routeIs('staff.dashboard') ? 'active' : '' }}">
             <i class="fas fa-th-large"></i> Dashboard
         </a>
+        <a href="{{ route('staff.work-schedules.index') }}"
+           class="sidebar-link {{ request()->routeIs('staff.work-schedules.*') ? 'active' : '' }}">
+            <i class="fas fa-calendar-alt"></i> Đăng ký giờ làm
+        </a>
 
         <div class="nav-section-label">Đơn hàng</div>
         <a href="{{ route('staff.orders') }}"

@@ -80,6 +80,17 @@
                         <input type="hidden" name="role_id" value="{{ $user->role_id }}">
                         @endif
                     </div>
+
+                    <div class="form-group" style="grid-column:1/-1;">
+                        <label class="form-label">Loại nhân viên</label>
+                        <select name="employment_type" class="form-select">
+                            <option value="">Không áp dụng / Chưa chọn</option>
+                            <option value="full_time" {{ old('employment_type', $user->employment_type) === 'full_time' ? 'selected' : '' }}>Full-time</option>
+                            <option value="part_time" {{ old('employment_type', $user->employment_type) === 'part_time' ? 'selected' : '' }}>Part-time</option>
+                        </select>
+                        <div class="form-text">Chỉ áp dụng cho tài khoản nhân viên.</div>
+                        @error('employment_type')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                    </div>
                 </div>
 
                 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">

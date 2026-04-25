@@ -25,6 +25,7 @@ class UserSeeder extends Seeder
             // Staff vận hành nội bộ.
             [
                 'role_id'    => 2,
+                'employment_type' => 'full_time',
                 'name'       => 'Nguyễn Văn Nhân',
                 'email'      => 'nhan@coffeechoys.vn',
                 'password'   => Hash::make('Staff@123'),
@@ -34,6 +35,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'role_id'    => 2,
+                'employment_type' => 'full_time',
                 'name'       => 'Trần Thị Linh',
                 'email'      => 'linh@coffeechoys.vn',
                 'password'   => Hash::make('Staff@123'),

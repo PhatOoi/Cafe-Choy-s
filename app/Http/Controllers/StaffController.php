@@ -10,10 +10,14 @@ use App\Models\User;
 use App\Models\OrderItem;
 use App\Models\OrderItemExtra;
 use App\Models\Payment;
+use App\Models\WorkScheduleBoardLock;
 use App\Support\DailyRevenueSnapshotService;
+use App\Models\WorkScheduleRegistration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class StaffController extends Controller
 {
@@ -620,6 +624,202 @@ class StaffController extends Controller
     public function assignDelivery(Request $request, $id) {
         Order::findOrFail($id)->update(['assigned_staff_id' => $request->staff_id]);
         return back()->with('success', 'Đã phân công nhân viên.');
+    }
+
+    // Trả về danh sách slot cố định theo loại nhân viên.
+    private function getScheduleSlotsByEmploymentType(?string $employmentType): array
+    {
+        if ($employmentType === 'part_time') {
+            return [
+                '08_12' => ['start' => '08:00', 'end' => '12:00', 'label' => '8h-12h'],
+                '12_16' => ['start' => '12:00', 'end' => '16:00', 'label' => '12h-16h'],
+                '16_20' => ['start' => '16:00', 'end' => '20:00', 'label' => '16h-20h'],
+                // Dùng 23:59 để biểu diễn slot 20h-24h trên cột time của SQL.
+                '20_24' => ['start' => '20:00', 'end' => '23:59', 'label' => '20h-24h'],
+            ];
+        }
+
+        if ($employmentType === 'full_time') {
+            return [
+                '08_16' => ['start' => '08:00', 'end' => '16:00', 'label' => '8h-16h'],
+                // Dùng 23:59 để biểu diễn slot 16h-24h trên cột time của SQL.
+                '16_24' => ['start' => '16:00', 'end' => '23:59', 'label' => '16h-24h'],
+            ];
+        }
+
+        return [];
+    }
+
+    // Resolve slot key từ start/end time đã lưu trong DB.
+    private function resolveSlotKey(string $employmentType, string $startTime, string $endTime): ?string
+    {
+        foreach ($this->getScheduleSlotsByEmploymentType($employmentType) as $slotKey => $slot) {
+            if ($slot['start'] === substr($startTime, 0, 5) && $slot['end'] === substr($endTime, 0, 5)) {
+                return $slotKey;
+            }
+        }
+
+        return null;
+    }
+
+    // Mỗi slot có sức chứa khác nhau theo loại nhân viên.
+    private function getScheduleSlotCapacity(?string $employmentType): int
+    {
+        return $employmentType === 'part_time' ? 2 : 1;
+    }
+
+    // Hiển thị trang đăng ký giờ làm và chia danh sách theo full-time / part-time.
+    public function workSchedules()
+    {
+        $currentStaff = Auth::user();
+        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+        $weekDays = collect(range(0, 6))->map(fn ($offset) => $weekStart->copy()->addDays($offset));
+        $weekBoardLock = WorkScheduleBoardLock::with('locker:id,name')
+            ->whereDate('week_start', $weekStart->toDateString())
+            ->first();
+        $isScheduleBoardLocked = (bool) $weekBoardLock;
+        $allowedSlots = $this->getScheduleSlotsByEmploymentType($currentStaff->employment_type);
+
+        $weeklyAssignments = [];
+        $mySelectedDates = [];
+
+        if ($currentStaff->employment_type) {
+            // Lấy đăng ký của đúng nhóm employment_type trong tuần hiện tại để khóa slot trên bảng tuần.
+            $registrations = WorkScheduleRegistration::with('staff:id,name')
+                ->where('employment_type', $currentStaff->employment_type)
+                ->whereBetween('work_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+                ->get();
+
+            foreach ($registrations as $registration) {
+                $slotKey = $this->resolveSlotKey(
+                    $currentStaff->employment_type,
+                    (string) $registration->start_time,
+                    (string) $registration->end_time
+                );
+
+                if (!$slotKey) {
+                    continue;
+                }
+
+                $dateKey = Carbon::parse($registration->work_date)->toDateString();
+                $weeklyAssignments[$dateKey][$slotKey] ??= [];
+                $weeklyAssignments[$dateKey][$slotKey][] = $registration;
+
+                if ((int) $registration->staff_id === (int) $currentStaff->id) {
+                    $mySelectedDates[$dateKey] = true;
+                }
+            }
+        }
+
+        // Lấy riêng các đăng ký của nhân viên hiện tại để hiển thị lịch sử vừa đăng ký.
+        $myRegistrations = WorkScheduleRegistration::query()
+            ->where('staff_id', $currentStaff->id)
+            ->orderByDesc('work_date')
+            ->orderByDesc('start_time')
+            ->take(6)
+            ->get();
+
+        return view('staff.work-schedules', compact(
+            'currentStaff',
+            'weekStart',
+            'weekEnd',
+            'weekDays',
+            'weekBoardLock',
+            'isScheduleBoardLocked',
+            'allowedSlots',
+            'weeklyAssignments',
+            'mySelectedDates',
+            'myRegistrations'
+        ));
+    }
+
+    // Nhân viên tự đăng ký slot cố định trong tuần hiện tại.
+    public function storeWorkSchedule(Request $request)
+    {
+        $staff = Auth::user();
+
+        // Chỉ nhân viên đã được phân loại full-time/part-time mới được đăng ký ca.
+        if (!$staff->employment_type) {
+            return back()->with('error', 'Nhân viên chưa được phân loại full-time hoặc part-time. Vui lòng liên hệ admin để cập nhật trước khi đăng ký giờ làm.');
+        }
+
+        $allowedSlots = $this->getScheduleSlotsByEmploymentType($staff->employment_type);
+        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+
+        // Nếu admin đã đóng bảng tuần thì staff không thể đăng ký thêm.
+        $isBoardLocked = WorkScheduleBoardLock::query()
+            ->whereDate('week_start', $weekStart->toDateString())
+            ->exists();
+
+        if ($isBoardLocked) {
+            return back()->with('error', 'Bảng đăng ký giờ làm tuần này đã được admin đóng. Bạn không thể đăng ký thêm.');
+        }
+
+        $data = $request->validate([
+            'work_date' => 'required|date',
+            'slot_key' => ['required', Rule::in(array_keys($allowedSlots))],
+        ]);
+
+        $workDate = Carbon::parse($data['work_date'])->startOfDay();
+
+        // Chỉ cho đăng ký trong tuần hiện tại (thứ 2 -> chủ nhật) và không cho đăng ký ngày đã qua.
+        if ($workDate->lt(now()->startOfDay()) || $workDate->lt($weekStart->startOfDay()) || $workDate->gt($weekEnd->endOfDay())) {
+            return back()
+                ->withInput()
+                ->withErrors(['work_date' => 'Chỉ được đăng ký trong tuần hiện tại và từ ngày hôm nay trở đi.']);
+        }
+
+        $selectedSlot = $allowedSlots[$data['slot_key']];
+        $slotCapacity = $this->getScheduleSlotCapacity($staff->employment_type);
+
+        // Mỗi nhân viên chỉ được có đúng 1 ca trong 1 ngày.
+        $myRegistrationOnDate = WorkScheduleRegistration::query()
+            ->where('staff_id', $staff->id)
+            ->whereDate('work_date', $workDate->toDateString())
+            ->first();
+
+        if ($myRegistrationOnDate) {
+            $isSameSlot =
+                substr((string) $myRegistrationOnDate->start_time, 0, 5) === $selectedSlot['start']
+                && substr((string) $myRegistrationOnDate->end_time, 0, 5) === $selectedSlot['end'];
+
+            if ($isSameSlot) {
+                return back()->with('success', 'Bạn đã đăng ký khung giờ này trước đó.');
+            }
+
+            return back()->with('error', 'Mỗi nhân viên chỉ được chọn một ca trong một ngày.');
+        }
+
+        // Slot được phép theo sức chứa: full-time 1 người, part-time 2 người.
+        $existingRegistrations = WorkScheduleRegistration::query()
+            ->where('employment_type', $staff->employment_type)
+            ->whereDate('work_date', $workDate->toDateString())
+            ->where('start_time', $selectedSlot['start'])
+            ->where('end_time', $selectedSlot['end'])
+            ->get();
+
+        if ($existingRegistrations->contains(fn ($registration) => (int) $registration->staff_id === (int) $staff->id)) {
+            return back()->with('success', 'Bạn đã đăng ký khung giờ này trước đó.');
+        }
+
+        if ($existingRegistrations->count() >= $slotCapacity) {
+            return back()->with('error', 'Khung giờ này đã có nhân viên khác chọn, vui lòng chọn khung giờ khác.');
+        }
+
+        // Lưu snapshot loại nhân viên để khi đổi loại staff thì lịch cũ vẫn giữ đúng ngữ cảnh.
+        WorkScheduleRegistration::create([
+            'staff_id' => $staff->id,
+            'employment_type' => $staff->employment_type,
+            'work_date' => $workDate->toDateString(),
+            'start_time' => $selectedSlot['start'],
+            'end_time' => $selectedSlot['end'],
+            'shift_label' => $selectedSlot['label'],
+            'note' => null,
+        ]);
+
+        return redirect()->route('staff.work-schedules.index')->with('success', 'Đăng ký giờ làm thành công.');
     }
 
     // Ghi nhận bắt đầu ca làm của staff hiện tại vào bảng shifts.

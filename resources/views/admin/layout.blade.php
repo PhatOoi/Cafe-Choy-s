@@ -644,6 +644,10 @@
         class="sidebar-link {{ request()->routeIs('admin.reports') && request('period','month') === 'year' ? 'active' : '' }}">
             <i class="fas fa-calendar"></i> Theo năm
         </a>
+        <a href="{{ route('admin.payroll') }}"
+        class="sidebar-link {{ request()->routeIs('admin.payroll') ? 'active' : '' }}">
+            <i class="fas fa-wallet"></i> Bảng lương
+        </a>
         <div class="nav-label">Sản phẩm</div>
         <a href="{{ route('admin.products') }}"
            class="sidebar-link {{ request()->routeIs('admin.products*') ? 'active' : '' }}">

@@ -12,6 +12,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\OrderHistoryController;
 use App\Http\Controllers\ChatController;
+use Illuminate\Http\Request;
 
 // ── PUBLIC ────────────────────────────────────────────────────
 // Các route mở cho khách chưa đăng nhập hoặc mọi người dùng truy cập.
@@ -96,6 +97,8 @@ Route::middleware(['auth'])->group(function () {
 // Khu vực vận hành cho staff/admin: xử lý đơn, tạo đơn tại quán, doanh thu, nhắc việc.
 Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(function () {
     Route::get('/',        [StaffController::class, 'dashboard'])->name('dashboard');
+    Route::get('/work-schedules', [StaffController::class, 'workSchedules'])->name('work-schedules.index');
+    Route::post('/work-schedules', [StaffController::class, 'storeWorkSchedule'])->name('work-schedules.store');
     Route::get('/orders',  [StaffController::class, 'orders'])->name('orders');
     // Chat hỗ trợ khách hàng
     Route::get('/support',                      fn() => view('staff.support'))->name('support');
@@ -128,6 +131,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('/',          fn() => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/reports',   [AdminController::class, 'reports'])->name('reports');
+    Route::get('/payroll',   [AdminController::class, 'payroll'])->name('payroll');
+    Route::post('/work-schedules/close-week-board', [AdminController::class, 'closeWeeklyWorkScheduleBoard'])->name('work-schedules.close-week-board');
+    Route::patch('/work-schedules/{id}/approve', [AdminController::class, 'approveWorkSchedule'])->name('work-schedules.approve');
+    Route::patch('/work-schedules/{id}/close', [AdminController::class, 'closeWorkSchedule'])->name('work-schedules.close');
 
     // Sản phẩm
     Route::get('/products',           [AdminController::class, 'products'])->name('products');
