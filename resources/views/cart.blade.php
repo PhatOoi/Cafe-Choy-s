@@ -1921,6 +1921,7 @@
 			}
 		});
 	</script>
+@include('components.ai-bot-widget')
 </body>
 
 </html>

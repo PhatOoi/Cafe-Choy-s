@@ -53,6 +53,7 @@
                         <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
                     @endguest
                     <li class="nav-item active"><a href="{{ route('support') }}" class="nav-link">Hỗ trợ</a></li>
+                    <li class="nav-item"><a href="{{ route('ai-chat.index') }}" class="nav-link">Choy AI</a></li>
                     <li class="nav-item flex-spacer"></li>
                     <li class="nav-item cart">
                         <a href="/cart" class="nav-link">
@@ -134,6 +135,14 @@
                     <p>Nhắn tin trực tiếp qua trang Facebook của chúng tôi</p>
                     <a href="#" class="contact-action">Choy's Cafe</a>
                     <span class="contact-note">Trả lời trong 1-2 giờ</span>
+                </div>
+
+                <div class="support-contact-card" style="border-color: rgba(200,162,107,.35); background: rgba(200,162,107,.06);">
+                    <div class="contact-icon-wrap" style="background: rgba(200,162,107,.25);"><i class="fas fa-robot"></i></div>
+                    <h4 style="color: #c8a26b;">Choy AI</h4>
+                    <p>Trợ lý AI trả lời tức thì về menu, đặt hàng và mọi thắc mắc về quán</p>
+                    <a href="{{ route('ai-chat.index') }}" class="contact-action">Chat với AI ngay</a>
+                    <span class="contact-note">Phản hồi trong vài giây</span>
                 </div>
             </div>
 
@@ -291,13 +300,16 @@
         /* Contact cards */
         .support-contact-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 64px;
         }
-        @media (max-width: 768px) {
-            .support-contact-grid { grid-template-columns: 1fr; }
+        @media (max-width: 900px) {
+            .support-contact-grid { grid-template-columns: repeat(2, 1fr); }
             .support-hero h1 { font-size: 32px; }
+        }
+        @media (max-width: 576px) {
+            .support-contact-grid { grid-template-columns: 1fr; }
         }
         .support-contact-card {
             background: rgba(255,255,255,.05);
@@ -755,5 +767,6 @@
         supportChatPoller = setInterval(loadSupportMessages, 4000);
         @endauth
     </script>
+@include('components.ai-bot-widget')
 </body>
 </html>

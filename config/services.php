@@ -4,13 +4,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Third Party Services
+    | Dịch Vụ Bên Thứ Ba
     |--------------------------------------------------------------------------
     |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
+    | File này dùng để lưu trữ thông tin xác thực cho các dịch vụ bên thứ ba
+    | như Mailgun, Postmark, AWS và nhiều dịch vụ khác. Đây là nơi quy ước
+    | để các package tìm kiếm thông tin xác thực dịch vụ tương ứng.
     |
     */
 
@@ -26,6 +25,10 @@ return [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    ],
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY', ''),
     ],
 
     'slack' => [

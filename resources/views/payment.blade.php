@@ -300,5 +300,6 @@ function placeOrder() {
     document.getElementById('successOverlay').style.display = 'flex';
 }
 </script>
+@include('components.ai-bot-widget')
 </body>
 </html>

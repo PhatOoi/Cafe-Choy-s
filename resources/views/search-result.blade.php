@@ -2023,5 +2023,6 @@
     </script>
 
 <script src="js/footer.js"></script>
+@include('components.ai-bot-widget')
 </body>
 </html>

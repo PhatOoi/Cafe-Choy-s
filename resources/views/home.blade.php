@@ -431,8 +431,8 @@
                         <h4>Khám phá</h4>
                         <ul>
                             <li><a href="#">Menu</a></li>
-                            <li><a href="#">Cửa hàng</a></li>
                             <li><a href="#">Đặt hàng online</a></li>
+                            <li><a href="#">Tuyển dụng</a></li>
                         </ul>
                     </div>
 
@@ -455,7 +455,7 @@
                         </div>
                         <div class="contact-item">
                             <i class="fas fa-clock"></i>
-                            <span>8:00 - 21:00</span>
+                            <span>8:00 - 24:00</span>
                         </div>
                     </div>
                 </div>
@@ -1105,6 +1105,7 @@
     <script src="js/google-map.js"></script>
     <script src="js/main.js"></script>
 
+@include('components.ai-bot-widget')
 </body>
 
 </html>
