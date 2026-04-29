@@ -130,6 +130,14 @@
         color: #fff;
         border-bottom-right-radius: 3px;
     }
+    .msg-image {
+        width: 100%;
+        max-width: 280px;
+        border-radius: 10px;
+        display: block;
+        margin-top: 8px;
+        box-shadow: 0 8px 16px rgba(0,0,0,.18);
+    }
     .msg-time { font-size: 10px; color: #b0b4c8; margin-top: 3px; }
 
     .chat-input-bar {
@@ -160,6 +168,12 @@
         transition: background .18s;
     }
     .chat-send-btn:hover { background: var(--primary-dark); }
+    .chat-image-hint {
+        min-height: 18px;
+        font-size: 11px;
+        color: #8a8fa8;
+        padding: 0 16px 10px;
+    }
 </style>
 @endsection
 
@@ -195,8 +209,11 @@
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-bar">
                 <input id="replyInput" type="text" placeholder="Nhập phản hồi..." onkeydown="if(event.key==='Enter')sendReply()">
+                <input id="replyImageInput" type="file" accept="image/*" style="display:none;">
+                <button class="chat-send-btn" type="button" title="Gửi ảnh" onclick="document.getElementById('replyImageInput').click()"><i class="fas fa-image"></i></button>
                 <button class="chat-send-btn" onclick="sendReply()"><i class="fas fa-paper-plane"></i></button>
             </div>
+            <div class="chat-image-hint" id="replyImageHint"></div>
         </div>
     </div>
 </div>
@@ -206,6 +223,21 @@
     var lastMsgId = 0;
     var convPoll = null;
     var msgPoll  = null;
+    var staffPastedImageFile = null;
+
+    function extractClipboardImage(event) {
+        var clipboardData = event.clipboardData || window.clipboardData;
+        if (!clipboardData || !clipboardData.items) return null;
+
+        for (var i = 0; i < clipboardData.items.length; i++) {
+            var item = clipboardData.items[i];
+            if (item.kind === 'file' && item.type.indexOf('image/') === 0) {
+                return item.getAsFile();
+            }
+        }
+
+        return null;
+    }
 
     // ── Load danh sách hội thoại ──
     function loadConversations() {
@@ -275,7 +307,12 @@
         var row = document.createElement('div');
         row.className = 'msg-row ' + m.sender;
         var time = m.created_at ? m.created_at.substring(11,16) : '';
-        row.innerHTML = '<div class="msg-bubble">' + escHtml(m.message) + '</div><span class="msg-time">' + time + '</span>';
+        var html = '<div class="msg-bubble">' + escHtml(m.message || '');
+        if (m.image_url) {
+            html += '<img class="msg-image" src="' + escAttr(m.image_url) + '" alt="Ảnh đính kèm" loading="lazy">';
+        }
+        html += '</div><span class="msg-time">' + time + '</span>';
+        row.innerHTML = html;
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
     }
@@ -283,27 +320,87 @@
     // ── Gửi phản hồi ──
     function sendReply() {
         var input = document.getElementById('replyInput');
+        var imageInput = document.getElementById('replyImageInput');
+        var imageHint = document.getElementById('replyImageHint');
         var text  = input.value.trim();
-        if (!text || !activeUserId) return;
+        var imageFile = imageInput && imageInput.files.length ? imageInput.files[0] : staffPastedImageFile;
+        if ((!text && !imageFile) || !activeUserId) return;
         input.value = '';
+
+        var formData = new FormData();
+        formData.append('message', text);
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
         fetch('/staff/chat/reply/' + activeUserId, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ message: text })
+            body: formData
         })
-        .then(r => r.json())
-        .then(function(data) {
-            appendMessage({ message: text, sender: 'staff', created_at: data.created_at });
+        .then(function (response) {
+            return response.json().then(function (data) {
+                return { ok: response.ok, data: data };
+            });
+        })
+        .then(function(result) {
+            if (!result.ok) {
+                alert(result.data && result.data.message ? result.data.message : 'Không thể gửi phản hồi.');
+                return;
+            }
+
+            var data = result.data;
+            appendMessage(data);
             if (data.id > lastMsgId) lastMsgId = data.id;
+
+            if (imageInput) {
+                imageInput.value = '';
+            }
+            staffPastedImageFile = null;
+
+            if (imageHint) {
+                imageHint.textContent = '';
+            }
         });
     }
 
     function escHtml(str) {
         return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function escAttr(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    var replyImageInput = document.getElementById('replyImageInput');
+    var replyInput = document.getElementById('replyInput');
+    var replyImageHint = document.getElementById('replyImageHint');
+
+    if (replyImageInput && replyImageHint) {
+        replyImageInput.addEventListener('change', function () {
+            var file = this.files && this.files.length ? this.files[0] : null;
+            staffPastedImageFile = null;
+            replyImageHint.textContent = file ? ('Đã chọn ảnh: ' + file.name) : '';
+        });
+    }
+
+    if (replyInput && replyImageHint) {
+        replyInput.addEventListener('paste', function (event) {
+            var pastedImage = extractClipboardImage(event);
+            if (!pastedImage) return;
+
+            event.preventDefault();
+            staffPastedImageFile = pastedImage;
+
+            if (replyImageInput) {
+                replyImageInput.value = '';
+            }
+
+            replyImageHint.textContent = 'Đã dán ảnh từ clipboard.';
+        });
     }
 
     // ── Khởi động ──

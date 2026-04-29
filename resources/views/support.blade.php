@@ -57,7 +57,7 @@
                     <li class="nav-item cart">
                         <a href="/cart" class="nav-link">
                             <span class="icon icon-shopping_cart"></span>
-                            <span class="bag"><small id="cart-count">0</small></span>
+                            <span class="bag"><small id="cart-count">{{ $cartCount ?? 0 }}</small></span>
                         </a>
                     </li>
 
@@ -242,10 +242,15 @@
                             </div>
                             <div class="support-chat-input-row">
                                 <input id="supportChatInput" type="text" placeholder="Nhập tin nhắn..." onkeydown="if(event.key==='Enter')sendSupportMessage()">
+                                <input id="supportChatImageInput" type="file" accept="image/*" style="display:none;">
+                                <button type="button" id="supportChatImageBtn" title="Gửi ảnh" onclick="document.getElementById('supportChatImageInput').click()">
+                                    <i class="fas fa-image"></i>
+                                </button>
                                 <button type="button" id="supportChatSendBtn" onclick="sendSupportMessage()">
                                     <i class="fas fa-paper-plane"></i>
                                 </button>
                             </div>
+                            <div id="supportChatImageHint" class="support-chat-image-hint"></div>
                         </div>
                     @else
                         <div class="support-chat-login-box">
@@ -643,6 +648,23 @@
             border-bottom-left-radius: 3px;
         }
 
+        .support-chat-image {
+            width: 100%;
+            max-width: 280px;
+            border-radius: 10px;
+            display: block;
+            margin-top: 8px;
+            box-shadow: 0 8px 18px rgba(0,0,0,.2);
+        }
+
+        .support-chat-row.customer .support-chat-image {
+            margin-left: auto;
+        }
+
+        .support-chat-row.staff .support-chat-image {
+            margin-right: auto;
+        }
+
         .support-chat-time {
             font-size: 10px;
             color: rgba(255,255,255,.38);
@@ -688,6 +710,13 @@
         .support-chat-input-row button:hover {
             transform: translateY(-1px);
             box-shadow: 0 16px 26px rgba(200,162,107,.26);
+        }
+
+        .support-chat-image-hint {
+            min-height: 18px;
+            padding: 0 14px 12px;
+            font-size: 12px;
+            color: rgba(255,255,255,.62);
         }
 
         .support-chat-login-box {
@@ -763,6 +792,21 @@
         @auth
         var supportChatLastId = 0;
         var supportChatPoller = null;
+        var supportPastedImageFile = null;
+
+        function extractClipboardImage(event) {
+            var clipboardData = event.clipboardData || window.clipboardData;
+            if (!clipboardData || !clipboardData.items) return null;
+
+            for (var i = 0; i < clipboardData.items.length; i++) {
+                var item = clipboardData.items[i];
+                if (item.kind === 'file' && item.type.indexOf('image/') === 0) {
+                    return item.getAsFile();
+                }
+            }
+
+            return null;
+        }
 
         function renderSupportChatEmpty() {
             return '<div class="support-chat-empty">Bắt đầu hội thoại. Nhân viên sẽ phản hồi sớm nhất có thể.</div>';
@@ -790,7 +834,16 @@
 
             var bubble = document.createElement('div');
             bubble.className = 'support-chat-bubble';
-            bubble.textContent = msg.message;
+            bubble.textContent = msg.message || '';
+
+            if (msg.image_url) {
+                var image = document.createElement('img');
+                image.className = 'support-chat-image';
+                image.src = msg.image_url;
+                image.alt = 'Ảnh đính kèm';
+                image.loading = 'lazy';
+                bubble.appendChild(image);
+            }
 
             var time = document.createElement('div');
             time.className = 'support-chat-time';
@@ -827,30 +880,81 @@
 
         function sendSupportMessage() {
             var input = document.getElementById('supportChatInput');
+            var imageInput = document.getElementById('supportChatImageInput');
+            var imageHint = document.getElementById('supportChatImageHint');
             if (!input) return;
 
             var message = input.value.trim();
-            if (!message) return;
+            var imageFile = imageInput && imageInput.files.length ? imageInput.files[0] : supportPastedImageFile;
+            if (!message && !imageFile) return;
 
             input.value = '';
+
+            var formData = new FormData();
+            formData.append('message', message);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
 
             fetch('{{ route("chat.send") }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ message: message })
+                body: formData
             })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                appendSupportMessage({
-                    message: message,
-                    sender: 'customer',
-                    created_at: data.created_at
+            .then(function (res) {
+                return res.json().then(function (data) {
+                    return { ok: res.ok, data: data };
                 });
+            })
+            .then(function (result) {
+                if (!result.ok) {
+                    alert(result.data && result.data.message ? result.data.message : 'Không thể gửi tin nhắn.');
+                    return;
+                }
+
+                var data = result.data;
+                appendSupportMessage(data);
                 if (data.id > supportChatLastId) supportChatLastId = data.id;
+
+                if (imageInput) {
+                    imageInput.value = '';
+                }
+                supportPastedImageFile = null;
+
+                if (imageHint) {
+                    imageHint.textContent = '';
+                }
+            });
+        }
+
+        var supportChatImageInput = document.getElementById('supportChatImageInput');
+        var supportChatInput = document.getElementById('supportChatInput');
+        var supportChatImageHint = document.getElementById('supportChatImageHint');
+
+        if (supportChatImageInput && supportChatImageHint) {
+            supportChatImageInput.addEventListener('change', function () {
+                var file = this.files && this.files.length ? this.files[0] : null;
+                supportPastedImageFile = null;
+                supportChatImageHint.textContent = file ? ('Đã chọn ảnh: ' + file.name) : '';
+            });
+        }
+
+        if (supportChatInput && supportChatImageHint) {
+            supportChatInput.addEventListener('paste', function (event) {
+                var pastedImage = extractClipboardImage(event);
+                if (!pastedImage) return;
+
+                event.preventDefault();
+                supportPastedImageFile = pastedImage;
+
+                if (supportChatImageInput) {
+                    supportChatImageInput.value = '';
+                }
+
+                supportChatImageHint.textContent = 'Đã dán ảnh từ clipboard.';
             });
         }
 

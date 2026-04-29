@@ -160,7 +160,7 @@
                     </div>
                     <div class="history-summary-card">
                         <span>Tổng chi tiêu</span>
-                        <strong>{{ number_format((float) $orders->sum('final_price'), 0, ',', '.') }} đ</strong>
+                        <strong>{{ number_format((float) $orders->where('status', 'delivered')->sum('final_price'), 0, ',', '.') }} đ</strong>
                     </div>
                 </div>
 

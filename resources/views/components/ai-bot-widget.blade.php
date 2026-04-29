@@ -68,10 +68,15 @@
                 maxlength="500"
                 onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); aiBotSend(); }"
             >
+            <input id="aiBotHumanImageInput" type="file" accept="image/*" style="display:none;">
+            <button id="aiBotImageBtn" class="aibot-hidden" type="button" onclick="document.getElementById('aiBotHumanImageInput').click()" title="Gửi ảnh cho nhân viên">
+                <i class="fas fa-image"></i>
+            </button>
             <button id="aiBotSendBtn" onclick="aiBotSend()">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
+        <div id="aiBotAttachmentHint" class="aibot-attachment-hint aibot-hidden"></div>
 
         {{-- Mode bar --}}
         <div class="aibot-modebar">
@@ -310,6 +315,15 @@
     color: #fff;
 }
 
+.aibot-msg-image {
+    width: 100%;
+    max-width: 220px;
+    border-radius: 10px;
+    display: block;
+    margin-top: 8px;
+    box-shadow: 0 8px 16px rgba(0,0,0,.22);
+}
+
 .aibot-msg-row.aibot-ai .aibot-bubble,
 .aibot-msg-row.aibot-human .aibot-bubble {
     background: rgba(255,255,255,.1);
@@ -448,6 +462,13 @@
     background: linear-gradient(135deg, #4e9eff, #2a6bcf);
 }
 
+.aibot-attachment-hint {
+    min-height: 18px;
+    padding: 0 12px 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,.55);
+}
+
 /* Mode bar */
 .aibot-modebar {
     display: flex;
@@ -498,7 +519,8 @@
     var humanPollInterval = null;
     var humanLastId = 0;
     var isSending = false;
-    var pendingOrderDraft = null;
+    var humanImageFile = null;
+    var waitingEscalateChoice = false;
 
     window.aiBotToggle = function () {
         var panel = document.getElementById('aiBotPanel');
@@ -531,15 +553,35 @@
         if (isSending) return;
         var input = document.getElementById('aiBotInput');
         var msg = input.value.trim();
-        if (!msg) return;
-        input.value = '';
-        isSending = true;
-        document.getElementById('aiBotSendBtn').disabled = true;
-
-        appendMsg('user', escHtml(msg));
-        hideEscalate();
 
         if (mode === 'ai') {
+            if (!msg) return;
+
+            if (waitingEscalateChoice) {
+                var normalized = msg.toLowerCase();
+                if (/^(co|có|ok|oke|yes|y|dong y|đồng ý)$/.test(normalized)) {
+                    input.value = '';
+                    appendMsg('user', escHtml(msg));
+                    aiBotSwitchToHuman();
+                    return;
+                }
+
+                if (/^(khong|không|ko|k|no|khong can|không cần)$/.test(normalized)) {
+                    input.value = '';
+                    appendMsg('user', escHtml(msg));
+                    hideEscalate();
+                    appendMsg('ai', 'Dạ oke anh/chị, bé tiếp tục hỗ trợ trong phạm vi thông tin của quán nha.');
+                    return;
+                }
+            }
+
+            input.value = '';
+            isSending = true;
+            document.getElementById('aiBotSendBtn').disabled = true;
+
+            appendMsg('user', escHtml(msg));
+            hideEscalate();
+
             showTyping();
             fetch('/widget/ai-send', {
                 method: 'POST',
@@ -551,10 +593,6 @@
                 hideTyping();
                 appendMsg('ai', escHtml(data.reply || 'Xin lỗi, thử lại sau.'));
                 if (data.escalate) showEscalate();
-                if (data.orderDraft) {
-                    pendingOrderDraft = data.orderDraft;
-                    renderOrderDraftCard(data.orderDraft);
-                }
             })
             .catch(function () {
                 hideTyping();
@@ -567,12 +605,46 @@
             });
         } else {
             // Human mode
+            var fileInput = document.getElementById('aiBotHumanImageInput');
+            var attachment = (fileInput && fileInput.files && fileInput.files.length) ? fileInput.files[0] : humanImageFile;
+            if (!msg && !attachment) return;
+
+            input.value = '';
+            isSending = true;
+            document.getElementById('aiBotSendBtn').disabled = true;
+            hideEscalate();
+
+            var formData = new FormData();
+            formData.append('message', msg);
+            if (attachment) {
+                formData.append('image', attachment);
+            }
+
             fetch('/chat/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-                body: JSON.stringify({ message: msg }),
+                headers: { 'X-CSRF-TOKEN': CSRF },
+                body: formData,
             })
-            .then(function () {})
+            .then(function (r) {
+                return r.json().then(function (data) {
+                    return { ok: r.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (!result.ok) {
+                    appendMsg('ai', escHtml((result.data && result.data.message) ? result.data.message : 'Không thể gửi tin nhắn.'));
+                    return;
+                }
+
+                appendHumanMessage('user', result.data);
+                if (result.data.id > humanLastId) humanLastId = result.data.id;
+
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                humanImageFile = null;
+                setAttachmentHint('');
+            })
             .catch(function () {
                 appendMsg('ai', 'Lỗi gửi tin nhắn. Vui lòng thử lại.');
             })
@@ -606,57 +678,10 @@
         container.innerHTML = '';
         appendMsg('ai', 'Hội thoại đã được xóa. Tôi có thể giúp gì cho bạn?');
         hideEscalate();
-        pendingOrderDraft = null;
         fetch('/widget/ai-clear', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF },
         });
-    };
-
-    window.aiBotConfirmOrderDraft = function () {
-        if (!pendingOrderDraft) {
-            appendMsg('ai', 'Không tìm thấy bill nháp. Vui lòng yêu cầu AI tạo lại bill.');
-            return;
-        }
-
-        if (!isLoggedIn) {
-            appendMsg('ai', 'Bạn cần <a href="/login" style="color:#c8a26b;">đăng nhập</a> để xác nhận đặt đơn.');
-            return;
-        }
-
-        showTyping();
-        fetch('/widget/ai-order/confirm', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-            body: JSON.stringify({}),
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            hideTyping();
-            if (data.success) {
-                pendingOrderDraft = null;
-                appendMsg('ai', escHtml(data.message || 'Đặt đơn thành công.'));
-
-                if (data.payment_method === 'bank_transfer') {
-                    if (data.qr && data.qr.image_url) {
-                        renderQrPaymentCard(data.qr);
-                        appendMsg('ai', 'Sau khi chuyển khoản xong, bạn nhắn "đã chuyển khoản" để tôi hỗ trợ kiểm tra nhanh cho bạn nhé.');
-                    } else {
-                        appendMsg('ai', 'Đơn của bạn đã tạo ở trạng thái chờ xác nhận chuyển khoản. Vui lòng vào giỏ hàng để quét QR và xác nhận thanh toán.');
-                    }
-                }
-            } else {
-                appendMsg('ai', escHtml(data.message || 'Không thể đặt đơn. Vui lòng chỉnh lại bill.'));
-            }
-        })
-        .catch(function () {
-            hideTyping();
-            appendMsg('ai', 'Lỗi khi xác nhận đặt đơn. Vui lòng thử lại.');
-        });
-    };
-
-    window.aiBotEditOrderDraft = function () {
-        appendMsg('ai', 'Đã rõ. Bạn hãy nhắn phần cần chỉnh (món/số lượng/size/topping/thanh toán), tôi sẽ cập nhật bill nháp mới cho bạn.');
     };
 
     // ── Private helpers ──────────────────────────────────────
@@ -669,6 +694,8 @@
         var dot      = document.getElementById('aiBotStatusDot');
         var statusTx = document.getElementById('aiBotStatusText');
         var inputRow = document.getElementById('aiBotInputRow');
+        var imageBtn = document.getElementById('aiBotImageBtn');
+        var imageInput = document.getElementById('aiBotHumanImageInput');
 
         if (aiBtn) aiBtn.classList.toggle('aibot-mode-active', mode === 'ai');
         if (humanBtn) humanBtn.classList.toggle('aibot-mode-active', mode === 'human');
@@ -680,6 +707,10 @@
             dot.classList.remove('aibot-dot-human');
             statusTx.textContent = 'Trợ lý AI';
             inputRow.classList.remove('aibot-human-input');
+            if (imageBtn) imageBtn.classList.add('aibot-hidden');
+            if (imageInput) imageInput.value = '';
+            humanImageFile = null;
+            setAttachmentHint('');
         } else {
             avatar.innerHTML = '<i class="fas fa-headset"></i>';
             avatar.classList.add('aibot-human-avatar');
@@ -687,7 +718,25 @@
             dot.classList.add('aibot-dot-human');
             statusTx.textContent = 'Hỗ trợ trực tiếp';
             inputRow.classList.add('aibot-human-input');
+            if (imageBtn) imageBtn.classList.remove('aibot-hidden');
         }
+    }
+
+    function setAttachmentHint(text) {
+        var hint = document.getElementById('aiBotAttachmentHint');
+        if (!hint) return;
+
+        hint.textContent = text || '';
+        hint.classList.toggle('aibot-hidden', !text);
+    }
+
+    function appendHumanMessage(role, msg) {
+        var text = msg && msg.message ? escHtml(String(msg.message)) : '';
+        var imageHtml = (msg && msg.image_url)
+            ? '<img class="aibot-msg-image" src="' + escAttr(String(msg.image_url)) + '" alt="Ảnh đính kèm" loading="lazy">'
+            : '';
+
+        appendMsg(role, text + imageHtml);
     }
 
     function appendMsg(role, html) {
@@ -714,62 +763,6 @@
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
         return row;
-    }
-
-    function renderOrderDraftCard(draft) {
-        var items = Array.isArray(draft.items) ? draft.items : [];
-        if (items.length === 0) return;
-
-        var lines = items.map(function (item) {
-            var parts = [];
-            if (item.size) parts.push('Size ' + escHtml(String(item.size)));
-            if (item.sugar) parts.push('Đường ' + escHtml(String(item.sugar)));
-            if (item.ice) parts.push('Đá ' + escHtml(String(item.ice)));
-            if (Array.isArray(item.toppings) && item.toppings.length) {
-                parts.push('Topping: ' + escHtml(item.toppings.join(', ')));
-            }
-
-            var optionText = parts.length ? '<br><small style="opacity:.75">' + parts.join(' | ') + '</small>' : '';
-            return '<li style="margin-bottom:6px;">' + (item.qty || 1) + ' x ' + escHtml(item.name || 'Món') + optionText + '</li>';
-        }).join('');
-
-        var paymentLabel = draft.payment_method === 'bank_transfer' ? 'Chuyển khoản QR' : 'Tiền mặt';
-
-        var html = '' +
-            '<div style="border:1px solid rgba(200,162,107,.35);border-radius:10px;padding:10px 12px;background:rgba(200,162,107,.07);">' +
-            '<div style="font-weight:600;margin-bottom:6px;">Bill nháp - vui lòng xác nhận</div>' +
-            '<ul style="margin:0 0 8px 18px;padding:0;">' + lines + '</ul>' +
-            '<div style="font-size:12px;opacity:.9;margin-bottom:10px;">Thanh toán: ' + paymentLabel + '</div>' +
-            '<div style="display:flex;gap:8px;">' +
-            '<button onclick="aiBotConfirmOrderDraft()" style="flex:1;border:none;border-radius:8px;padding:7px 8px;background:linear-gradient(135deg,#4caf50,#2f8e3a);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Xác nhận đặt đơn</button>' +
-            '<button onclick="aiBotEditOrderDraft()" style="flex:1;border:none;border-radius:8px;padding:7px 8px;background:rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Chỉnh lại bill</button>' +
-            '</div>' +
-            '</div>';
-
-        appendMsg('ai', html);
-    }
-
-    function renderQrPaymentCard(qr) {
-        var amount = Number(qr.amount || 0);
-        var amountText = Number.isFinite(amount) ? amount.toLocaleString('vi-VN') + ' đ' : '0 đ';
-
-        var html = '' +
-            '<div style="border:1px solid rgba(76,175,80,.45);border-radius:12px;padding:12px;background:rgba(76,175,80,.08);">' +
-            '<div style="font-weight:700;margin-bottom:8px;">Mã QR thanh toán</div>' +
-            '<div style="text-align:center;margin-bottom:10px;">' +
-            '<img src="' + escHtml(String(qr.image_url || '')) + '" alt="QR thanh toán" style="width:180px;max-width:100%;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:#fff;padding:6px;">' +
-            '</div>' +
-            '<div style="font-size:12px;line-height:1.65;">' +
-            '<div><b>Ngân hàng:</b> ' + escHtml(String(qr.bank_name || 'Vietcombank')) + '</div>' +
-            '<div><b>Thụ hưởng:</b> ' + escHtml(String(qr.account_name || '')) + '</div>' +
-            '<div><b>Số tài khoản:</b> ' + escHtml(String(qr.account_number || '')) + '</div>' +
-            '<div><b>Số tiền:</b> ' + escHtml(amountText) + '</div>' +
-            '<div><b>Nội dung CK:</b> ' + escHtml(String(qr.ref_code || '')) + '</div>' +
-            '</div>' +
-            '<div style="margin-top:8px;font-size:11px;opacity:.85;">Vui lòng giữ đúng nội dung chuyển khoản để nhân viên xác nhận nhanh hơn.</div>' +
-            '</div>';
-
-        appendMsg('ai', html);
     }
 
     function showTyping() {
@@ -799,10 +792,12 @@
 
     function showEscalate() {
         document.getElementById('aiBotEscalatePrompt').classList.remove('aibot-hidden');
+        waitingEscalateChoice = true;
     }
 
     function hideEscalate() {
         document.getElementById('aiBotEscalatePrompt').classList.add('aibot-hidden');
+        waitingEscalateChoice = false;
     }
 
     function escHtml(str) {
@@ -811,6 +806,14 @@
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/\n/g, '<br>');
+    }
+
+    function escAttr(str) {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 
     function startHumanPoll() {
@@ -834,12 +837,45 @@
             if (data.reset) { humanLastId = 0; return; }
             (data.messages || []).forEach(function (msg) {
                 if (msg.sender === 'staff') {
-                    appendMsg('human', escHtml(msg.message));
+                    appendHumanMessage('human', msg);
                 }
                 if (msg.id > humanLastId) humanLastId = msg.id;
             });
         })
         .catch(function () {});
+    }
+
+    var aiBotInput = document.getElementById('aiBotInput');
+    var aiBotHumanImageInput = document.getElementById('aiBotHumanImageInput');
+
+    if (aiBotHumanImageInput) {
+        aiBotHumanImageInput.addEventListener('change', function () {
+            var file = (this.files && this.files.length) ? this.files[0] : null;
+            humanImageFile = null;
+            setAttachmentHint(file ? ('Đã chọn ảnh: ' + file.name) : '');
+        });
+    }
+
+    if (aiBotInput) {
+        aiBotInput.addEventListener('paste', function (event) {
+            if (mode !== 'human') return;
+
+            var clipboardData = event.clipboardData || window.clipboardData;
+            if (!clipboardData || !clipboardData.items) return;
+
+            for (var i = 0; i < clipboardData.items.length; i++) {
+                var item = clipboardData.items[i];
+                if (item.kind === 'file' && item.type.indexOf('image/') === 0) {
+                    event.preventDefault();
+                    humanImageFile = item.getAsFile();
+                    if (aiBotHumanImageInput) {
+                        aiBotHumanImageInput.value = '';
+                    }
+                    setAttachmentHint('Đã dán ảnh từ clipboard.');
+                    break;
+                }
+            }
+        });
     }
 })();
 </script>

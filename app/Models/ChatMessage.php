@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ChatMessage extends Model
 {
     // Các cột cho phép mass assignment khi tạo tin nhắn qua ChatController.
-    protected $fillable = ['user_id', 'message', 'sender', 'replied_by', 'is_read'];
+    protected $fillable = ['user_id', 'message', 'image_path', 'sender', 'replied_by', 'is_read'];
 
     // Khách hàng chủ sở hữu cuộc trò chuyện này.
     public function user()

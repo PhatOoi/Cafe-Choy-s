@@ -9,6 +9,17 @@ use Illuminate\Support\Facades\Auth;
 
 class ChatController extends Controller
 {
+    private function formatMessage(ChatMessage $message): array
+    {
+        return [
+            'id' => $message->id,
+            'message' => $message->message,
+            'image_url' => $message->image_path ? asset('storage/' . $message->image_path) : null,
+            'sender' => $message->sender,
+            'created_at' => $message->created_at,
+        ];
+    }
+
     // ── CUSTOMER ──────────────────────────────────────────────
 
     // Lấy tin nhắn của cuộc trò chuyện khách hàng hiện tại (dùng để polling)
@@ -20,7 +31,7 @@ class ChatController extends Controller
         $messages = ChatMessage::where('user_id', $userId)
             ->where('id', '>', $after)
             ->orderBy('id')
-            ->get(['id', 'message', 'sender', 'created_at']);
+            ->get(['id', 'message', 'image_path', 'sender', 'created_at']);
 
         // Nếu client đang giữ lịch sử (after > 0) nhưng DB đã không còn tin nào,
         // trả cờ reset để frontend xóa ngay lịch sử cũ đang hiển thị.
@@ -35,26 +46,39 @@ class ChatController extends Controller
 
         return response()->json([
             'reset' => $shouldReset,
-            'messages' => $messages,
+            'messages' => $messages->map(fn (ChatMessage $message) => $this->formatMessage($message))->values(),
         ]);
     }
 
     // Khách hàng gửi tin nhắn
     public function send(Request $request)
     {
-        $request->validate(['message' => 'required|string|max:1000']);
+        $validated = $request->validate([
+            'message' => 'nullable|string|max:1000',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $text = trim((string) ($validated['message'] ?? ''));
+        $imagePath = $request->hasFile('image') ? $request->file('image')->store('chat-images', 'public') : null;
+
+        if ($text === '' && !$imagePath) {
+            return response()->json([
+                'message' => 'Vui lòng nhập nội dung hoặc chọn ảnh để gửi.',
+            ], 422);
+        }
 
         $user = Auth::user();
         $msg = ChatMessage::create([
             'user_id' => $user->id,
-            'message' => $request->message,
+            'message' => $text,
+            'image_path' => $imagePath,
             'sender'  => 'customer',
         ]);
 
         // Update lần hoạt động cuối của khách hàng
         $user->update(['last_chat_activity_at' => now()]);
 
-        return response()->json(['id' => $msg->id, 'created_at' => $msg->created_at]);
+        return response()->json($this->formatMessage($msg));
     }
 
     // ── STAFF ─────────────────────────────────────────────────
@@ -79,7 +103,7 @@ class ChatController extends Controller
         $messages = ChatMessage::where('user_id', $userId)
             ->where('id', '>', $after)
             ->orderBy('id')
-            ->get(['id', 'message', 'sender', 'created_at']);
+            ->get(['id', 'message', 'image_path', 'sender', 'created_at']);
 
         // Đánh dấu đã đọc khi staff mở hội thoại
         ChatMessage::where('user_id', $userId)
@@ -87,25 +111,38 @@ class ChatController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true]);
 
-        return response()->json($messages);
+        return response()->json($messages->map(fn (ChatMessage $message) => $this->formatMessage($message))->values());
     }
 
     // Staff phản hồi khách
     public function reply(Request $request, $userId)
     {
-        $request->validate(['message' => 'required|string|max:1000']);
+        $validated = $request->validate([
+            'message' => 'nullable|string|max:1000',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $text = trim((string) ($validated['message'] ?? ''));
+        $imagePath = $request->hasFile('image') ? $request->file('image')->store('chat-images', 'public') : null;
+
+        if ($text === '' && !$imagePath) {
+            return response()->json([
+                'message' => 'Vui lòng nhập nội dung hoặc chọn ảnh để gửi.',
+            ], 422);
+        }
 
         // Chắc chắn user tồn tại
         User::findOrFail($userId);
 
         $msg = ChatMessage::create([
             'user_id'    => $userId,
-            'message'    => $request->message,
+            'message'    => $text,
+            'image_path' => $imagePath,
             'sender'     => 'staff',
             'replied_by' => Auth::id(),
         ]);
 
-        return response()->json(['id' => $msg->id, 'created_at' => $msg->created_at]);
+        return response()->json($this->formatMessage($msg));
     }
 
     // Tổng số tin nhắn chưa đọc từ khách (dùng cho badge sidebar)

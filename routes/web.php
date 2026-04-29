@@ -49,7 +49,6 @@ Route::get('/support', fn() => view('support'))->name('support');
 // Widget AI — public, không cần đăng nhập (dùng cho floating chatbot trên mọi trang).
 Route::post('/widget/ai-send',  [AiChatController::class, 'widgetSend'])->name('widget.ai-send');
 Route::post('/widget/ai-clear', [AiChatController::class, 'widgetClear'])->name('widget.ai-clear');
-Route::post('/widget/ai-order/confirm', [AiChatController::class, 'widgetConfirmOrder'])->name('widget.ai-order.confirm');
 
 // Route debug test DB — chỉ bật ở local, không dùng trên production.
 Route::get('/test-db', function () {
