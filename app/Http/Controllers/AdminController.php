@@ -21,13 +21,32 @@ class AdminController extends Controller
     // Đơn giá theo giờ dùng cho bảng lương tạm tính nội bộ.
     private const PAYROLL_RATES = [
         'full_time' => 32000,
-        'part_time' => 28000,
+        'part_time' => 25000,
     ];
 
     // Đơn giá tăng ca theo loại nhân viên.
     private const OVERTIME_RATES = [
         'full_time' => 40000,
         'part_time' => 30000,
+    ];
+
+    private const HOLIDAY_HOURLY_MULTIPLIER = 4;
+
+    // Ngày lễ cố định theo dương lịch (MM-DD).
+    private const FIXED_HOLIDAYS = [
+        '01-01', // Tết Dương lịch
+        '04-30', // Giải phóng miền Nam
+        '05-01', // Quốc tế lao động
+        '09-02', // Quốc khánh
+    ];
+
+    // Các ngày lễ/tết theo năm (cập nhật thêm mỗi năm khi cần).
+    private const SPECIAL_HOLIDAYS = [
+        '2026-02-16',
+        '2026-02-17',
+        '2026-02-18',
+        '2026-02-19',
+        '2026-02-20',
     ];
 
     // Slot làm việc cố định theo loại nhân viên để render bảng tuần giống staff.
@@ -590,6 +609,8 @@ class AdminController extends Controller
         $monthInput = $request->input('month', now()->format('Y-m'));
         $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
+        $now = now();
+        $today = $now->copy()->startOfDay();
 
         // Lấy toàn bộ đăng ký trong tháng để tổng hợp bảng lương.
         $scheduleQuery = WorkScheduleRegistration::with('staff:id,name,email,employment_type')
@@ -603,14 +624,32 @@ class AdminController extends Controller
 
         $scheduleRows = $scheduleQuery->get();
 
-        $payrollSourceRows = $scheduleRows->where('status', 'approved');
+        // Chỉ cộng lương khi ca đã hoàn thành (đã qua giờ kết thúc ca) và không phải ca vắng.
+        $payrollSourceRows = $scheduleRows
+            ->whereIn('status', ['approved', 'closed'])
+            ->filter(function ($row) use ($now, $today) {
+                $workDate = Carbon::parse($row->work_date)->startOfDay();
+                $endTime = substr((string) $row->end_time, 0, 5);
+                $shiftEndAt = Carbon::parse($workDate->toDateString() . ' ' . $endTime);
 
-        // Tổng hợp giờ tăng ca theo nhân viên trong tháng, tính các đơn chưa bị từ chối.
+                if ($workDate->lt($today)) {
+                    return true;
+                }
+
+                return $workDate->isSameDay($today) && $now->greaterThanOrEqualTo($shiftEndAt);
+            })
+            ->reject(function ($row) {
+                $note = strtoupper((string) ($row->note ?? ''));
+                return str_contains($note, '[ABSENT]');
+            });
+
+        // Tổng hợp giờ tăng ca đã duyệt và ngày tăng ca đã kết thúc.
         $overtimeQuery = Overtime::query()
-            ->selectRaw('staff_id, SUM(hours) as total_overtime_hours')
+            ->select(['staff_id', 'overtime_date', 'hours'])
             ->whereBetween('overtime_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->where('status', 'approved')
-            ->groupBy('staff_id');
+            ->whereDate('overtime_date', '<', $today->toDateString())
+            ->orderBy('overtime_date');
 
         if ($request->filled('employment_type')) {
             $overtimeQuery->whereHas('staff', function ($query) use ($request) {
@@ -618,25 +657,67 @@ class AdminController extends Controller
             });
         }
 
-        $overtimeByStaff = $overtimeQuery->pluck('total_overtime_hours', 'staff_id');
+        $overtimeByStaff = $overtimeQuery
+            ->get()
+            ->groupBy('staff_id')
+            ->map(function ($rows) {
+                $normalHours = 0.0;
+                $holidayHours = 0.0;
+
+                foreach ($rows as $row) {
+                    $hours = (float) $row->hours;
+                    $isHoliday = $this->isHolidayDate(Carbon::parse($row->overtime_date));
+
+                    if ($isHoliday) {
+                        $holidayHours += $hours;
+                    } else {
+                        $normalHours += $hours;
+                    }
+                }
+
+                return [
+                    'normal_hours' => round($normalHours, 2),
+                    'holiday_hours' => round($holidayHours, 2),
+                ];
+            });
 
         $payrollRows = $payrollSourceRows
             ->groupBy('staff_id')
             ->map(function ($rows) use ($overtimeByStaff) {
                 $staff = $rows->first()->staff;
-                $totalMinutes = $rows->sum(fn ($row) => $this->calculateWorkMinutes((string) $row->start_time, (string) $row->end_time));
+                $normalMinutes = 0;
+                $holidayMinutes = 0;
+
+                foreach ($rows as $row) {
+                    $minutes = $this->calculateWorkMinutes((string) $row->start_time, (string) $row->end_time);
+                    $isHoliday = $this->isHolidayDate(Carbon::parse($row->work_date));
+
+                    if ($isHoliday) {
+                        $holidayMinutes += $minutes;
+                    } else {
+                        $normalMinutes += $minutes;
+                    }
+                }
+
                 $employmentType = $rows->first()->employment_type;
                 $hourlyRate = self::PAYROLL_RATES[$employmentType] ?? 0;
                 $overtimeRate = self::OVERTIME_RATES[$employmentType] ?? 0;
-                $overtimeHours = round((float) ($overtimeByStaff[(int) $staff->id] ?? 0), 2);
-                $baseSalary = round(($totalMinutes / 60) * $hourlyRate);
-                $overtimeSalary = round($overtimeHours * $overtimeRate);
+                $staffOvertime = $overtimeByStaff[(int) $staff->id] ?? ['normal_hours' => 0, 'holiday_hours' => 0];
+                $normalOvertimeHours = (float) ($staffOvertime['normal_hours'] ?? 0);
+                $holidayOvertimeHours = (float) ($staffOvertime['holiday_hours'] ?? 0);
+                $overtimeHours = round($normalOvertimeHours + $holidayOvertimeHours, 2);
+
+                $baseSalary = round(($normalMinutes / 60) * $hourlyRate)
+                    + round(($holidayMinutes / 60) * $hourlyRate * self::HOLIDAY_HOURLY_MULTIPLIER);
+
+                $overtimeSalary = round($normalOvertimeHours * $overtimeRate)
+                    + round($holidayOvertimeHours * $overtimeRate * self::HOLIDAY_HOURLY_MULTIPLIER);
 
                 return [
                     'staff' => $staff,
                     'employment_type' => $employmentType,
                     'shift_count' => $rows->count(),
-                    'total_hours' => round($totalMinutes / 60, 2),
+                    'total_hours' => round(($normalMinutes + $holidayMinutes) / 60, 2),
                     'hourly_rate' => $hourlyRate,
                     'overtime_hours' => $overtimeHours,
                     'overtime_rate' => $overtimeRate,
@@ -648,8 +729,7 @@ class AdminController extends Controller
             ->values();
 
         $payrollStats = [
-            'eligible_shift_count' => $payrollSourceRows->count(),
-            'approved_count' => $payrollSourceRows->count(),
+            'completed_shift_count' => $payrollSourceRows->count(),
             'gross_salary_total' => $payrollRows->sum('gross_salary'),
         ];
 
@@ -993,6 +1073,15 @@ class AdminController extends Controller
         $minutes = $start->diffInMinutes($end);
 
         return substr($endTime, 0, 5) === '23:59' ? $minutes + 1 : $minutes;
+    }
+
+    private function isHolidayDate(Carbon $date): bool
+    {
+        $dateKey = $date->toDateString();
+        $monthDayKey = $date->format('m-d');
+
+        return in_array($monthDayKey, self::FIXED_HOLIDAYS, true)
+            || in_array($dateKey, self::SPECIAL_HOLIDAYS, true);
     }
 
     // Resolve slot key theo nhóm nhân viên để map dữ liệu vào bảng tuần.

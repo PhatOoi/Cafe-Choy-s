@@ -102,8 +102,8 @@
     <div class="stat-card">
         <div class="stat-icon si-gold"><i class="fas fa-check-circle"></i></div>
         <div>
-            <div class="stat-value">{{ $payrollStats['approved_count'] }}</div>
-            <div class="stat-label">Ca đã duyệt</div>
+            <div class="stat-value">{{ $payrollStats['completed_shift_count'] }}</div>
+            <div class="stat-label">Ca đã hoàn thành</div>
         </div>
     </div>
     <div class="stat-card">

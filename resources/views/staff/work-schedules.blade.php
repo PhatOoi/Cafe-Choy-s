@@ -363,23 +363,17 @@
         @endif
     </div>
 
-    <div class="week-summary">
-        @if($isAutoClosedAtNight)
-            Bảng đăng ký giờ làm tự động đóng sau 22:00. Vui lòng quay lại đăng ký vào ngày mai.
-        @elseif($isScheduleBoardLocked)
-            Bảng đăng ký giờ làm tuần này đã được admin đóng lúc {{ optional($weekBoardLock->locked_at)?->format('d/m/Y H:i') }}
-            @if(optional($weekBoardLock->locker)->name)
-                bởi {{ $weekBoardLock->locker->name }}
+    @if(!$isScheduleBoardLocked)
+        <div class="week-summary">
+            @if(!$currentStaff->employment_type)
+                Tài khoản của bạn chưa được admin gán loại nhân viên. Vui lòng liên hệ admin để được gán full-time hoặc part-time trước khi đăng ký.
+            @elseif($currentStaff->employment_type === 'part_time')
+                Bảng đăng ký giờ làm sẽ được đóng vào 22h00 tối nay. Slot part-time: 8h-12h, 12h-16h, 16h-20h, 20h-24h. Mỗi slot được tối đa 2 nhân viên part-time chọn trong cùng ngày.
+            @else
+                Bảng đăng ký giờ làm sẽ được đóng vào 22h00 tối nay. Slot full-time: 8h-16h, 16h-24h. Mỗi slot chỉ một nhân viên full-time được chọn.
             @endif
-            . Bạn không thể đăng ký thêm.
-        @elseif(!$currentStaff->employment_type)
-            Tài khoản của bạn chưa được admin gán loại nhân viên. Vui lòng liên hệ admin để được gán full-time hoặc part-time trước khi đăng ký.
-        @elseif($currentStaff->employment_type === 'part_time')
-            Slot part-time: 8h-12h, 12h-16h, 16h-20h, 20h-24h. Mỗi slot được tối đa 2 nhân viên part-time chọn trong cùng ngày.
-        @else
-            Slot full-time: 8h-16h, 16h-24h. Mỗi slot chỉ một nhân viên full-time được chọn.
-        @endif
-    </div>
+        </div>
+    @endif
 
     <div class="week-calendar-wrap">
         <table class="week-calendar">
@@ -413,11 +407,7 @@
                                     $isSlotFull = count($assignments) >= $slotCapacity;
                                 @endphp
                                 <td>
-                                    @if($isScheduleBoardLocked)
-                                        <div class="slot-state closed">Bảng đã khóa</div>
-                                    @elseif($isPastDate)
-                                        <div class="slot-state closed">Đã qua</div>
-                                    @elseif(!empty($assignments))
+                                    @if(!empty($assignments))
                                         <div class="slot-stack">
                                             @foreach($assignments as $assignment)
                                                 @if((int) $assignment->staff_id === (int) $currentStaff->id)
@@ -434,6 +424,10 @@
                                             @endforeach
 
                                             @if($isMine)
+                                            @elseif($isScheduleBoardLocked)
+                                                <div class="slot-state closed">Bảng đã khóa</div>
+                                            @elseif($isPastDate)
+                                                <div class="slot-state closed">Đã qua</div>
                                             @elseif($alreadyPickedAnotherShift)
                                                 <div class="slot-state closed">Bạn đã chọn ca khác</div>
                                             @elseif(!$isSlotFull)
@@ -445,6 +439,10 @@
                                                 </form>
                                             @endif
                                         </div>
+                                    @elseif($isScheduleBoardLocked)
+                                        <div class="slot-state closed">Bảng đã khóa</div>
+                                    @elseif($isPastDate)
+                                        <div class="slot-state closed">Đã qua</div>
                                     @elseif($alreadyPickedAnotherShift)
                                         <div class="slot-state closed">Bạn đã chọn ca khác</div>
                                     @else
