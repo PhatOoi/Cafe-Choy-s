@@ -337,7 +337,7 @@
                                                     <div class="text-center" style="margin-bottom:4px;">
                                                         <img src="/images/logo.png" alt="Choy's Cafe Logo" style="height:90px; object-fit:contain;" />
                                                     </div>
-                                                    <div class="text-center" style="font-size:13px;color:#111;">Tòa JOVE, Trung Mỹ Tây, Quận 12<br>0904xxxxxx</div>
+                                                    <div class="text-center" style="font-size:13px;color:#111;">Tòa JOVE, Trung Mỹ Tây, Quận 12<br>0346901474</div>
                                                     <div class="text-center mt-2 mb-2" style="font-size:16px;font-weight:bold; color:#111;">HÓA ĐƠN <span id="bill-code"></span></div>
                                                     <div class="d-flex justify-content-between mb-1" style="font-size:13px;color:#111;">
                                                         <span style="color:#111;">Thời gian</span>
@@ -395,8 +395,8 @@
                                                         <span style="color:#111;">Tên khách hàng</span>
                                                         <span style="color:#111;">{{ Auth::user()->name ?? '-' }}</span>
                                                     </div>
-                                                    <div class="text-center mt-2" style="font-size:13px;color:#111;">
-                                                        Quý khách vui lòng kiểm tra lại hóa đơn trước khi thanh toán<br>
+                                                    <div class="text-center mt-2" style="font-size:13px;color:#111;white-space:nowrap;">
+                                                        Quý khách vui lòng kiểm tra hóa đơn trước khi thanh toán.<br>
                                                         Xin cảm ơn quý khách.<br>
                                                         Hẹn gặp lại quý khách lần sau
                                                     </div>

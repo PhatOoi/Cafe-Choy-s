@@ -53,7 +53,6 @@
                         <li class="nav-item"><a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a></li>
                     @endguest
                     <li class="nav-item active"><a href="{{ route('support') }}" class="nav-link">Hỗ trợ</a></li>
-                    <li class="nav-item"><a href="{{ route('ai-chat.index') }}" class="nav-link">Choy AI</a></li>
                     <li class="nav-item flex-spacer"></li>
                     <li class="nav-item cart">
                         <a href="/cart" class="nav-link">
@@ -117,8 +116,8 @@
                     <div class="contact-icon-wrap"><i class="fas fa-phone-alt"></i></div>
                     <h4>Hotline</h4>
                     <p>Gọi trực tiếp cho chúng tôi trong giờ làm việc</p>
-                    <a href="tel:+190099" class="contact-action">+190 099</a>
-                    <span class="contact-note">8:00 – 21:00 hàng ngày</span>
+                    <a href="tel:+84346901474" class="contact-action">+84 346901474</a>
+                    <span class="contact-note">8:00 – 24:00 hàng ngày</span>
                 </div>
 
                 <div class="support-contact-card">
@@ -133,7 +132,7 @@
                     <div class="contact-icon-wrap"><i class="fab fa-facebook-messenger"></i></div>
                     <h4>Facebook</h4>
                     <p>Nhắn tin trực tiếp qua trang Facebook của chúng tôi</p>
-                    <a href="#" class="contact-action">Choy's Cafe</a>
+                    <a href="https://www.facebook.com/share/1CvQdbW463/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" class="contact-action">Choy's Cafe</a>
                     <span class="contact-note">Trả lời trong 1-2 giờ</span>
                 </div>
 
@@ -265,6 +264,98 @@
     </section>
 
     <style>
+        /* Đảm bảo navbar luôn ở trên cùng */
+        .ftco_navbar {
+            position: sticky !important;
+            top: 0;
+            z-index: 1000 !important;
+        }
+
+        /* User avatar & dropdown */
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: none;
+            box-shadow: none;
+            display: block;
+            transition: 0.3s;
+        }
+        .user-avatar:hover { transform: scale(1.1); }
+        .user-avatar-btn {
+            margin-left: 8px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            appearance: none;
+            border-radius: 999px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .user-dropdown-wrapper { list-style: none; }
+        .user-dropdown-container { position: relative; }
+        .user-dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            background: #1a1a1a;
+            border-radius: 12px;
+            min-width: 230px;
+            padding: 10px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            z-index: 9999;
+        }
+        .user-dropdown-menu.active { display: block; animation: dropdownFadeIn 0.2s ease; }
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+        }
+        .dropdown-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .user-details .user-name { margin: 0; font-size: 14px; font-weight: 600; color: #fff; }
+        .user-details .user-role { margin: 0; font-size: 12px; color: #aaa; }
+        .badge-admin, .badge-customer {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+        }
+        .badge-admin { background: #c8a26b; color: #1a1a1a; }
+        .badge-customer { background: #333; color: #ccc; }
+        .dropdown-divider { border-top: 1px solid rgba(255,255,255,0.1); margin: 6px 0; }
+        .dropdown-link {
+            display: block;
+            padding: 9px 14px;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: background 0.2s;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+        .dropdown-link:hover { background: rgba(200,162,107,0.15); color: #c8a26b; }
+        .logout-btn { color: #f87171; }
+        .logout-btn:hover { background: rgba(248,113,113,0.1); color: #f87171; }
+
         .support-section {
             padding: 110px 0 90px;
             background: #1a1009;

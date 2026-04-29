@@ -15,6 +15,7 @@ class UserSeeder extends Seeder
             // Admin
             [
                 'role_id'    => 1,
+                'employment_type' => null,
                 'name'       => 'Admin Coffee Choy',
                 'email'      => 'choyscaffe@gmail.com',
                 'password'   => Hash::make('Admin@123'),
@@ -35,7 +36,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'role_id'    => 2,
-                'employment_type' => 'full_time',
+                'employment_type' => 'part_time',
                 'name'       => 'Trần Thị Linh',
                 'email'      => 'linh@coffeechoys.vn',
                 'password'   => Hash::make('Staff@123'),
@@ -46,6 +47,7 @@ class UserSeeder extends Seeder
             // Các tài khoản khách hàng mẫu dùng cho cart, voucher và order history.
             [
                 'role_id'    => 3,
+                'employment_type' => null,
                 'name'       => 'Lê Minh Khách',
                 'email'      => 'khach1@gmail.com',
                 'password'   => Hash::make('Customer@123'),
@@ -55,6 +57,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'role_id'    => 3,
+                'employment_type' => null,
                 'name'       => 'Phạm Thị Hương',
                 'email'      => 'huong@gmail.com',
                 'password'   => Hash::make('Customer@123'),
@@ -64,6 +67,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'role_id'    => 3,
+                'employment_type' => null,
                 'name'       => 'Võ Quốc Bảo',
                 'email'      => 'bao@gmail.com',
                 'password'   => Hash::make('Customer@123'),

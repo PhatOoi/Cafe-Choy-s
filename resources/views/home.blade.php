@@ -451,7 +451,7 @@
                         <h4>Liên hệ</h4>
                         <div class="contact-item">
                             <i class="fas fa-phone"></i>
-                            <span>+190099</span>
+                            <span>+84 346901474</span>
                         </div>
                         <div class="contact-item">
                             <i class="fas fa-clock"></i>
