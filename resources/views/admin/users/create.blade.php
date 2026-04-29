@@ -33,35 +33,35 @@
                         <label class="form-label">Họ và tên <span style="color:#e11d48;">*</span></label>
                         <input type="text" name="name" class="form-control {{ $errors->has('name') ? 'border-danger' : '' }}"
                                value="{{ old('name') }}" placeholder="Nguyễn Văn A" required>
-                        @error('name')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('name')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Email <span style="color:#e11d48;">*</span></label>
                         <input type="email" name="email" class="form-control {{ $errors->has('email') ? 'border-danger' : '' }}"
                                value="{{ old('email') }}" placeholder="email@example.com" required>
-                        @error('email')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('email')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Số điện thoại</label>
                         <input type="text" name="phone" class="form-control"
                                value="{{ old('phone') }}" placeholder="0901234567">
-                        @error('phone')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('phone')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Căn cước công dân</label>
                         <input type="text" name="citizen_id" class="form-control {{ $errors->has('citizen_id') ? 'border-danger' : '' }}"
                                value="{{ old('citizen_id') }}" inputmode="numeric" maxlength="12" pattern="[0-9]{12}" autocomplete="off">
-                        @error('citizen_id')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('citizen_id')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
                             <label class="form-label">Mật khẩu <span style="color:#e11d48;">*</span></label>
                             <input type="password" name="password" class="form-control {{ $errors->has('password') ? 'border-danger' : '' }}" autocomplete="new-password" required>
-                            @error('password')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                            @error('password')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="form-group">
@@ -80,7 +80,7 @@
                             @endforeach
                         </select>
                         <div class="form-text">Chọn cẩn thận — Admin có toàn quyền hệ thống</div>
-                        @error('role_id')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('role_id')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group" style="grid-column:1/-1;">
@@ -91,7 +91,7 @@
                             <option value="part_time" {{ old('employment_type') === 'part_time' ? 'selected' : '' }}>Part-time</option>
                         </select>
                         <div class="form-text">Chỉ bắt buộc khi tạo tài khoản có role là nhân viên.</div>
-                        @error('employment_type')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('employment_type')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
                 </div>
 

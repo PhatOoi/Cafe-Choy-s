@@ -21,7 +21,7 @@
                     <button class="btn" type="submit">Xác nhận</button>
                 </form>
                 @if ($errors->any())
-                    <div style="color:red; margin-top:10px;">
+                    <div class="auth-error-list">
                         @foreach ($errors->all() as $error)
                             <div>{{ $error }}</div>
                         @endforeach

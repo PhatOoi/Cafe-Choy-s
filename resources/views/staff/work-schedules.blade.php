@@ -129,6 +129,13 @@
         border: 1px solid #fde7bf;
     }
 
+    .schedule-error-text {
+        color: #d32f2f;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
+
     .my-schedule-list {
         padding: 0 20px 20px;
         display: grid;
@@ -511,9 +518,9 @@
                     <label class="schedule-label">Số giờ tăng ca <span style="color: #d32f2f;">*</span></label>
                     <input type="number" name="hours" class="schedule-input" required step="0.5" min="0.5" max="2"
                         value="{{ old('hours') }}" placeholder="VD: 1.5 hoặc 2">
-                    <span data-error-for="hours" style="color: #d32f2f; font-size: 12px;"></span>
+                    <span data-error-for="hours" class="schedule-error-text"></span>
                     @error('hours')
-                        <span style="color: #d32f2f; font-size: 12px;">{{ $message }}</span>
+                        <span class="schedule-error-text">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
@@ -521,9 +528,9 @@
             <div>
                 <label class="schedule-label">Ghi chú (tùy chọn)</label>
                 <textarea name="notes" class="schedule-textarea" placeholder="VD: Phục vụ sự kiện, hỗ trợ bếp...">{{ old('notes') }}</textarea>
-                <span data-error-for="notes" style="color: #d32f2f; font-size: 12px;"></span>
+                <span data-error-for="notes" class="schedule-error-text"></span>
                 @error('notes')
-                    <span style="color: #d32f2f; font-size: 12px;">{{ $message }}</span>
+                    <span class="schedule-error-text">{{ $message }}</span>
                 @enderror
             </div>
 

@@ -37,14 +37,14 @@
                         <label class="form-label">Họ và tên <span style="color:#e11d48;">*</span></label>
                         <input type="text" name="name" class="form-control"
                                value="{{ old('name', $user->name) }}" required>
-                        @error('name')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('name')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Email <span style="color:#e11d48;">*</span></label>
                         <input type="email" name="email" class="form-control"
                                value="{{ old('email', $user->email) }}" required>
-                        @error('email')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('email')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
@@ -57,14 +57,14 @@
                         <label class="form-label">Căn cước công dân</label>
                         <input type="text" name="citizen_id" class="form-control {{ $errors->has('citizen_id') ? 'border-danger' : '' }}"
                                value="{{ old('citizen_id', $user->citizen_id) }}" inputmode="numeric" maxlength="12" pattern="[0-9]{12}" autocomplete="off">
-                        @error('citizen_id')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('citizen_id')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
                             <label class="form-label">Mật khẩu mới</label>
                             <input type="password" name="password" class="form-control" autocomplete="new-password">
-                            @error('password')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                            @error('password')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="form-group">
@@ -84,7 +84,7 @@
                             @endforeach
                         </select>
                         @if($user->id === Auth::id())
-                        <div class="form-text" style="color:#d97706;">⚠️ Bạn không thể thay đổi role của chính mình</div>
+                        <div class="form-text form-text-warning">⚠️ Bạn không thể thay đổi role của chính mình</div>
                         {{-- Hidden input để giữ value khi disabled --}}
                         <input type="hidden" name="role_id" value="{{ $user->role_id }}">
                         @endif
@@ -98,7 +98,7 @@
                             <option value="part_time" {{ old('employment_type', $user->employment_type) === 'part_time' ? 'selected' : '' }}>Part-time</option>
                         </select>
                         <div class="form-text">Chỉ áp dụng cho tài khoản nhân viên.</div>
-                        @error('employment_type')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('employment_type')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
                 </div>
 

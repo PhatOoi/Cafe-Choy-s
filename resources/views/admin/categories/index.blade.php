@@ -95,7 +95,7 @@
                         <label class="form-label">Tên danh mục <span style="color:#e11d48;">*</span></label>
                         <input type="text" name="name" id="catNameInput" class="form-control"
                                placeholder="VD: Cà phê, Trà sữa, Nước ép..." required>
-                        @error('name')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('name')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">

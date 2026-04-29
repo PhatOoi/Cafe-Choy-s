@@ -79,6 +79,39 @@
             background: #333;
         }
 
+        .auth-alert {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.45;
+            border: 1px solid transparent;
+        }
+
+        .auth-alert-error {
+            color: #b91c1c;
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .auth-alert-success {
+            color: #166534;
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .auth-error-list {
+            display: grid;
+            gap: 4px;
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            font-size: 13px;
+        }
+
         .toggle-text {
             margin-top: 15px;
             font-size: 15px;

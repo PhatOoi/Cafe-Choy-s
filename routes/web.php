@@ -169,6 +169,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::put('/categories/{id}',    [AdminController::class, 'updateCategory'])->name('categories.update');
     Route::delete('/categories/{id}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
 
+    // Kho nguyên liệu
+    Route::get('/ingredients', [AdminController::class, 'ingredients'])->name('ingredients');
+    Route::post('/ingredients', [AdminController::class, 'storeIngredient'])->name('ingredients.store');
+    Route::put('/ingredients/{id}', [AdminController::class, 'updateIngredient'])->name('ingredients.update');
+    Route::delete('/ingredients/{id}', [AdminController::class, 'destroyIngredient'])->name('ingredients.destroy');
+
     // Người dùng
     Route::get('/users',               [AdminController::class, 'users'])->name('users');
     Route::get('/users/create',        [AdminController::class, 'createUser'])->name('users.create');

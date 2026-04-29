@@ -51,7 +51,7 @@
                 <p style="margin-bottom: 10px;"><a href="/forgot-password" style="color:#3498db;">Quên mật khẩu?</a></p>
                 <button class="btn" type="submit">Đăng nhập</button>
                 @if (session('error'))
-                    <div style="color:red; margin-top:10px;">{{ session('error') }}</div>
+                    <div class="auth-alert auth-alert-error">{{ session('error') }}</div>
                 @endif
                 <p class="toggle-text">
                     Bạn chưa có tài khoản?
@@ -64,10 +64,10 @@
                 @csrf
                 <h1>Tạo tài khoản</h1>
                 @if ($errors->has('register_error'))
-                    <div style="color:red; margin-bottom:10px;">{{ $errors->first('register_error') }}</div>
+                    <div class="auth-alert auth-alert-error">{{ $errors->first('register_error') }}</div>
                 @endif
                 @if ($errors->any())
-                    <div style="color:red; margin-bottom:10px;">
+                    <div class="auth-error-list">
                         @foreach ($errors->all() as $error)
                             <div>{{ $error }}</div>
                         @endforeach
@@ -100,7 +100,7 @@
                 <button class="btn" type="submit">Tạo tài khoản</button>
                 <button class="btn" type="button" style="margin-top:10px; background:#222; color:#fff;" onclick="document.getElementById('toggle').checked=false;">Quay lại trang đăng nhập</button>
                 @if (session('register_success'))
-                    <div id="register-success-message" style="color:green; margin-top:10px;">{{ session('register_success') }}</div>
+                    <div id="register-success-message" class="auth-alert auth-alert-success">{{ session('register_success') }}</div>
                     <script>
                         // Nếu đang ở form đăng ký, tự động chuyển sang form đăng nhập và reload để hiển thị thông báo
                         if (document.getElementById('toggle') && document.getElementById('toggle').checked) {

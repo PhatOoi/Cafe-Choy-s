@@ -28,7 +28,7 @@
                     <label class="form-label">Tên sản phẩm <span style="color:#e11d48;">*</span></label>
                     <input type="text" name="name" class="form-control"
                            value="{{ old('name', $product->name) }}" required>
-                    @error('name')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                    @error('name')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -64,7 +64,7 @@
                     <label class="form-label">URL hình ảnh (nếu không upload file)</label>
                     <input type="url" name="image_url" class="form-control" 
                            value="{{ old('image_url', $product->image_url) }}" placeholder="https://example.com/image.jpg">
-                    @error('image_url')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                    @error('image_url')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="form-group">

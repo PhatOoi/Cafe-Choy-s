@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Overtime;
+use App\Models\Ingredient;
 use App\Models\UserRole;
 use App\Models\WorkScheduleBoardLock;
 use App\Models\WorkScheduleRegistration;
@@ -284,6 +285,65 @@ class AdminController extends Controller
         }
         $category->delete();
         return back()->with('success', 'Đã xóa danh mục!');
+    }
+
+    // ─── Kho nguyên liệu ────────────────────────────────────────────────────
+
+    public function ingredients()
+    {
+        $ingredients = Ingredient::query()
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.ingredients.index', compact('ingredients'));
+    }
+
+    public function storeIngredient(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:120|unique:ingredients,name',
+            'brand' => 'required|string|max:120',
+            'unit' => 'required|string|max:30',
+            'stock_quantity' => 'required|numeric|min:0',
+            'received_date' => 'required|date',
+            'manufacture_date' => 'required|date',
+            'expiry_date' => 'required|date|after_or_equal:manufacture_date',
+            'lot_number' => 'required|string|max:80|unique:ingredients,lot_number',
+            'note' => 'nullable|string|max:255',
+        ]);
+        $data['minimum_quantity'] = 0;
+
+        Ingredient::create($data);
+
+        return back()->with('success', 'Đã thêm nguyên liệu mới vào kho.');
+    }
+
+    public function updateIngredient(Request $request, $id)
+    {
+        $ingredient = Ingredient::findOrFail($id);
+
+        $data = $request->validate([
+            'brand' => 'required|string|max:120',
+            'unit' => 'required|string|max:30',
+            'stock_quantity' => 'required|numeric|min:0',
+            'received_date' => 'required|date',
+            'manufacture_date' => 'required|date',
+            'expiry_date' => 'required|date|after_or_equal:manufacture_date',
+            'lot_number' => 'required|string|max:80|unique:ingredients,lot_number,' . $id,
+        ]);
+        $data['minimum_quantity'] = 0;
+
+        $ingredient->update($data);
+
+        return back()->with('success', 'Đã cập nhật số lượng kho nguyên liệu.');
+    }
+
+    public function destroyIngredient($id)
+    {
+        $ingredient = Ingredient::findOrFail($id);
+        $ingredient->delete();
+
+        return back()->with('success', 'Đã xóa nguyên liệu khỏi kho.');
     }
 
     // ─── Quản lý nhân viên & người dùng ──────────────────────────────────────

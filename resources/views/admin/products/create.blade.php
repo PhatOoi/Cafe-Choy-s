@@ -30,7 +30,7 @@
                     <label class="form-label">Tên sản phẩm <span style="color:#e11d48;">*</span></label>
                     <input type="text" name="name" class="form-control"
                            value="{{ old('name') }}" placeholder="VD: Cà phê sữa đá" required>
-                    @error('name')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                    @error('name')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -44,14 +44,14 @@
                             </option>
                             @endforeach
                         </select>
-                        @error('category_id')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('category_id')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Giá bán (đ) <span style="color:#e11d48;">*</span></label>
                         <input type="number" name="price" class="form-control"
                                value="{{ old('price') }}" placeholder="35000" min="0" step="500" required>
-                        @error('price')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        @error('price')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
                 </div>
 
@@ -71,7 +71,7 @@
                     <label class="form-label">URL hình ảnh (nếu không upload file)</label>
                     <input type="url" name="image_url" class="form-control" 
                            value="{{ old('image_url') }}" placeholder="https://example.com/image.jpg">
-                    @error('image_url')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                    @error('image_url')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Trạng thái <span style="color:#e11d48;">*</span></label>

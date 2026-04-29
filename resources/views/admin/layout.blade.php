@@ -538,6 +538,8 @@
             display: block;
         }
         .form-text { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
+        .form-text-error { color: #dc2626; font-weight: 500; }
+        .form-text-warning { color: #d97706; font-weight: 500; }
         .form-group { margin-bottom: 18px; }
 
         /* Filter bar */
@@ -670,6 +672,10 @@
         <a href="{{ route('admin.orders') }}"
            class="sidebar-link {{ request()->routeIs('admin.orders*') ? 'active' : '' }}">
             <i class="fas fa-receipt"></i> Quản lý đơn hàng
+        </a>
+        <a href="{{ route('admin.ingredients') }}"
+           class="sidebar-link {{ request()->routeIs('admin.ingredients*') ? 'active' : '' }}">
+            <i class="fas fa-warehouse"></i> Kho nguyên liệu
         </a>
 
         <div class="nav-label">Người dùng</div>
