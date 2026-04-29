@@ -54,14 +54,23 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Mật khẩu mới <span style="color:var(--text-muted);font-weight:400;">(để trống nếu không đổi)</span></label>
-                        <input type="password" name="password" class="form-control" placeholder="Tối thiểu 6 ký tự">
-                        @error('password')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        <label class="form-label">Căn cước công dân</label>
+                        <input type="text" name="citizen_id" class="form-control {{ $errors->has('citizen_id') ? 'border-danger' : '' }}"
+                               value="{{ old('citizen_id', $user->citizen_id) }}" inputmode="numeric" maxlength="12" pattern="[0-9]{12}" autocomplete="off">
+                        @error('citizen_id')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Xác nhận mật khẩu mới</label>
-                        <input type="password" name="password_confirmation" class="form-control">
+                    <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">Mật khẩu mới</label>
+                            <input type="password" name="password" class="form-control" autocomplete="new-password">
+                            @error('password')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Xác nhận mật khẩu mới</label>
+                            <input type="password" name="password_confirmation" class="form-control" autocomplete="new-password">
+                        </div>
                     </div>
 
                     <div class="form-group" style="grid-column:1/-1;">
@@ -70,7 +79,7 @@
                                 {{ $user->id === Auth::id() ? 'disabled' : '' }}>
                             @foreach($roles as $role)
                             <option value="{{ $role->id }}" {{ old('role_id', $user->role_id) == $role->id ? 'selected' : '' }}>
-                                {{ $role->id === 1 ? '👑 Admin' : ($role->id === 2 ? '👷 Nhân viên' : '🧑 Khách hàng') }}
+                                {{ $role->name === 'admin' ? '👑 Admin' : ($role->name === 'staff' ? '👷 Nhân viên' : '🧑 Khách hàng') }}
                             </option>
                             @endforeach
                         </select>
@@ -82,7 +91,7 @@
                     </div>
 
                     <div class="form-group" style="grid-column:1/-1;">
-                        <label class="form-label">Loại nhân viên</label>
+                        <label class="form-label">Hình thức làm việc</label>
                         <select name="employment_type" class="form-select">
                             <option value="">Không áp dụng / Chưa chọn</option>
                             <option value="full_time" {{ old('employment_type', $user->employment_type) === 'full_time' ? 'selected' : '' }}>Full-time</option>

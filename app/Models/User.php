@@ -10,7 +10,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     // Các trường có thể gán hàng loạt khi tạo/cập nhật user.
-    protected $fillable = ['name','email','password','role_id','employment_type','is_active','phone','avatar_url'];
+    protected $fillable = ['name','email','password','role_id','employment_type','citizen_id','is_active','phone','avatar_url'];
 
     // Các trường nhạy cảm không trả ra khi serialize model.
     protected $hidden   = ['password','remember_token'];
@@ -35,6 +35,9 @@ class User extends Authenticatable
 
     // Các khung giờ làm việc mà nhân viên đã đăng ký.
     public function workScheduleRegistrations() { return $this->hasMany(WorkScheduleRegistration::class, 'staff_id'); }
+
+    // Các giờ tăng ca đã đăng ký.
+    public function overtimes() { return $this->hasMany(Overtime::class, 'staff_id'); }
 
     // Helper kiểm tra nhanh vai trò để dùng trong controller/view.
     public function isAdmin(): bool  { return $this->role_id === 1; }

@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Category;
+use App\Models\Overtime;
 use App\Models\UserRole;
 use App\Models\WorkScheduleBoardLock;
 use App\Models\WorkScheduleRegistration;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -20,6 +22,12 @@ class AdminController extends Controller
     private const PAYROLL_RATES = [
         'full_time' => 32000,
         'part_time' => 28000,
+    ];
+
+    // Đơn giá tăng ca theo loại nhân viên.
+    private const OVERTIME_RATES = [
+        'full_time' => 40000,
+        'part_time' => 30000,
     ];
 
     // Slot làm việc cố định theo loại nhân viên để render bảng tuần giống staff.
@@ -286,7 +294,7 @@ class AdminController extends Controller
     public function createUser()
     {
         // Chỉ nạp các role chính để tạo tài khoản nội bộ hoặc khách hàng.
-        $roles = UserRole::whereIn('id', [1, 2, 3])->get(); // admin, staff, customer
+        $roles = UserRole::whereIn('name', ['admin', 'staff', 'customer'])->get();
         return view('admin.users.create', compact('roles'));
     }
 
@@ -300,17 +308,28 @@ class AdminController extends Controller
             'phone'    => 'nullable|string|max:20|unique:users,phone',
             'role_id'  => 'required|exists:user_roles,id',
             'employment_type' => 'nullable|in:full_time,part_time',
+            'citizen_id' => 'nullable|digits:12|unique:users,citizen_id',
         ]);
 
+        $selectedRoleName = UserRole::whereKey($data['role_id'])->value('name');
+        $isStaffRole = $selectedRoleName === 'staff';
+
         // Chỉ staff mới có loại nhân viên; các role khác luôn để null.
-        if ((int) $data['role_id'] === 2 && empty($data['employment_type'])) {
+        if ($isStaffRole && empty($data['employment_type'])) {
             return back()->withInput()->withErrors([
                 'employment_type' => 'Vui lòng chọn loại nhân viên cho tài khoản staff.',
             ]);
         }
 
-        if ((int) $data['role_id'] !== 2) {
+        if ($isStaffRole && empty($data['citizen_id'])) {
+            return back()->withInput()->withErrors([
+                'citizen_id' => 'Vui lòng nhập căn cước công dân gồm đúng 12 số cho tài khoản nhân viên.',
+            ]);
+        }
+
+        if (!$isStaffRole) {
             $data['employment_type'] = null;
+            $data['citizen_id'] = null;
         }
 
         $data['password']  = Hash::make($data['password']);
@@ -341,17 +360,28 @@ class AdminController extends Controller
             'phone'   => 'nullable|string|max:20|unique:users,phone,' . $id,
             'role_id' => 'required|exists:user_roles,id',
             'employment_type' => 'nullable|in:full_time,part_time',
+            'citizen_id' => 'nullable|digits:12|unique:users,citizen_id,' . $id,
         ]);
 
+        $selectedRoleName = UserRole::whereKey($data['role_id'])->value('name');
+        $isStaffRole = $selectedRoleName === 'staff';
+
         // Chỉ staff mới giữ được loại nhân viên; role khác sẽ reset về null.
-        if ((int) $data['role_id'] === 2 && empty($data['employment_type'])) {
+        if ($isStaffRole && empty($data['employment_type'])) {
             return back()->withInput()->withErrors([
                 'employment_type' => 'Vui lòng chọn loại nhân viên cho tài khoản staff.',
             ]);
         }
 
-        if ((int) $data['role_id'] !== 2) {
+        if ($isStaffRole && empty($data['citizen_id'])) {
+            return back()->withInput()->withErrors([
+                'citizen_id' => 'Vui lòng nhập căn cước công dân gồm đúng 12 số cho tài khoản nhân viên.',
+            ]);
+        }
+
+        if (!$isStaffRole) {
             $data['employment_type'] = null;
+            $data['citizen_id'] = null;
         }
 
         if ($request->filled('password')) {
@@ -429,12 +459,13 @@ class AdminController extends Controller
         return view('admin.orders.detail', compact('order'));
     }
 
-    // ─── Bảng lương & duyệt đăng ký giờ làm ─────────────────────────────────
+    // ─── Đăng ký giờ làm (Admin) ────────────────────────────────────────────
 
-    public function payroll(Request $request)
+    public function workSchedules(Request $request)
     {
         $weekStart = now()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+        $isAutoClosedAtNight = now()->greaterThanOrEqualTo(now()->copy()->setTime(22, 0));
         $weekDays = collect(range(0, 6))->map(fn ($offset) => $weekStart->copy()->addDays($offset));
         $weekBoardLock = WorkScheduleBoardLock::with('locker:id,name')
             ->whereDate('week_start', $weekStart->toDateString())
@@ -467,12 +498,10 @@ class AdminController extends Controller
         }
 
         $monthInput = $request->input('month', now()->format('Y-m'));
-        $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
-        $monthEnd = $monthStart->copy()->endOfMonth();
 
-        // Lấy toàn bộ đăng ký trong tháng để tổng hợp bảng lương và khối thao tác admin.
+        // Khối duyệt ca làm luôn theo tuần hiện tại (7 ngày), có thể vắt qua tháng kế tiếp.
         $scheduleQuery = WorkScheduleRegistration::with(['staff:id,name,email,employment_type', 'approver:id,name', 'closer:id,name'])
-            ->whereBetween('work_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->whereBetween('work_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->orderByDesc('work_date')
             ->orderBy('start_time');
 
@@ -486,53 +515,148 @@ class AdminController extends Controller
 
         $scheduleRows = $scheduleQuery->get();
 
-        $payrollRows = $scheduleRows
-            ->whereIn('status', ['approved', 'closed'])
+        // Danh sách tăng ca trong tuần hiện tại để admin duyệt.
+        $overtimeQuery = Overtime::with('staff:id,name,email,employment_type')
+            ->whereBetween('overtime_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->orderByDesc('overtime_date')
+            ->orderByDesc('created_at');
+
+        if ($request->filled('employment_type')) {
+            $overtimeQuery->whereHas('staff', function ($query) use ($request) {
+                $query->where('employment_type', $request->employment_type);
+            });
+        }
+
+        $overtimeRows = $overtimeQuery->get();
+
+        $scheduleStats = [
+            'pending_count' => $scheduleRows->where('status', 'pending')->count(),
+            'approved_count' => $scheduleRows->where('status', 'approved')->count(),
+            'closed_count' => $scheduleRows->where('status', 'closed')->count(),
+            'pending_overtime_count' => $overtimeRows->where('status', 'pending')->count(),
+        ];
+
+        $pendingSchedules = $scheduleRows->where('status', 'pending')->values();
+        $approvedSchedules = $scheduleRows->where('status', 'approved')->values();
+        $closedSchedules = $scheduleRows->where('status', 'closed')->values();
+        $pendingOvertimes = $overtimeRows->where('status', 'pending')->values();
+        $processedOvertimes = $overtimeRows->whereIn('status', ['approved', 'rejected'])->take(10)->values();
+        $scheduleSlots = self::SCHEDULE_SLOTS;
+
+        return view('admin.work-schedules.index', compact(
+            'monthInput',
+            'weekStart',
+            'weekEnd',
+            'weekDays',
+            'isAutoClosedAtNight',
+            'weekBoardLock',
+            'weeklyAssignments',
+            'scheduleStats',
+            'pendingSchedules',
+            'approvedSchedules',
+            'closedSchedules',
+            'pendingOvertimes',
+            'processedOvertimes',
+            'scheduleSlots'
+        ));
+    }
+
+    // Admin mở lại bảng đăng ký tuần hiện tại để staff tiếp tục đăng ký trước 22:00.
+    public function openWeeklyWorkScheduleBoard()
+    {
+        if (now()->greaterThanOrEqualTo(now()->copy()->setTime(22, 0))) {
+            return back()->with('error', 'Sau 22:00 bảng đăng ký tự động đóng, không thể mở lại.');
+        }
+
+        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+
+        $existingLock = WorkScheduleBoardLock::query()
+            ->whereDate('week_start', $weekStart->toDateString())
+            ->first();
+
+        if (!$existingLock) {
+            return back()->with('success', 'Bảng đăng ký giờ làm hiện đang mở.');
+        }
+
+        $existingLock->delete();
+
+        return back()->with('success', 'Đã mở bảng đăng ký giờ làm tuần hiện tại.');
+    }
+
+    // ─── Bảng lương (Admin) ─────────────────────────────────────────────────
+
+    public function payroll(Request $request)
+    {
+        $monthInput = $request->input('month', now()->format('Y-m'));
+        $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
+        // Lấy toàn bộ đăng ký trong tháng để tổng hợp bảng lương.
+        $scheduleQuery = WorkScheduleRegistration::with('staff:id,name,email,employment_type')
+            ->whereBetween('work_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->orderByDesc('work_date')
+            ->orderBy('start_time');
+
+        if ($request->filled('employment_type')) {
+            $scheduleQuery->where('employment_type', $request->employment_type);
+        }
+
+        $scheduleRows = $scheduleQuery->get();
+
+        $payrollSourceRows = $scheduleRows->where('status', 'approved');
+
+        // Tổng hợp giờ tăng ca theo nhân viên trong tháng, tính các đơn chưa bị từ chối.
+        $overtimeQuery = Overtime::query()
+            ->selectRaw('staff_id, SUM(hours) as total_overtime_hours')
+            ->whereBetween('overtime_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->where('status', 'approved')
+            ->groupBy('staff_id');
+
+        if ($request->filled('employment_type')) {
+            $overtimeQuery->whereHas('staff', function ($query) use ($request) {
+                $query->where('employment_type', $request->employment_type);
+            });
+        }
+
+        $overtimeByStaff = $overtimeQuery->pluck('total_overtime_hours', 'staff_id');
+
+        $payrollRows = $payrollSourceRows
             ->groupBy('staff_id')
-            ->map(function ($rows) {
+            ->map(function ($rows) use ($overtimeByStaff) {
                 $staff = $rows->first()->staff;
                 $totalMinutes = $rows->sum(fn ($row) => $this->calculateWorkMinutes((string) $row->start_time, (string) $row->end_time));
-                $hourlyRate = self::PAYROLL_RATES[$rows->first()->employment_type] ?? 0;
-                $approvedRows = $rows->where('status', 'approved')->count();
-                $closedRows = $rows->where('status', 'closed')->count();
+                $employmentType = $rows->first()->employment_type;
+                $hourlyRate = self::PAYROLL_RATES[$employmentType] ?? 0;
+                $overtimeRate = self::OVERTIME_RATES[$employmentType] ?? 0;
+                $overtimeHours = round((float) ($overtimeByStaff[(int) $staff->id] ?? 0), 2);
+                $baseSalary = round(($totalMinutes / 60) * $hourlyRate);
+                $overtimeSalary = round($overtimeHours * $overtimeRate);
 
                 return [
                     'staff' => $staff,
-                    'employment_type' => $rows->first()->employment_type,
+                    'employment_type' => $employmentType,
                     'shift_count' => $rows->count(),
-                    'approved_count' => $approvedRows,
-                    'closed_count' => $closedRows,
                     'total_hours' => round($totalMinutes / 60, 2),
                     'hourly_rate' => $hourlyRate,
-                    'gross_salary' => round(($totalMinutes / 60) * $hourlyRate),
+                    'overtime_hours' => $overtimeHours,
+                    'overtime_rate' => $overtimeRate,
+                    'overtime_salary' => $overtimeSalary,
+                    'gross_salary' => $baseSalary + $overtimeSalary,
                 ];
             })
             ->sortBy('staff.name')
             ->values();
 
         $payrollStats = [
-            'pending_count' => $scheduleRows->where('status', 'pending')->count(),
-            'approved_count' => $scheduleRows->where('status', 'approved')->count(),
-            'closed_count' => $scheduleRows->where('status', 'closed')->count(),
+            'eligible_shift_count' => $payrollSourceRows->count(),
+            'approved_count' => $payrollSourceRows->count(),
             'gross_salary_total' => $payrollRows->sum('gross_salary'),
         ];
 
-        $pendingSchedules = $scheduleRows->where('status', 'pending')->values();
-        $approvedSchedules = $scheduleRows->where('status', 'approved')->values();
-        $closedSchedules = $scheduleRows->where('status', 'closed')->values();
-
         return view('admin.payroll.index', compact(
             'monthInput',
-            'weekStart',
-            'weekEnd',
-            'weekDays',
-            'weekBoardLock',
-            'weeklyAssignments',
             'payrollRows',
-            'payrollStats',
-            'pendingSchedules',
-            'approvedSchedules',
-            'closedSchedules'
+            'payrollStats'
         ));
     }
 
@@ -583,11 +707,34 @@ class AdminController extends Controller
     }
 
     // Admin duyệt một đăng ký giờ làm để đưa vào bảng lương tạm tính.
-    public function approveWorkSchedule($id)
+    public function approveWorkSchedule(Request $request, $id)
     {
         $registration = WorkScheduleRegistration::findOrFail($id);
+        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+        $workDate = Carbon::parse($registration->work_date);
+
+        if ($workDate->lt($weekStart->copy()->startOfDay()) || $workDate->gt($weekEnd->copy()->endOfDay())) {
+            $message = 'Chỉ được duyệt các ca nằm trong tuần hiện tại (7 ngày).';
+
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return back()->with('error', $message);
+        }
 
         if ($registration->status === 'closed') {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bản đăng ký này đã được đóng bảng lương nên không thể duyệt lại.',
+                ], 422);
+            }
+
             return back()->with('error', 'Bản đăng ký này đã được đóng bảng lương nên không thể duyệt lại.');
         }
 
@@ -597,7 +744,47 @@ class AdminController extends Controller
             'approved_at' => now(),
         ]);
 
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã duyệt đăng ký giờ làm.',
+                'registration_id' => $registration->id,
+            ]);
+        }
+
         return back()->with('success', 'Đã duyệt đăng ký giờ làm.');
+    }
+
+    // Admin duyệt đơn tăng ca của staff.
+    public function approveOvertime($id)
+    {
+        $overtime = Overtime::with('staff:id,employment_type')->findOrFail($id);
+
+        if ($overtime->status === 'approved') {
+            return back()->with('success', 'Đơn tăng ca này đã được duyệt trước đó.');
+        }
+
+        $overtime->update([
+            'status' => 'approved',
+        ]);
+
+        return back()->with('success', 'Đã duyệt đơn tăng ca.');
+    }
+
+    // Admin từ chối đơn tăng ca của staff.
+    public function rejectOvertime($id)
+    {
+        $overtime = Overtime::findOrFail($id);
+
+        if ($overtime->status === 'rejected') {
+            return back()->with('success', 'Đơn tăng ca này đã được từ chối trước đó.');
+        }
+
+        $overtime->update([
+            'status' => 'rejected',
+        ]);
+
+        return back()->with('success', 'Đã từ chối đơn tăng ca.');
     }
 
     // Admin đóng một đăng ký giờ làm để chốt lương và khóa thao tác chỉnh sửa tiếp theo.
@@ -620,6 +807,120 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Đã đóng bảng đăng ký giờ làm.');
+    }
+
+    // Admin đánh dấu vắng ca để loại khỏi danh sách đã duyệt.
+    public function markWorkScheduleAbsent($id)
+    {
+        $registration = WorkScheduleRegistration::findOrFail($id);
+
+        if ($registration->status === 'pending') {
+            return back()->with('error', 'Ca chưa duyệt, không thể đánh dấu vắng.');
+        }
+
+        if ($registration->status === 'closed') {
+            return back()->with('success', 'Ca này đã ở trạng thái đóng.');
+        }
+
+        $currentNote = trim((string) $registration->note);
+        $absentNote = '[ABSENT] Vắng ca do admin đánh dấu lúc ' . now()->format('d/m/Y H:i');
+
+        $registration->update([
+            'status' => 'closed',
+            'closed_by' => auth()->id(),
+            'closed_at' => now(),
+            'note' => $currentNote === '' ? $absentNote : ($currentNote . ' | ' . $absentNote),
+        ]);
+
+        return back()->with('success', 'Đã đánh dấu vắng ca.');
+    }
+
+    // Admin đánh dấu ca phát sinh để ghi nhận nội bộ.
+    public function markWorkScheduleExtra($id)
+    {
+        $registration = WorkScheduleRegistration::findOrFail($id);
+
+        if ($registration->status === 'pending') {
+            return back()->with('error', 'Ca chưa duyệt, không thể đánh dấu ca phát sinh.');
+        }
+
+        if ($registration->status === 'closed') {
+            return back()->with('error', 'Ca đã đóng, không thể đánh dấu ca phát sinh.');
+        }
+
+        $currentNote = trim((string) $registration->note);
+
+        if (str_contains($currentNote, '[EXTRA_SHIFT]')) {
+            return back()->with('success', 'Ca này đã được đánh dấu phát sinh trước đó.');
+        }
+
+        $extraNote = '[EXTRA_SHIFT] Ca phát sinh do admin đánh dấu lúc ' . now()->format('d/m/Y H:i');
+
+        $registration->update([
+            'note' => $currentNote === '' ? $extraNote : ($currentNote . ' | ' . $extraNote),
+        ]);
+
+        return back()->with('success', 'Đã đánh dấu ca phát sinh.');
+    }
+
+    // Admin điều chỉnh ngày làm và khung giờ của một ca đã duyệt/chờ duyệt.
+    public function adjustWorkSchedule(Request $request, $id)
+    {
+        $registration = WorkScheduleRegistration::findOrFail($id);
+
+        if ($registration->status === 'closed') {
+            return back()->with('error', 'Ca đã đóng không thể điều chỉnh.');
+        }
+
+        $employmentType = (string) $registration->employment_type;
+        $allowedSlots = self::SCHEDULE_SLOTS[$employmentType] ?? [];
+
+        if (empty($allowedSlots)) {
+            return back()->with('error', 'Không tìm thấy khung giờ hợp lệ cho loại nhân viên này.');
+        }
+
+        $data = $request->validate([
+            'work_date' => 'required|date',
+            'slot_key' => ['required', Rule::in(array_keys($allowedSlots))],
+        ]);
+
+        $workDate = Carbon::parse($data['work_date'])->toDateString();
+        $selectedSlot = $allowedSlots[$data['slot_key']];
+
+        // Mỗi nhân viên chỉ được có đúng 1 ca trong 1 ngày (trừ chính bản ghi đang chỉnh).
+        $myOtherShiftInDate = WorkScheduleRegistration::query()
+            ->where('staff_id', $registration->staff_id)
+            ->whereDate('work_date', $workDate)
+            ->where('id', '!=', $registration->id)
+            ->exists();
+
+        if ($myOtherShiftInDate) {
+            return back()->with('error', 'Nhân viên này đã có ca khác trong ngày đã chọn.');
+        }
+
+        $slotCapacity = $this->getScheduleSlotCapacity($employmentType);
+
+        // Kiểm tra sức chứa slot theo loại nhân viên (không tính chính bản ghi đang chỉnh).
+        $slotOccupancy = WorkScheduleRegistration::query()
+            ->where('employment_type', $employmentType)
+            ->whereDate('work_date', $workDate)
+            ->where('start_time', $selectedSlot['start'])
+            ->where('end_time', $selectedSlot['end'])
+            ->where('id', '!=', $registration->id)
+            ->count();
+
+        if ($slotOccupancy >= $slotCapacity) {
+            return back()->with('error', 'Khung giờ này đã đủ số lượng nhân viên. Vui lòng chọn khung giờ khác.');
+        }
+
+        $registration->update([
+            'work_date' => $workDate,
+            'start_time' => $selectedSlot['start'],
+            'end_time' => $selectedSlot['end'],
+            'shift_label' => $selectedSlot['label'],
+        ]);
+
+        return back()->with('success', 'Đã điều chỉnh ca làm thành công.');
     }
 
     // ─── Thống kê & Báo cáo ──────────────────────────────────────────────────
@@ -704,6 +1005,12 @@ class AdminController extends Controller
         }
 
         return null;
+    }
+
+    // Sức chứa slot theo loại nhân viên: full-time 1 người, part-time 2 người.
+    private function getScheduleSlotCapacity(string $employmentType): int
+    {
+        return $employmentType === 'part_time' ? 2 : 1;
     }
    
 }

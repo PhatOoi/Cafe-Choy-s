@@ -51,15 +51,23 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Mật khẩu <span style="color:#e11d48;">*</span></label>
-                        <input type="password" name="password" class="form-control {{ $errors->has('password') ? 'border-danger' : '' }}"
-                               placeholder="Tối thiểu 6 ký tự" required>
-                        @error('password')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        <label class="form-label">Căn cước công dân</label>
+                        <input type="text" name="citizen_id" class="form-control {{ $errors->has('citizen_id') ? 'border-danger' : '' }}"
+                               value="{{ old('citizen_id') }}" inputmode="numeric" maxlength="12" pattern="[0-9]{12}" autocomplete="off">
+                        @error('citizen_id')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Xác nhận mật khẩu <span style="color:#e11d48;">*</span></label>
-                        <input type="password" name="password_confirmation" class="form-control" placeholder="Nhập lại mật khẩu" required>
+                    <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">Mật khẩu <span style="color:#e11d48;">*</span></label>
+                            <input type="password" name="password" class="form-control {{ $errors->has('password') ? 'border-danger' : '' }}" autocomplete="new-password" required>
+                            @error('password')<div class="form-text" style="color:#dc2626;">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Xác nhận mật khẩu <span style="color:#e11d48;">*</span></label>
+                            <input type="password" name="password_confirmation" class="form-control" autocomplete="new-password" required>
+                        </div>
                     </div>
 
                     <div class="form-group" style="grid-column:1/-1;">
@@ -67,7 +75,7 @@
                         <select name="role_id" class="form-select" required>
                             @foreach($roles as $role)
                             <option value="{{ $role->id }}" {{ old('role_id', 3) == $role->id ? 'selected' : '' }}>
-                                {{ $role->id === 1 ? '👑 Admin — Toàn quyền hệ thống' : ($role->id === 2 ? '👷 Nhân viên — Vận hành đơn hàng' : '🧑 Khách hàng — Đặt hàng và mua sắm') }}
+                                {{ $role->name === 'admin' ? '👑 Admin — Toàn quyền hệ thống' : ($role->name === 'staff' ? '👷 Nhân viên — Vận hành đơn hàng' : '🧑 Khách hàng — Đặt hàng và mua sắm') }}
                             </option>
                             @endforeach
                         </select>
@@ -76,7 +84,7 @@
                     </div>
 
                     <div class="form-group" style="grid-column:1/-1;">
-                        <label class="form-label">Loại nhân viên</label>
+                        <label class="form-label">Hình thức làm việc</label>
                         <select name="employment_type" class="form-select">
                             <option value="">Không áp dụng / Chưa chọn</option>
                             <option value="full_time" {{ old('employment_type') === 'full_time' ? 'selected' : '' }}>Full-time</option>

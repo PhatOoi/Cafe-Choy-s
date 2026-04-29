@@ -644,6 +644,10 @@
         class="sidebar-link {{ request()->routeIs('admin.reports') && request('period','month') === 'year' ? 'active' : '' }}">
             <i class="fas fa-calendar"></i> Theo năm
         </a>
+        <a href="{{ route('admin.work-schedules.index') }}"
+        class="sidebar-link {{ request()->routeIs('admin.work-schedules.*') ? 'active' : '' }}">
+            <i class="fas fa-calendar-week"></i> Đăng ký giờ làm
+        </a>
         <a href="{{ route('admin.payroll') }}"
         class="sidebar-link {{ request()->routeIs('admin.payroll') ? 'active' : '' }}">
             <i class="fas fa-wallet"></i> Bảng lương

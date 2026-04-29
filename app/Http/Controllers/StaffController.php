@@ -11,6 +11,7 @@ use App\Models\OrderItem;
 use App\Models\OrderItemExtra;
 use App\Models\Payment;
 use App\Models\WorkScheduleBoardLock;
+use App\Models\Overtime;
 use App\Support\DailyRevenueSnapshotService;
 use App\Models\WorkScheduleRegistration;
 use Illuminate\Http\Request;
@@ -674,11 +675,12 @@ class StaffController extends Controller
         $currentStaff = Auth::user();
         $weekStart = now()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+        $isAutoClosedAtNight = now()->greaterThanOrEqualTo(now()->copy()->setTime(22, 0));
         $weekDays = collect(range(0, 6))->map(fn ($offset) => $weekStart->copy()->addDays($offset));
         $weekBoardLock = WorkScheduleBoardLock::with('locker:id,name')
             ->whereDate('week_start', $weekStart->toDateString())
             ->first();
-        $isScheduleBoardLocked = (bool) $weekBoardLock;
+        $isScheduleBoardLocked = (bool) $weekBoardLock || $isAutoClosedAtNight;
         $allowedSlots = $this->getScheduleSlotsByEmploymentType($currentStaff->employment_type);
 
         $weeklyAssignments = [];
@@ -720,17 +722,26 @@ class StaffController extends Controller
             ->take(6)
             ->get();
 
+        // Lấy danh sách tăng ca của nhân viên hiện tại.
+        $myOvertimes = Overtime::query()
+            ->where('staff_id', $currentStaff->id)
+            ->orderByDesc('overtime_date')
+            ->take(6)
+            ->get();
+
         return view('staff.work-schedules', compact(
             'currentStaff',
             'weekStart',
             'weekEnd',
             'weekDays',
             'weekBoardLock',
+            'isAutoClosedAtNight',
             'isScheduleBoardLocked',
             'allowedSlots',
             'weeklyAssignments',
             'mySelectedDates',
-            'myRegistrations'
+            'myRegistrations',
+            'myOvertimes'
         ));
     }
 
@@ -747,6 +758,7 @@ class StaffController extends Controller
         $allowedSlots = $this->getScheduleSlotsByEmploymentType($staff->employment_type);
         $weekStart = now()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+        $isAutoClosedAtNight = now()->greaterThanOrEqualTo(now()->copy()->setTime(22, 0));
 
         // Nếu admin đã đóng bảng tuần thì staff không thể đăng ký thêm.
         $isBoardLocked = WorkScheduleBoardLock::query()
@@ -755,6 +767,10 @@ class StaffController extends Controller
 
         if ($isBoardLocked) {
             return back()->with('error', 'Bảng đăng ký giờ làm tuần này đã được admin đóng. Bạn không thể đăng ký thêm.');
+        }
+
+        if ($isAutoClosedAtNight) {
+            return back()->with('error', 'Bảng đăng ký giờ làm tự động đóng sau 22:00. Vui lòng đăng ký vào ngày mai.');
         }
 
         $data = $request->validate([
@@ -836,4 +852,62 @@ class StaffController extends Controller
         if ($shift) \Illuminate\Support\Facades\DB::table('shifts')->where('id',$shift->id)->update(['end_time'=>now()]);
         return back()->with('success', 'Đã kết thúc ca.');
     }
+
+    // Nhân viên đăng ký giờ tăng ca.
+    public function storeOvertime(Request $request)
+    {
+        $validated = $request->validate([
+            'hours' => 'required|numeric|min:0.5|max:2',
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'hours.required' => 'Vui lòng nhập số giờ tăng ca.',
+            'hours.numeric' => 'Số giờ phải là số.',
+            'hours.min' => 'Số giờ tối thiểu là 0.5 giờ.',
+            'hours.max' => 'Số giờ tối đa là 2 giờ.',
+        ]);
+
+        $staff = Auth::user();
+        $overtimeDate = now()->toDateString();
+
+        // Kiểm tra xem đã có đăng ký tăng ca cho ngày này chưa.
+        $existing = Overtime::where('staff_id', $staff->id)
+            ->whereDate('overtime_date', $overtimeDate)
+            ->first();
+
+        if ($existing) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Bạn đã đăng ký tăng ca cho ngày này rồi.',
+                ], 422);
+            }
+
+            return back()->with('error', 'Bạn đã đăng ký tăng ca cho ngày này rồi.');
+        }
+
+        $overtime = Overtime::create([
+            'staff_id' => $staff->id,
+            'overtime_date' => $overtimeDate,
+            'hours' => $validated['hours'],
+            'notes' => $validated['notes'],
+            'status' => 'pending',
+        ]);
+
+        if ($request->expectsJson()) {
+            $hours = (float) $overtime->hours;
+
+            return response()->json([
+                'message' => 'Đăng ký tăng ca thành công. Chờ admin duyệt.',
+                'overtime' => [
+                    'overtime_date' => Carbon::parse($overtime->overtime_date)->format('d/m/Y'),
+                    'hours' => fmod($hours, 1.0) === 0.0 ? (int) $hours : $hours,
+                    'status' => $overtime->status,
+                    'notes' => $overtime->notes,
+                    'staff_name' => $staff->name,
+                ],
+            ], 201);
+        }
+
+        return back()->with('success', 'Đăng ký tăng ca thành công. Chờ admin duyệt.');
+    }
 }
+

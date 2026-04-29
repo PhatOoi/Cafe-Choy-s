@@ -110,6 +110,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
     Route::get('/',        [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/work-schedules', [StaffController::class, 'workSchedules'])->name('work-schedules.index');
     Route::post('/work-schedules', [StaffController::class, 'storeWorkSchedule'])->name('work-schedules.store');
+    Route::post('/overtimes', [StaffController::class, 'storeOvertime'])->name('overtimes.store');
     Route::get('/orders',  [StaffController::class, 'orders'])->name('orders');
     // Chat hỗ trợ khách hàng
     Route::get('/support',                      fn() => view('staff.support'))->name('support');
@@ -142,10 +143,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('/',          fn() => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/reports',   [AdminController::class, 'reports'])->name('reports');
+    Route::get('/work-schedules', [AdminController::class, 'workSchedules'])->name('work-schedules.index');
     Route::get('/payroll',   [AdminController::class, 'payroll'])->name('payroll');
+    Route::post('/work-schedules/open-week-board', [AdminController::class, 'openWeeklyWorkScheduleBoard'])->name('work-schedules.open-week-board');
     Route::post('/work-schedules/close-week-board', [AdminController::class, 'closeWeeklyWorkScheduleBoard'])->name('work-schedules.close-week-board');
     Route::patch('/work-schedules/{id}/approve', [AdminController::class, 'approveWorkSchedule'])->name('work-schedules.approve');
+    Route::patch('/work-schedules/{id}/adjust', [AdminController::class, 'adjustWorkSchedule'])->name('work-schedules.adjust');
+    Route::patch('/work-schedules/{id}/extra', [AdminController::class, 'markWorkScheduleExtra'])->name('work-schedules.extra');
+    Route::patch('/work-schedules/{id}/absent', [AdminController::class, 'markWorkScheduleAbsent'])->name('work-schedules.absent');
     Route::patch('/work-schedules/{id}/close', [AdminController::class, 'closeWorkSchedule'])->name('work-schedules.close');
+    Route::patch('/overtimes/{id}/approve', [AdminController::class, 'approveOvertime'])->name('overtimes.approve');
+    Route::patch('/overtimes/{id}/reject', [AdminController::class, 'rejectOvertime'])->name('overtimes.reject');
 
     // Sản phẩm
     Route::get('/products',           [AdminController::class, 'products'])->name('products');

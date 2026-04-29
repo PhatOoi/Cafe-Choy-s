@@ -364,7 +364,9 @@
     </div>
 
     <div class="week-summary">
-        @if($isScheduleBoardLocked)
+        @if($isAutoClosedAtNight)
+            Bảng đăng ký giờ làm tự động đóng sau 22:00. Vui lòng quay lại đăng ký vào ngày mai.
+        @elseif($isScheduleBoardLocked)
             Bảng đăng ký giờ làm tuần này đã được admin đóng lúc {{ optional($weekBoardLock->locked_at)?->format('d/m/Y H:i') }}
             @if(optional($weekBoardLock->locker)->name)
                 bởi {{ $weekBoardLock->locker->name }}
@@ -487,4 +489,259 @@
         @endforelse
     </div>
 </div>
+
+{{-- Bảng đăng ký giờ tăng ca --}}
+<div class="schedule-card" style="margin-top:20px;">
+    <div class="schedule-card-header">
+        <div>
+            <h3 class="schedule-card-title">📋 Đăng ký giờ tăng ca</h3>
+            <p class="schedule-card-sub">Đăng ký giờ tăng ca và chờ admin duyệt.</p>
+        </div>
+    </div>
+
+    <div class="schedule-form">
+        <div id="overtimeFormMessage" class="schedule-note-box" style="display:none; margin:0 0 14px;"></div>
+        <form id="overtimeForm" method="POST" action="{{ route('staff.overtimes.store') }}">
+            @csrf
+            
+            <div class="schedule-form-row">
+                <div>
+                    <label class="schedule-label">Ngày tăng ca</label>
+                    <div class="schedule-input" style="background:#f8fafc; color:#475569;">{{ now()->format('d/m/Y') }} (hôm nay)</div>
+                </div>
+                <div>
+                    <label class="schedule-label">Số giờ tăng ca <span style="color: #d32f2f;">*</span></label>
+                    <input type="number" name="hours" class="schedule-input" required step="0.5" min="0.5" max="2"
+                        value="{{ old('hours') }}" placeholder="VD: 1.5 hoặc 2">
+                    <span data-error-for="hours" style="color: #d32f2f; font-size: 12px;"></span>
+                    @error('hours')
+                        <span style="color: #d32f2f; font-size: 12px;">{{ $message }}</span>
+                    @enderror
+                </div>
+            </div>
+
+            <div>
+                <label class="schedule-label">Ghi chú (tùy chọn)</label>
+                <textarea name="notes" class="schedule-textarea" placeholder="VD: Phục vụ sự kiện, hỗ trợ bếp...">{{ old('notes') }}</textarea>
+                <span data-error-for="notes" style="color: #d32f2f; font-size: 12px;"></span>
+                @error('notes')
+                    <span style="color: #d32f2f; font-size: 12px;">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+                <button id="overtimeSubmitBtn" type="submit" style="
+                    background: #d4813a;
+                    color: #fff;
+                    border: 0;
+                    padding: 10px 18px;
+                    border-radius: 10px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: filter .18s ease;
+                " onmouseover="this.style.filter='brightness(.95)'" onmouseout="this.style.filter='brightness(1)'">
+                    Đăng ký tăng ca
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Bảng danh sách tăng ca gần đây --}}
+<div class="schedule-card" style="margin-top:20px;">
+    <div class="schedule-card-header">
+        <div>
+            <h3 class="schedule-card-title">📊 Danh sách tăng ca của tôi</h3>
+            <p class="schedule-card-sub">Hiển thị 6 đơn tăng ca gần nhất.</p>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="schedule-table" style="min-width: 500px;">
+            <thead>
+                <tr>
+                    <th>Tên nhân viên</th>
+                    <th>Ngày tăng ca</th>
+                    <th>Số giờ</th>
+                    <th>Trạng thái</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody id="overtimeTableBody">
+                @forelse($myOvertimes as $overtime)
+                    <tr>
+                        <td style="font-weight: 700;">{{ $currentStaff->name }}</td>
+                        <td style="font-weight: 700;">{{ $overtime->overtime_date->format('d/m/Y') }}</td>
+                        <td style="text-align: center;">
+                            @php
+                                $hours = (int) $overtime->hours === $overtime->hours 
+                                    ? (int) $overtime->hours 
+                                    : $overtime->hours;
+                            @endphp
+                            {{ $hours }} giờ
+                        </td>
+                        <td>
+                            @if($overtime->status === 'pending')
+                                <span style="
+                                    display: inline-block;
+                                    background: #fef3c7;
+                                    color: #b45309;
+                                    padding: 5px 10px;
+                                    border-radius: 8px;
+                                    font-size: 11px;
+                                    font-weight: 700;
+                                    text-transform: uppercase;
+                                ">Chờ duyệt</span>
+                            @elseif($overtime->status === 'approved')
+                                <span style="
+                                    display: inline-block;
+                                    background: #dcfce7;
+                                    color: #166534;
+                                    padding: 5px 10px;
+                                    border-radius: 8px;
+                                    font-size: 11px;
+                                    font-weight: 700;
+                                    text-transform: uppercase;
+                                ">Được duyệt</span>
+                            @elseif($overtime->status === 'rejected')
+                                <span style="
+                                    display: inline-block;
+                                    background: #fee2e2;
+                                    color: #991b1b;
+                                    padding: 5px 10px;
+                                    border-radius: 8px;
+                                    font-size: 11px;
+                                    font-weight: 700;
+                                    text-transform: uppercase;
+                                ">Từ chối</span>
+                            @endif
+                        </td>
+                        <td style="font-size: 12px; color: #8a8fa8;">{{ $overtime->notes ?: '—' }}</td>
+                    </tr>
+                @empty
+                    <tr id="overtimeEmptyRow">
+                        <td colspan="5" class="schedule-empty">Bạn chưa có đơn tăng ca nào.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@endsection
+
+@section('scripts')
+<script>
+(() => {
+    const form = document.getElementById('overtimeForm');
+    const messageBox = document.getElementById('overtimeFormMessage');
+    const submitBtn = document.getElementById('overtimeSubmitBtn');
+    const tableBody = document.getElementById('overtimeTableBody');
+
+    if (!form || !messageBox || !submitBtn || !tableBody) {
+        return;
+    }
+
+    const showMessage = (text, type) => {
+        messageBox.style.display = 'block';
+        messageBox.textContent = text;
+        if (type === 'success') {
+            messageBox.style.background = '#ecfdf3';
+            messageBox.style.borderColor = '#c8f3d9';
+            messageBox.style.color = '#166534';
+            return;
+        }
+
+        messageBox.style.background = '#fef2f2';
+        messageBox.style.borderColor = '#fecaca';
+        messageBox.style.color = '#991b1b';
+    };
+
+    const clearFieldErrors = () => {
+        form.querySelectorAll('[data-error-for]').forEach((node) => {
+            node.textContent = '';
+        });
+    };
+
+    const setFieldErrors = (errors) => {
+        Object.entries(errors).forEach(([field, messages]) => {
+            const errorNode = form.querySelector(`[data-error-for="${field}"]`);
+            if (!errorNode || !Array.isArray(messages) || messages.length === 0) {
+                return;
+            }
+            errorNode.textContent = messages[0];
+        });
+    };
+
+    const statusBadgeHtml = (status) => {
+        if (status === 'approved') {
+            return '<span style="display:inline-block;background:#dcfce7;color:#166534;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;">Được duyệt</span>';
+        }
+        if (status === 'rejected') {
+            return '<span style="display:inline-block;background:#fee2e2;color:#991b1b;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;">Từ chối</span>';
+        }
+        return '<span style="display:inline-block;background:#fef3c7;color:#b45309;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;">Chờ duyệt</span>';
+    };
+
+    const appendOvertimeRow = (overtime) => {
+        const emptyRow = document.getElementById('overtimeEmptyRow');
+        if (emptyRow) {
+            emptyRow.remove();
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="font-weight: 700;">${overtime.staff_name || ''}</td>
+            <td style="font-weight: 700;">${overtime.overtime_date || ''}</td>
+            <td style="text-align: center;">${overtime.hours} giờ</td>
+            <td>${statusBadgeHtml(overtime.status)}</td>
+            <td style="font-size: 12px; color: #8a8fa8;">${overtime.notes || '—'}</td>
+        `;
+        tableBody.prepend(row);
+
+        while (tableBody.querySelectorAll('tr').length > 6) {
+            tableBody.lastElementChild?.remove();
+        }
+    };
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFieldErrors();
+        messageBox.style.display = 'none';
+        submitBtn.disabled = true;
+        const originalLabel = submitBtn.textContent;
+        submitBtn.textContent = 'Đang gửi...';
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new FormData(form),
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 422 && payload.errors) {
+                    setFieldErrors(payload.errors);
+                }
+                showMessage(payload.message || 'Không thể đăng ký tăng ca. Vui lòng thử lại.', 'error');
+                return;
+            }
+
+            appendOvertimeRow(payload.overtime || {});
+            showMessage(payload.message || 'Đăng ký tăng ca thành công.', 'success');
+            form.reset();
+        } catch (_error) {
+            showMessage('Không thể kết nối máy chủ. Vui lòng thử lại.', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalLabel;
+        }
+    });
+})();
+</script>
 @endsection
