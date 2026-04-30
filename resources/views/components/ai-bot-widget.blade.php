@@ -112,13 +112,15 @@
     background: linear-gradient(135deg, #c8a26b, #a07040);
     color: #fff;
     font-size: 22px;
-    cursor: pointer;
+    cursor: grab;
     box-shadow: 0 8px 24px rgba(200,162,107,.45);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     transition: transform .25s, box-shadow .25s;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #aiBotTrigger:hover {
@@ -877,5 +879,93 @@
             }
         });
     }
+
+    // ── Drag to reposition ──────────────────────────────────────────
+    (function () {
+        var widget = document.getElementById('aiBotWidget');
+        var trigger = document.getElementById('aiBotTrigger');
+        var dragging = false;
+        var dragMoved = false;
+        var startX, startY, origLeft, origTop;
+
+        function getWidgetRect() {
+            return widget.getBoundingClientRect();
+        }
+
+        function initPos() {
+            // Chuyển từ bottom/right sang top/left để drag hoạt động
+            var rect = getWidgetRect();
+            widget.style.bottom = 'auto';
+            widget.style.right = 'auto';
+            widget.style.top = rect.top + 'px';
+            widget.style.left = rect.left + 'px';
+        }
+
+        function clamp(val, min, max) {
+            return Math.max(min, Math.min(max, val));
+        }
+
+        function onStart(clientX, clientY) {
+            if (!widget.style.top || widget.style.top === '' || widget.style.top === 'auto') {
+                initPos();
+            }
+            dragging = true;
+            dragMoved = false;
+            startX = clientX;
+            startY = clientY;
+            origLeft = parseInt(widget.style.left);
+            origTop  = parseInt(widget.style.top);
+            trigger.style.cursor = 'grabbing';
+        }
+
+        function onMove(clientX, clientY) {
+            if (!dragging) return;
+            var dx = clientX - startX;
+            var dy = clientY - startY;
+            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragMoved = true;
+            var newLeft = clamp(origLeft + dx, 0, window.innerWidth  - widget.offsetWidth);
+            var newTop  = clamp(origTop  + dy, 0, window.innerHeight - widget.offsetHeight);
+            widget.style.left = newLeft + 'px';
+            widget.style.top  = newTop  + 'px';
+        }
+
+        function onEnd() {
+            if (!dragging) return;
+            dragging = false;
+            trigger.style.cursor = 'grab';
+        }
+
+        // Mouse
+        trigger.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            onStart(e.clientX, e.clientY);
+        });
+        document.addEventListener('mousemove', function (e) { onMove(e.clientX, e.clientY); });
+        document.addEventListener('mouseup', function (e) {
+            if (dragging && !dragMoved) {
+                // Là click bình thường → toggle panel
+                window.aiBotToggle();
+            }
+            onEnd();
+        });
+
+        // Touch
+        trigger.addEventListener('touchstart', function (e) {
+            var t = e.touches[0];
+            onStart(t.clientX, t.clientY);
+        }, { passive: true });
+        document.addEventListener('touchmove', function (e) {
+            if (!dragging) return;
+            var t = e.touches[0];
+            onMove(t.clientX, t.clientY);
+        }, { passive: true });
+        document.addEventListener('touchend', function () {
+            if (dragging && !dragMoved) window.aiBotToggle();
+            onEnd();
+        });
+
+        // Xóa onclick gốc để không bị gọi 2 lần sau khi drag
+        trigger.removeAttribute('onclick');
+    }());
 })();
 </script>

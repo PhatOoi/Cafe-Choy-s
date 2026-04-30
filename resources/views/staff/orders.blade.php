@@ -160,15 +160,6 @@
                value="{{ request('search') }}">
     </div>
 
-    <div class="filter-group">
-        <label>Loại đơn</label>
-        <select name="type" class="filter-input">
-            <option value="">Tất cả</option>
-            <option value="delivery"  {{ request('type') === 'delivery'  ? 'selected' : '' }}>Giao hàng</option>
-            <option value="in_store"  {{ request('type') === 'in_store'  ? 'selected' : '' }}>Tại quán</option>
-        </select>
-    </div>
-
     <button type="submit" class="btn-primary-staff" style="height:38px;">
         <i class="fas fa-search"></i> Lọc
     </button>
@@ -194,7 +185,6 @@
                 <tr>
                     <th>Mã đơn</th>
                     <th>Khách hàng</th>
-                    <th>Loại</th>
                     <th>Sản phẩm</th>
                     <th>Tổng tiền</th>
                     <th>Thanh toán</th>
@@ -218,15 +208,6 @@
                                 <div class="customer-phone">{{ $order->user->phone ?? '' }}</div>
                             </div>
                         </div>
-                    </td>
-                    <td>
-                        @if($order->order_type === 'delivery')
-                            <span class="order-type-icon" title="Giao hàng">🛵</span>
-                            <span style="font-size:12px;">Giao hàng</span>
-                        @else
-                            <span class="order-type-icon" title="Tại quán">🏠</span>
-                            <span style="font-size:12px;">Tại quán</span>
-                        @endif
                     </td>
                     <td>
                         <span style="font-size:13px;">{{ $order->items->count() }} món</span>

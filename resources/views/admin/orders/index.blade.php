@@ -89,7 +89,7 @@
                     </td>
                     <td>
                         <span style="font-size:12px;">
-                            {{ $order->order_type === 'delivery' ? '🛵 Giao hàng' : '🏠 Tại quán' }}
+                            🏠 Tại quán
                         </span>
                     </td>
                     <td><span class="badge badge-{{ $order->status }}">{{ $order->status_label ?? $order->status }}</span></td>

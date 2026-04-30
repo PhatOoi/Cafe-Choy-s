@@ -20,14 +20,12 @@ class Order extends Model
     // Các cột cho phép mass assignment khi tạo/cập nhật đơn.
     protected $fillable = [
         'user_id',
-        'address_id',
         'assigned_staff_id',
         'voucher_id',
-        'order_type',
         'status',
         'total_price',
         'discount_amount',
-        'shipping_fee',
+        'points_used',
         'final_price',
         'note',
     ];
@@ -37,7 +35,6 @@ class Order extends Model
         'created_at' => 'datetime',
         'total_price' => 'decimal:2',
         'discount_amount' => 'decimal:2',
-        'shipping_fee' => 'decimal:2',
         'final_price' => 'decimal:2',
         'updated_at' => 'datetime',
     ];
@@ -54,7 +51,7 @@ class Order extends Model
         return $this->belongsTo(User::class, 'assigned_staff_id');
     }
 
-    // Địa chỉ giao hàng nếu đây là đơn delivery.
+    // Địa chỉ liên kết với đơn (nếu có).
     public function address()
     {
         return $this->belongsTo(Address::class);
@@ -80,8 +77,8 @@ class Order extends Model
             'confirmed'  => 'Đã xác nhận',
             'processing' => 'Đang chuẩn bị',
             'ready'      => 'Sẵn sàng',
-            'delivering' => $this->order_type === 'delivery' ? 'Đã giao' : 'Hoàn thành đơn hàng',
-            'delivered'  => $this->order_type === 'delivery' ? 'Đã giao' : 'Hoàn thành đơn hàng',
+            'delivering' => 'Hoàn thành đơn hàng',
+            'delivered'  => 'Hoàn thành đơn hàng',
             'failed'     => 'Thất bại',
             'cancelled'  => 'Đã hủy',
             default      => $this->status,
@@ -107,17 +104,6 @@ class Order extends Model
     // Các trạng thái tiếp theo hợp lệ cho nhân viên
     public function getNextStatusesAttribute()
     {
-        // Hiện tại cả đơn delivery và in_store đều đi chung một flow trạng thái.
-        if ($this->order_type !== 'delivery') {
-            return match($this->status) {
-                'pending'    => ['confirmed', 'cancelled'],
-                'confirmed'  => ['processing', 'cancelled'],
-                'processing' => ['ready'],
-                'ready'      => ['delivered'],
-                default      => [],
-            };
-        }
-
         return match($this->status) {
             'pending'    => ['confirmed', 'cancelled'],
             'confirmed'  => ['processing', 'cancelled'],

@@ -162,7 +162,7 @@
                         <p style="font-size:13px;color:#8a8fa8;margin:4px 0 0;">
                             {{ \Carbon\Carbon::parse($order->created_at)->format('H:i — d/m/Y') }}
                             &nbsp;·&nbsp;
-                            {{ $order->order_type === 'delivery' ? '🛵 Giao hàng' : '🏠 Tại quán' }}
+                            🏠 Tại quán
                         </p>
                     </div>
                     <span class="badge-status badge-{{ $order->status }}" style="font-size:13px;padding:6px 16px;">
@@ -218,12 +218,6 @@
                         <span>-{{ number_format($order->discount_amount, 0, ',', '.') }}đ</span>
                     </div>
                     @endif
-                    @if($order->shipping_fee > 0)
-                    <div class="price-row">
-                        <span>Phí giao hàng</span>
-                        <span>{{ number_format($order->shipping_fee, 0, ',', '.') }}đ</span>
-                    </div>
-                    @endif
                     <div class="price-row total">
                         <span>Tổng thanh toán</span>
                         <span>{{ number_format($order->final_price, 0, ',', '.') }}đ</span>
@@ -236,10 +230,9 @@
         <div class="card">
             <div class="card-header">
                 <i class="fas fa-user" style="color:var(--primary);margin-right:8px;"></i>
-                {{ $order->order_type === 'delivery' ? 'Thông tin khách hàng' : 'Thông tin đơn tại quán' }}
+                Thông tin đơn tại quán
             </div>
             <div class="card-body">
-                @if($order->order_type === 'delivery')
                 <div class="info-row">
                     <span class="info-label">Họ tên</span>
                     <span class="info-value">{{ $order->user->name ?? '—' }}</span>
@@ -252,16 +245,6 @@
                     <span class="info-label">Điện thoại</span>
                     <span class="info-value">{{ $order->user->phone ?? '—' }}</span>
                 </div>
-                @if($order->address)
-                <div class="info-row" style="flex-direction:column;gap:6px;">
-                    <span class="info-label">Địa chỉ giao hàng</span>
-                    <div class="address-box">
-                        <i class="fas fa-map-marker-alt"></i>
-                        {{ $order->address->full_address }}
-                    </div>
-                </div>
-                @endif
-                @else
                 <div class="info-row">
                     <span class="info-label">Số thứ tự đơn</span>
                     <span class="info-value">#{{ $order->id }}</span>
@@ -270,7 +253,6 @@
                     <span class="info-label">Hình thức</span>
                     <span class="info-value">Tại quán</span>
                 </div>
-                @endif
                 @if($order->note)
                 <div class="info-row" style="flex-direction:column;gap:6px;">
                     <span class="info-label">Ghi chú</span>
@@ -340,39 +322,21 @@
                 {{-- Timeline --}}
                 <div class="status-timeline">
                     @php
-                        if ($order->order_type === 'delivery') {
-                            $steps = ['pending','confirmed','processing','ready','delivered'];
-                            $labels = [
-                                'pending'    => 'Chờ xác nhận',
-                                'confirmed'  => 'Đã xác nhận',
-                                'processing' => 'Đang chuẩn bị',
-                                'ready'      => 'Sẵn sàng giao',
-                                'delivered'  => 'Đã giao',
-                            ];
-                            $icons = [
-                                'pending'    => 'clock',
-                                'confirmed'  => 'check',
-                                'processing' => 'blender',
-                                'ready'      => 'box',
-                                'delivered'  => 'check-double',
-                            ];
-                        } else {
-                            $steps = ['pending','confirmed','processing','ready','delivered'];
-                            $labels = [
-                                'pending'    => 'Chờ xác nhận',
-                                'confirmed'  => 'Đã xác nhận',
-                                'processing' => 'Đang chuẩn bị',
-                                'ready'      => 'Sẵn sàng',
-                                'delivered'  => 'Hoàn thành đơn hàng',
-                            ];
-                            $icons = [
-                                'pending'    => 'clock',
-                                'confirmed'  => 'check',
-                                'processing' => 'blender',
-                                'ready'      => 'box',
-                                'delivered'  => 'check-double',
-                            ];
-                        }
+                        $steps = ['pending','confirmed','processing','ready','delivered'];
+                        $labels = [
+                            'pending'    => 'Chờ xác nhận',
+                            'confirmed'  => 'Đã xác nhận',
+                            'processing' => 'Đang chuẩn bị',
+                            'ready'      => 'Sẵn sàng',
+                            'delivered'  => 'Hoàn thành đơn hàng',
+                        ];
+                        $icons = [
+                            'pending'    => 'clock',
+                            'confirmed'  => 'check',
+                            'processing' => 'blender',
+                            'ready'      => 'box',
+                            'delivered'  => 'check-double',
+                        ];
                         $currentIdx = array_search($order->status, $steps);
                     @endphp
 

@@ -177,7 +177,7 @@
 
                         <div class="faq-item">
                             <button class="faq-question" type="button">
-                                <span>Thời gian giao hàng mất bao lâu?</span>
+                                <span>Thời gian chuẩn bị món mất bao lâu?</span>
                                 <i class="fas fa-chevron-down faq-icon"></i>
                             </button>
                             <div class="faq-answer">

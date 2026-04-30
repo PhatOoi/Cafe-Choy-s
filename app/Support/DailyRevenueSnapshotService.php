@@ -23,8 +23,7 @@ class DailyRevenueSnapshotService
         // Duyệt từng ngày để tính và upsert snapshot riêng cho ngày đó.
         while ($cursorDate->lte($endDate)) {
             $dateString = $cursorDate->toDateString();
-            $isStaffCreatedOrder = fn ($order) => in_array((int) optional($order->user)->role_id, [1, 2], true)
-                && $order->order_type === 'in_store';
+            $isStaffCreatedOrder = fn ($order) => in_array((int) optional($order->user)->role_id, [1, 2], true);
             $isWebAppOrder = fn ($order) => (int) optional($order->user)->role_id === 3;
 
             // Chỉ lấy các đơn đã paid và thuộc 2 nguồn doanh thu cần thống kê.
@@ -33,8 +32,7 @@ class DailyRevenueSnapshotService
                 ->whereHas('payment', fn ($query) => $query->where('status', 'paid'))
                 ->where(function ($query) {
                     $query->where(function ($staffQuery) {
-                        $staffQuery->where('order_type', 'in_store')
-                            ->whereHas('user', fn ($userQuery) => $userQuery->whereIn('role_id', [1, 2]));
+                        $staffQuery->whereHas('user', fn ($userQuery) => $userQuery->whereIn('role_id', [1, 2]));
                     })->orWhereHas('user', fn ($userQuery) => $userQuery->where('role_id', 3));
                 })
                 ->get();

@@ -9,7 +9,7 @@ class Address extends Model
     // Bảng địa chỉ không dùng created_at/updated_at tự động.
     public $timestamps = false;
 
-    // Các cột cho phép gán hàng loạt khi tạo/sửa địa chỉ giao hàng.
+    // Các cột cho phép gán hàng loạt khi tạo/sửa địa chỉ.
     protected $fillable = [
         'user_id', 'label', 'address_line', 'district', 'city', 'lat', 'lng', 'is_default',
     ];

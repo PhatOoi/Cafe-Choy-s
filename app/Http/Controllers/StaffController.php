@@ -32,8 +32,7 @@ class StaffController extends Controller
     private function getRevenueSnapshotData(): array
     {
         $historyStart = now()->subDays(29)->startOfDay();
-        $isStaffCreatedOrder = fn ($order) => in_array((int) optional($order->user)->role_id, [1, 2], true)
-            && $order->order_type === 'in_store';
+        $isStaffCreatedOrder = fn ($order) => in_array((int) optional($order->user)->role_id, [1, 2], true);
         $isWebAppOrder = fn ($order) => (int) optional($order->user)->role_id === 3;
 
         // Mỗi lần vào trang báo cáo sẽ sync lại snapshot để hạn chế lệch dữ liệu hiển thị.
@@ -65,8 +64,7 @@ class StaffController extends Controller
             ->whereHas('payment', fn ($query) => $query->where('status', 'paid'))
             ->where(function ($query) {
                 $query->where(function ($staffQuery) {
-                    $staffQuery->where('order_type', 'in_store')
-                        ->whereHas('user', fn ($userQuery) => $userQuery->whereIn('role_id', [1, 2]));
+                    $staffQuery->whereHas('user', fn ($userQuery) => $userQuery->whereIn('role_id', [1, 2]));
                 })->orWhereHas('user', fn ($userQuery) => $userQuery->where('role_id', 3));
             })
             ->get();
@@ -127,16 +125,11 @@ class StaffController extends Controller
     public function orders(Request $request)
     {
         // Nạp danh sách đơn cho staff với đủ quan hệ cần hiển thị trong bảng.
-        $query = Order::with(['user', 'items.product', 'payment', 'address']);
+        $query = Order::with(['user', 'items.product', 'payment']);
 
         // Lọc theo trạng thái
         if ($request->filled('status')) {
             $query->where('status', $request->status);
-        }
-
-        // Lọc theo loại đơn
-        if ($request->filled('type')) {
-            $query->where('order_type', $request->type);
         }
 
         // Tìm theo ID hoặc tên khách
@@ -202,7 +195,6 @@ class StaffController extends Controller
 
         $orders = Order::with(['items.product', 'payment'])
             ->where('assigned_staff_id', $staffId)
-            ->where('order_type', 'in_store')
             ->where('created_at', '>=', $historyStart)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -212,8 +204,7 @@ class StaffController extends Controller
             ->whereHas('payment', fn ($query) => $query->where('status', 'paid'))
             ->where(function ($query) use ($staffId) {
                 $query->where(function ($staffQuery) use ($staffId) {
-                    $staffQuery->where('assigned_staff_id', $staffId)
-                        ->where('order_type', 'in_store');
+                    $staffQuery->where('assigned_staff_id', $staffId);
                 })->orWhereHas('user', fn ($userQuery) => $userQuery->where('role_id', 3));
             })
             ->orderBy('created_at', 'desc')
@@ -225,7 +216,7 @@ class StaffController extends Controller
             ->map(function ($group, $date) use ($orders, $staffId) {
                 $staffOrdersForDay = $orders->filter(fn ($order) => $order->created_at->format('Y-m-d') === $date)->values();
                 $staffCreatedRevenue = (float) $group
-                    ->filter(fn ($order) => (int) $order->assigned_staff_id === (int) $staffId && $order->order_type === 'in_store')
+                    ->filter(fn ($order) => (int) $order->assigned_staff_id === (int) $staffId)
                     ->sum('final_price');
                 $customerRevenue = (float) $group
                     ->filter(fn ($order) => optional($order->user)->role_id === 3)
@@ -306,7 +297,7 @@ class StaffController extends Controller
     public function updateStatus(Request $request, $id)
     {
         // updateStatus là luồng trung tâm để staff chuyển bước đơn hàng hoặc hủy đơn.
-        $order = Order::findOrFail($id);
+        $order = Order::with(['payment', 'user'])->findOrFail($id);
         $cancelReasonOptions = [
             'change_option' => 'Thay đổi topping/kích cỡ',
             'no_longer_needed' => 'Không còn nhu cầu mua',
@@ -365,6 +356,19 @@ class StaffController extends Controller
 
         $order->save();
 
+        // Xử lý điểm tích lũy khi hủy đơn.
+        if ($nextStatus === 'cancelled') {
+            $orderUser = $order->user;
+            if ($orderUser) {
+                $pointsUsed   = (int) ($order->points_used ?? 0);
+                $wasPaid      = optional($order->payment)->status === 'paid';
+                $pointsEarned = $wasPaid ? (int) floor($order->final_price / 10) : 0;
+                // Hoàn điểm đã dùng, trừ điểm đã nhận (nếu đơn đã thanh toán).
+                $orderUser->loyalty_points = max(0, $orderUser->loyalty_points + $pointsUsed - $pointsEarned);
+                $orderUser->save();
+            }
+}
+
         // Nếu giao thành công → cập nhật payment
         if ($nextStatus === 'delivered') {
             $order->payment?->update([
@@ -420,6 +424,15 @@ class StaffController extends Controller
 
             DB::table('carts')->where('user_id', $order->user_id)->delete();
         });
+
+        // Cộng điểm tích lũy cho khách = số tiền thực trả / 10 (10đ = 1 điểm).
+        if ($order->user_id) {
+            $orderUser = \App\Models\User::find($order->user_id);
+            if ($orderUser) {
+                $orderUser->loyalty_points = $orderUser->loyalty_points + (int) floor($order->final_price / 10);
+                $orderUser->save();
+            }
+        }
 
         // Khi payment chuyển sang paid thì snapshot doanh thu cũng cần cập nhật.
         $this->syncDailyRevenueSnapshots();
@@ -527,11 +540,9 @@ class StaffController extends Controller
             $order = Order::create([
                 'user_id'           => Auth::id(),
                 'assigned_staff_id' => Auth::id(),
-                'order_type'        => 'in_store',
                 'status'            => $initialStatus,
                 'total_price'       => $totalPrice,
                 'discount_amount'   => 0,
-                'shipping_fee'      => 0,
                 'final_price'       => $totalPrice,
                 'note'              => $orderNote !== '' ? $orderNote : 'Bán tại quán',
                 'created_at'        => now(),
@@ -597,7 +608,7 @@ class StaffController extends Controller
 
     // Mở trang xem/sửa đơn hiện tại cho staff.
     public function editOrder($id) {
-        $order = Order::with(['user','items.product','address','payment'])->findOrFail($id);
+        $order = Order::with(['user','items.product','payment'])->findOrFail($id);
         return view('staff.order-detail', compact('order'));
     }
 
@@ -617,12 +628,12 @@ class StaffController extends Controller
     }
     public function invoice($id) {
         // Mở chế độ in hóa đơn bằng chính view chi tiết đơn với cờ printMode.
-        $order = Order::with(['user','address','items.product','items.extras','payment'])->findOrFail($id);
+        $order = Order::with(['user','items.product','items.extras','payment'])->findOrFail($id);
         return view('staff.order-detail', ['order'=>$order, 'printMode'=>true]);
     }
 
-    // Gán nhân viên phụ trách cho đơn giao hàng hoặc đơn cần điều phối nội bộ.
-    public function assignDelivery(Request $request, $id) {
+    // Gán nhân viên phụ trách cho đơn hàng.
+    public function assignStaff(Request $request, $id) {
         Order::findOrFail($id)->update(['assigned_staff_id' => $request->staff_id]);
         return back()->with('success', 'Đã phân công nhân viên.');
     }

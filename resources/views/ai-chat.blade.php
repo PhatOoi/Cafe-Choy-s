@@ -126,7 +126,7 @@
                             <ul style="margin: 8px 0 0; padding-left: 18px; line-height: 1.9;">
                                 <li>Menu & giá cả các món</li>
                                 <li>Cách đặt hàng & thanh toán</li>
-                                <li>Giao hàng & chính sách hủy đơn</li>
+                                <li>Thời gian chuẩn bị món & chính sách hủy đơn</li>
                                 <li>Gợi ý món phù hợp</li>
                             </ul>
                             Bạn muốn hỏi gì?
@@ -139,7 +139,7 @@
                     <button class="ai-suggestion-btn" onclick="sendSuggestion(this)">☕ Menu cà phê có gì?</button>
                     <button class="ai-suggestion-btn" onclick="sendSuggestion(this)">🧋 Trà sữa nào ngon nhất?</button>
                     <button class="ai-suggestion-btn" onclick="sendSuggestion(this)">💳 Thanh toán bằng cách nào?</button>
-                    <button class="ai-suggestion-btn" onclick="sendSuggestion(this)">🚚 Giao hàng bao lâu?</button>
+                    <button class="ai-suggestion-btn" onclick="sendSuggestion(this)">⏱️ Chuẩn bị món bao lâu?</button>
                     <button class="ai-suggestion-btn" onclick="sendSuggestion(this)">❌ Hủy đơn được không?</button>
                     <button class="ai-suggestion-btn" onclick="sendSuggestion(this)">🎂 Bánh & snack có gì?</button>
                 </div>

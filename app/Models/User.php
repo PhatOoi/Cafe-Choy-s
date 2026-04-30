@@ -10,7 +10,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     // Các trường có thể gán hàng loạt khi tạo/cập nhật user.
-    protected $fillable = ['name','email','password','role_id','employment_type','citizen_id','is_active','phone','avatar_url'];
+    protected $fillable = ['name','email','password','role_id','employment_type','citizen_id','is_active','phone','avatar_url','loyalty_points'];
 
     // Các trường nhạy cảm không trả ra khi serialize model.
     protected $hidden   = ['password','remember_token'];

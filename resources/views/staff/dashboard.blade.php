@@ -103,7 +103,7 @@
                     <div class="order-card-meta">
                         <span class="badge-status badge-{{ $order->status }}">{{ $order->status_label }}</span>
                         &nbsp;·&nbsp;{{ $order->items->count() }} món
-                        &nbsp;·&nbsp;{{ $order->order_type === 'delivery' ? '🛵 Giao hàng' : '🏠 Tại quán' }}
+                        &nbsp;·&nbsp;🏠 Tại quán
                     </div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">

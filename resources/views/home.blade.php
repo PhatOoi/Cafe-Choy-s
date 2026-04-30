@@ -247,12 +247,11 @@
                 <div class="col-md-4 ftco-animate">
                     <div class="media d-block text-center block-6 services">
                         <div class="icon d-flex justify-content-center align-items-center mb-5">
-                            <span class="flaticon-delivery-truck"></span>
+                            <span class="flaticon-coffee-cup"></span>
                         </div>
                         <div class="media-body">
-                            <h3 class="heading">Giao Hàng Nhanh Chóng</h3>
-                            <p>Cam kết giao hàng nhanh chóng và đảm bảo chất lượng, giúp bạn nhận được món uống yêu
-                                thích chỉ trong thời gian ngắn nhất.</p>
+                            <h3 class="heading">Phục Vụ Nhanh Tại Quán</h3>
+                            <p>Đội ngũ luôn chuẩn bị món nhanh chóng và đúng vị để bạn nhận đồ uống tại quầy trong thời gian ngắn nhất.</p>
                         </div>
                     </div>
                 </div>

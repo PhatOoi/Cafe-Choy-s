@@ -67,7 +67,7 @@ class OrderHistoryController extends Controller
         }
 
         // Chỉ lấy đơn thuộc về user hiện tại để tránh truy cập chéo dữ liệu.
-        $order = Order::query()
+        $order = Order::with(['payment', 'user'])
             ->where('user_id', $user->id)
             ->whereKey($id)
             ->firstOrFail();
@@ -82,6 +82,17 @@ class OrderHistoryController extends Controller
         $order->status = 'cancelled';
         $order->note = trim(($existingNote !== '' ? $existingNote . ' | ' : '') . 'Khách hàng tự hủy đơn');
         $order->save();
+
+        // Xử lý điểm tích lũy khi hủy đơn.
+        $orderUser = $order->user;
+        if ($orderUser) {
+            $pointsUsed    = (int) ($order->points_used ?? 0);
+            $wasPaid       = optional($order->payment)->status === 'paid';
+            $pointsEarned  = $wasPaid ? (int) floor($order->final_price / 10) : 0;
+            // Hoàn điểm đã dùng, trừ điểm đã nhận (nếu đơn đã thanh toán).
+            $orderUser->loyalty_points = max(0, $orderUser->loyalty_points + $pointsUsed - $pointsEarned);
+            $orderUser->save();
+        }
 
         // Đồng bộ số liệu báo cáo nếu trạng thái đơn thay đổi ảnh hưởng đến thống kê.
         $this->syncDailyRevenueSnapshots();

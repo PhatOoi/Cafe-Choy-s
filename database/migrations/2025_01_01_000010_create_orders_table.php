@@ -17,19 +17,19 @@ return new class extends Migration
                   ->comment('NULL = mua tại quán');
             $table->foreignId('assigned_staff_id')->nullable()->nullOnDelete()
                   ->constrained('users')
-                  ->comment('Nhân viên phụ trách giao / tiếp nhận');
+                  ->comment('Nhân viên phụ trách tiếp nhận');
             $table->foreignId('voucher_id')->nullable()->nullOnDelete()
                   ->constrained('vouchers')
                   ->comment('Voucher áp dụng cho đơn');
-            $table->string('order_type', 20)->default('delivery')
-                  ->comment('delivery / in_store');
+            $table->string('order_type', 20)->default('in_store')
+                  ->comment('in_store');
             $table->string('status', 30)->default('pending')
                   ->comment('pending/confirmed/processing/ready/delivering/delivered/failed/cancelled');
             $table->decimal('total_price', 10, 2)->comment('Tổng trước giảm');
             $table->decimal('discount_amount', 10, 2)->default(0)
                   ->comment('Số tiền được giảm');
             $table->decimal('shipping_fee', 10, 2)->default(0);
-            $table->decimal('final_price', 10, 2)->comment('Tổng sau giảm + phí ship');
+            $table->decimal('final_price', 10, 2)->comment('Tổng sau giảm');
             $table->text('note')->nullable();
             $table->timestamp('created_at')->useCurrent();
 

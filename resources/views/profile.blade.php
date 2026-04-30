@@ -262,6 +262,42 @@
                         </div>
                     </section>
 
+                    {{-- ── Panel tích điểm thành viên ── --}}
+                    @if(!$user->isStaff())
+                    <section class="profile-panel panel-wide">
+                        <div class="panel-heading">
+                            <span class="panel-kicker">Thành viên</span>
+                            <h3>Điểm tích lũy</h3>
+                        </div>
+                        @php $points = $user->loyalty_points ?? 0; @endphp
+
+                        <div style="display:flex;flex-direction:column;gap:20px;">
+                            {{-- Tổng điểm --}}
+                            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                                <div style="display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:50%;background:#c8773a22;border:2px solid #c8773a;flex-shrink:0;">
+                                    <i class="fas fa-star" style="font-size:28px;color:#c8773a;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size:13px;color:#8b7355;font-weight:600;margin-bottom:2px;">Điểm thành viên</div>
+                                    <div style="font-size:36px;font-weight:800;color:#c8773a;line-height:1;">{{ number_format($points, 0, ',', '.') }}</div>
+                                    <div style="font-size:12px;color:#aaa;margin-top:2px;">điểm</div>
+                                </div>
+                            </div>
+
+                            {{-- Cách tích điểm --}}
+                            <div style="background:#fdf8f3;border-radius:12px;padding:16px;">
+                                <div style="font-size:13px;font-weight:700;color:#5c3d2e;margin-bottom:8px;"><i class="fas fa-info-circle" style="color:#c8773a;margin-right:6px;"></i>Cách tích điểm</div>
+                                <ul style="margin:0;padding-left:16px;font-size:12px;color:#7a6652;line-height:1.9;">
+                                    <li>Mỗi <strong>10đ</strong> thanh toán = <strong>1 điểm</strong></li>
+                                    <li>Điểm được cộng khi đơn hoàn thành &amp; đã thanh toán</li>
+                                    <li>Điểm có thể dùng để giảm giá cho đơn tiếp theo (1 điểm = 1đ)</li>
+                                    <li>Điểm không có hạn sử dụng</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                    @endif
+
                     {{-- ── Panel đổi mật khẩu: validate mật khẩu mạnh + xác nhận ── --}}
                     <section class="profile-panel panel-wide" id="password-panel">
                         <div class="panel-heading">

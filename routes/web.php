@@ -131,7 +131,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
     Route::post('/orders/{id}/status',  [StaffController::class, 'updateStatus'])->name('order.status');
     Route::post('/orders/{id}/confirm-payment', [StaffController::class, 'confirmPayment'])->name('order.payment.confirm');
     Route::get('/orders/{id}/invoice',  [StaffController::class, 'invoice'])->name('order.invoice');
-    Route::post('/orders/{id}/assign',  [StaffController::class, 'assignDelivery'])->name('order.assign');
+    Route::post('/orders/{id}/assign',  [StaffController::class, 'assignStaff'])->name('order.assign');
     Route::post('/shift/start', [StaffController::class, 'startShift'])->name('shift.start');
     Route::post('/shift/end',   [StaffController::class, 'endShift'])->name('shift.end');
 });

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class AddressSeeder extends Seeder
 {
-    // Seed một số địa chỉ mẫu cho khách hàng để test checkout giao hàng.
+    // Seed một số địa chỉ mẫu cho khách hàng.
     public function run(): void
     {
         // Mỗi record mô phỏng một địa chỉ đã lưu của khách, có kèm tọa độ map.

@@ -260,21 +260,58 @@
 									<div class="card-body">
                                            <h5 class="card-title">Tổng Cộng</h5>
                                            <h3 class="text-danger" id="cart-total">{{ number_format($total) }} đ</h3>
-                                           <button class="btn btn-primary btn-block mt-3" type="button" data-toggle="modal" data-target="#paymentMethodModal">Thanh Toán</button>
+                                           @auth
+                                           @if($userPoints > 0)
+                                           <div id="points-discount-row" style="display:none;margin-top:6px;font-size:13px;color:#27ae60;font-weight:600;">  − <span id="points-discount-amount">0</span>đ giảm từ điểm</div>
+                                           @endif
+                                           @endauth
+                                           <button class="btn btn-primary btn-block mt-3" type="button" onclick="openPaymentModal()">Thanh Toán</button>
                                     </div>
                                     <!-- Modal chọn hình thức thanh toán -->
                                     <div class="modal fade" id="paymentMethodModal" tabindex="-1" role="dialog" aria-labelledby="paymentMethodModalLabel" aria-hidden="true">
                                         <div class="modal-dialog" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header border-0" style="display:block;">
-                                                    <div class="w-100 text-center font-weight-bold" style="font-size:18px; margin-bottom:12px;">Vui lòng lựa chọn hình thức thanh toán</div>
+                                                    <div class="w-100 text-center font-weight-bold" style="font-size:18px; margin-bottom:12px;">Xác nhận & Thanh toán</div>
                                                     <button type="button" class="close position-absolute" style="right:16px;top:16px;" data-dismiss="modal" aria-label="Close">
                                                         <span aria-hidden="true">&times;</span>
                                                     </button>
                                                 </div>
-                                                <div class="modal-body d-flex flex-column align-items-center gap-3" style="gap: 16px;">
-                                                    <button class="btn btn-primary w-100 mb-2" type="button" onclick="handleCashPayment()">Thanh toán bằng tiền mặt</button>
-                                                    <button class="btn btn-primary w-100" type="button" onclick="showQRModal()">Thanh toán QR code</button>
+                                                <div class="modal-body">
+                                                    @auth
+                                                    @if($userPoints > 0)
+                                                    {{-- Xác nhận dùng điểm --}}
+                                                    <div style="background:#fffaf4;border:1.5px solid #f59e0b55;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+                                                        <div style="font-size:13px;font-weight:700;color:#5c3d2e;margin-bottom:10px;">
+                                                            <i class="fas fa-star" style="color:#f59e0b;margin-right:6px;"></i>Điểm tích lũy của bạn
+                                                        </div>
+                                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                                                            <span style="font-size:13px;color:#7a6652;">Số điểm hiện có</span>
+                                                            <span style="font-weight:700;color:#c8773a;font-size:15px;">{{ number_format($userPoints, 0, ',', '.') }} điểm</span>
+                                                        </div>
+                                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                                            <span style="font-size:13px;color:#7a6652;">Có thể giảm tối đa</span>
+                                                            <span style="font-weight:700;color:#27ae60;font-size:14px;" id="modal-max-discount">—</span>
+                                                        </div>
+                                                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;padding:10px 12px;background:#fff;border:1.5px solid #e8ddd2;border-radius:9px;">
+                                                            <input type="checkbox" id="use-points-toggle" onchange="toggleUsePoints(this.checked)" style="width:17px;height:17px;accent-color:#c8773a;cursor:pointer;flex-shrink:0;">
+                                                            <span style="font-size:13px;font-weight:600;color:#5c3d2e;">Dùng điểm để giảm giá đơn này</span>
+                                                        </label>
+                                                        <div id="modal-points-applied" style="display:none;margin-top:10px;padding:8px 12px;background:#e8f8ee;border-radius:8px;font-size:13px;color:#1a7a40;font-weight:600;">
+                                                            ✅ Đã áp dụng: giảm <span id="modal-discount-amount">0</span>đ → Còn lại <span id="modal-final-total">0</span>đ
+                                                        </div>
+                                                    </div>
+                                                    @endif
+                                                    @endauth
+                                                    <div style="font-size:13px;font-weight:700;color:#3d2b1f;margin-bottom:10px;text-align:center;">Chọn hình thức thanh toán</div>
+                                                    <div class="d-flex flex-column" style="gap:10px;">
+                                                        <button class="btn btn-primary w-100" type="button" onclick="handleCashPayment()">
+                                                            <i class="fas fa-money-bill-wave" style="margin-right:8px;"></i>Tiền mặt
+                                                        </button>
+                                                        <button class="btn btn-primary w-100" type="button" onclick="showQRModal()">
+                                                            <i class="fas fa-qrcode" style="margin-right:8px;"></i>Thanh toán QR code
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -409,7 +446,73 @@
                                     </div>
 
                                     <!-- Đặt toàn bộ JS ở cuối file, sau tất cả HTML -->
-                                    <script>
+                                    <script>                                    var userLoyaltyPoints = {{ $userPoints ?? 0 }};
+                                    var usePoints = false;
+
+                                    /**
+                                     * Tính số điểm tối đa được phép dùng theo giá trị đơn:
+                                     * < 300.000đ : làm tròn xuống bội 10.000 (phần dư modulo 10.000)
+                                     * >= 300.000đ: tối đa 10% giá trị đơn
+                                     */
+                                    function calcMaxDiscount(base) {
+                                        if (base >= 300000) return Math.floor(base * 0.1);
+                                        var remainder = base % 10000;
+                                        // Đã tròn bội 10k → áp 10%
+                                        if (remainder === 0) return Math.floor(base * 0.1);
+                                        // Có lẻ → chỉ giảm phần lẻ để làm tròn
+                                        return remainder;
+                                    }
+
+                                    function openPaymentModal() {
+                                        if (getCartEntries(window.currentCartState).length === 0) {
+                                            showToast('Giỏ hàng đang trống.');
+                                            return;
+                                        }
+                                        // Reset trạng thái điểm mỗi lần mở modal
+                                        usePoints = false;
+                                        var toggle = document.getElementById('use-points-toggle');
+                                        if (toggle) toggle.checked = false;
+                                        var applied = document.getElementById('modal-points-applied');
+                                        if (applied) applied.style.display = 'none';
+                                        var discountRow = document.getElementById('points-discount-row');
+                                        if (discountRow) discountRow.style.display = 'none';
+                                        // Cập nhật số tiền giảm tối đa hiển thị trong modal
+                                        var base = window.currentCartTotal || 0;
+                                        var maxDiscount = Math.min(userLoyaltyPoints, calcMaxDiscount(base));
+                                        var maxEl = document.getElementById('modal-max-discount');
+                                        if (maxEl) maxEl.textContent = maxDiscount.toLocaleString('vi-VN') + 'đ';
+                                        // Reset cart-total về giá gốc
+                                        syncPaymentSummary(window.currentCartState, base);
+                                        if (window.jQuery) $('#paymentMethodModal').modal('show');
+                                    }
+
+                                    function toggleUsePoints(checked) {
+                                        usePoints = checked;
+                                        var base = window.currentCartTotal || 0;
+                                        var discount = checked ? Math.min(userLoyaltyPoints, calcMaxDiscount(base)) : 0;
+                                        var finalTotal = Math.max(0, base - discount);
+                                        // Hiển thị dòng xác nhận trong modal
+                                        var applied = document.getElementById('modal-points-applied');
+                                        var discountAmtEl = document.getElementById('modal-discount-amount');
+                                        var finalTotalEl = document.getElementById('modal-final-total');
+                                        if (applied) applied.style.display = checked ? 'block' : 'none';
+                                        if (discountAmtEl) discountAmtEl.textContent = discount.toLocaleString('vi-VN');
+                                        if (finalTotalEl) finalTotalEl.textContent = finalTotal.toLocaleString('vi-VN');
+                                        // Cập nhật dòng tóm tắt nhỏ bên ngoài modal
+                                        var discountRow = document.getElementById('points-discount-row');
+                                        var discountAmt = document.getElementById('points-discount-amount');
+                                        if (discountRow) discountRow.style.display = checked ? 'block' : 'none';
+                                        if (discountAmt) discountAmt.textContent = discount.toLocaleString('vi-VN');
+                                        // Cập nhật tổng tiền hiển thị
+                                        var cartTotalEl = document.getElementById('cart-total');
+                                        if (cartTotalEl) cartTotalEl.textContent = finalTotal.toLocaleString('vi-VN') + ' đ';
+                                    }
+
+                                    function getEffectiveTotal() {
+                                        var base = window.currentCartTotal || 0;
+                                        return usePoints ? Math.max(0, base - Math.min(userLoyaltyPoints, calcMaxDiscount(base))) : base;
+                                    }
+
                                     function syncCartCount(cartCount) {
                                         var cartCountElement = document.getElementById('cart-count');
                                         if (cartCountElement && typeof cartCount !== 'undefined') {
@@ -680,15 +783,19 @@
                                         }).join('');
                                     }
 
-                                    // Đồng bộ tất cả phần phụ thuộc cart: tổng tiền, bill và ảnh QR thanh toán.
+                                    // Khi total cart thay đổi (update/remove) cần re-apply điểm nếu đang được bật.
                                     function syncPaymentSummary(cart, total) {
-                                        var resolvedTotal = typeof total === 'number' ? total : calculateCartTotalFromState(cart);
+                                        var resolvedBase = typeof total === 'number' ? total : calculateCartTotalFromState(cart);
+                                        var discount = usePoints ? Math.min(userLoyaltyPoints, calcMaxDiscount(resolvedBase)) : 0;
+                                        var resolvedTotal = Math.max(0, resolvedBase - discount);
                                         var serviceTotal = document.getElementById('bill-service-total');
                                         var grandTotal = document.getElementById('bill-grand-total');
                                         var cartTotal = document.getElementById('cart-total');
                                         var qrAmount = document.getElementById('qr-amount');
                                         var qrNote = document.getElementById('qr-note');
                                         var qrImage = document.getElementById('qr-code-image');
+                                        var discountAmt = document.getElementById('points-discount-amount');
+                                        if (discountAmt && usePoints) discountAmt.textContent = discount.toLocaleString('vi-VN');
 
                                         syncBillItems(cart);
 
@@ -866,7 +973,8 @@
                                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                             },
                                             body: JSON.stringify({
-                                                qr_note: (document.getElementById('qr-note') || {}).textContent || ''
+                                                qr_note: (document.getElementById('qr-note') || {}).textContent || '',
+                                                use_points: usePoints
                                             })
                                         })
                                         .then(function(res) {
@@ -911,7 +1019,7 @@
                                                 'Content-Type': 'application/json',
                                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                             },
-                                            body: JSON.stringify({})
+                                            body: JSON.stringify({ use_points: usePoints })
                                         })
                                         .then(function(res) {
                                             return res.json();

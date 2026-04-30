@@ -121,9 +121,9 @@
 
     <!-- LEFT: Form -->
     <div>
-        <!-- Thông tin giao hàng -->
+        <!-- Thông tin nhận tại quán -->
         <div class="card" style="margin-bottom:20px;">
-            <div class="card-title"><i class="fas fa-map-marker-alt"></i> Thông tin giao hàng</div>
+            <div class="card-title"><i class="fas fa-user-check"></i> Thông tin nhận tại quán</div>
             <div class="form-group">
                 <label>Họ và tên *</label>
                 <input type="text" id="name" placeholder="Nguyễn Văn A"
@@ -135,12 +135,8 @@
                        value="{{ Auth::user()->phone ?? '' }}">
             </div>
             <div class="form-group">
-                <label>Địa chỉ giao hàng *</label>
-                <input type="text" id="address" placeholder="Số nhà, tên đường, phường/xã...">
-            </div>
-            <div class="form-group">
                 <label>Ghi chú thêm</label>
-                <textarea id="note" placeholder="Ít đá, giao trước 10h..."></textarea>
+                <textarea id="note" placeholder="Ít đá, thêm đá viên riêng..."></textarea>
             </div>
         </div>
 
@@ -218,9 +214,6 @@
             <div style="font-size:13px;color:#5c3d2e;margin-bottom:8px;display:flex;justify-content:space-between;">
                 <span>Tạm tính</span><span>130.000đ</span>
             </div>
-            <div style="font-size:13px;color:#5c3d2e;margin-bottom:8px;display:flex;justify-content:space-between;">
-                <span>Phí giao hàng</span><span style="color:#27ae60;">Miễn phí</span>
-            </div>
             <div class="order-total">
                 <span>Tổng thanh toán</span>
                 <span>130.000đ</span>
@@ -286,10 +279,9 @@ function copyAmount() { copy(document.getElementById('qr-amount').textContent); 
 function placeOrder() {
     const name    = document.getElementById('name').value.trim();
     const phone   = document.getElementById('phone').value.trim();
-    const address = document.getElementById('address').value.trim();
 
-    if (!name || !phone || !address) {
-        alert('⚠️ Vui lòng điền đầy đủ thông tin giao hàng!');
+    if (!name || !phone) {
+        alert('⚠️ Vui lòng điền đầy đủ thông tin nhận hàng tại quán!');
         return;
     }
     if (!/^\d{8,11}$/.test(phone.replace(/\s/g,''))) {

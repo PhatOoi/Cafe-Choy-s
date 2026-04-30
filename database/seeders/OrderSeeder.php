@@ -7,51 +7,51 @@ use Illuminate\Support\Facades\DB;
 
 class OrderSeeder extends Seeder
 {
-    // Seed các đơn mẫu gồm delivery, tại quán, payment và sử dụng voucher.
+    // Seed các đơn mẫu tại quán, payment và sử dụng voucher.
     public function run(): void
     {
         // Tạo các đơn mẫu với nhiều trạng thái khác nhau để test dashboard và lịch sử đơn.
         DB::table('orders')->insert([
             [
                 'user_id'           => 4,
-                'address_id'        => 1,
+                'address_id'        => null,
                 'assigned_staff_id' => 2,
                 'voucher_id'        => 1,
-                'order_type'        => 'delivery',
+                'order_type'        => 'in_store',
                 'status'            => 'delivered',
                 'total_price'       => 80000,
                 'discount_amount'   => 8000,
-                'shipping_fee'      => 15000,
-                'final_price'       => 87000,
+                'shipping_fee'      => 0,
+                'final_price'       => 72000,
                 'note'              => null,
                 'created_at'        => '2025-07-01 09:00:00',
             ],
             [
                 'user_id'           => 5,
-                'address_id'        => 2,
+                'address_id'        => null,
                 'assigned_staff_id' => 2,
                 'voucher_id'        => null,
-                'order_type'        => 'delivery',
-                'status'            => 'delivering',
+                'order_type'        => 'in_store',
+                'status'            => 'processing',
                 'total_price'       => 95000,
                 'discount_amount'   => 0,
-                'shipping_fee'      => 15000,
-                'final_price'       => 110000,
+                'shipping_fee'      => 0,
+                'final_price'       => 95000,
                 'note'              => 'Ít đá',
                 'created_at'        => '2025-07-01 10:00:00',
             ],
             [
                 'user_id'           => 6,
-                'address_id'        => 4,
+                'address_id'        => null,
                 'assigned_staff_id' => 3,
                 'voucher_id'        => 2,
-                'order_type'        => 'delivery',
+                'order_type'        => 'in_store',
                 'status'            => 'confirmed',
                 'total_price'       => 250000,
                 'discount_amount'   => 50000,
-                'shipping_fee'      => 15000,
-                'final_price'       => 215000,
-                'note'              => 'Giao trước 10h',
+                'shipping_fee'      => 0,
+                'final_price'       => 200000,
+                'note'              => 'Khách lấy tại quán',
                 'created_at'        => '2025-07-01 11:00:00',
             ],
             [
@@ -91,9 +91,9 @@ class OrderSeeder extends Seeder
 
         // Gắn dữ liệu thanh toán mẫu để test nhiều phương thức và nhiều trạng thái payment.
         DB::table('payments')->insert([
-            ['order_id' => 1, 'method' => 'momo',          'status' => 'paid',    'amount' => 87000,  'paid_at' => '2025-07-01 09:15:00', 'ref_code' => 'MM20250701001'],
-            ['order_id' => 2, 'method' => 'bank_transfer', 'status' => 'pending', 'amount' => 110000, 'paid_at' => null,                  'ref_code' => null],
-            ['order_id' => 3, 'method' => 'cod',           'status' => 'pending', 'amount' => 215000, 'paid_at' => null,                  'ref_code' => null],
+            ['order_id' => 1, 'method' => 'momo',          'status' => 'paid',    'amount' => 72000,  'paid_at' => '2025-07-01 09:15:00', 'ref_code' => 'MM20250701001'],
+            ['order_id' => 2, 'method' => 'bank_transfer', 'status' => 'pending', 'amount' => 95000,  'paid_at' => null,                  'ref_code' => null],
+            ['order_id' => 3, 'method' => 'cash',          'status' => 'pending', 'amount' => 200000, 'paid_at' => null,                  'ref_code' => null],
             ['order_id' => 4, 'method' => 'cash',          'status' => 'paid',    'amount' => 55000,  'paid_at' => '2025-07-01 10:30:00', 'ref_code' => null],
         ]);
 

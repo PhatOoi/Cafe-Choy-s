@@ -70,12 +70,6 @@
                         <span style="color:#16a34a;">- {{ number_format($order->discount_amount, 0, ',', '.') }}đ</span>
                     </div>
                     @endif
-                    @if($order->shipping_fee > 0)
-                    <div style="display:flex;justify-content:space-between;font-size:13.5px;">
-                        <span style="color:var(--text-muted);">Phí giao hàng</span>
-                        <span>{{ number_format($order->shipping_fee, 0, ',', '.') }}đ</span>
-                    </div>
-                    @endif
                     <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;border-top:1px solid var(--border);padding-top:10px;">
                         <span>Tổng cộng</span>
                         <span style="color:var(--primary);">{{ number_format($order->final_price, 0, ',', '.') }}đ</span>
@@ -111,7 +105,7 @@
                 </div>
                 <div style="font-size:13px;color:var(--text-muted);">
                     <div style="margin-bottom:8px;">
-                        <strong>Loại đơn:</strong> {{ $order->order_type === 'delivery' ? '🛵 Giao hàng' : '🏠 Tại quán' }}
+                        <strong>Loại đơn:</strong> 🏠 Tại quán
                     </div>
                     <div style="margin-bottom:8px;">
                         <strong>Tạo lúc:</strong> {{ $order->created_at->format('H:i d/m/Y') }}
@@ -143,12 +137,6 @@
                 <p style="color:var(--text-muted);font-size:13px;">Khách vãng lai</p>
                 @endif
 
-                @if($order->address)
-                <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;">
-                    <strong>📍 Địa chỉ giao:</strong><br>
-                    <span style="color:var(--text-muted);">{{ $order->address->full_address ?? '—' }}</span>
-                </div>
-                @endif
             </div>
         </div>
 

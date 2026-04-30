@@ -182,7 +182,7 @@
                                 </div>
                                 <div class="order-meta-item">
                                     <span>Hình thức</span>
-                                    <strong>{{ $order->order_type === 'in_store' ? 'Tại quán' : 'Giao hàng' }}</strong>
+                                    <strong>Tại quán</strong>
                                 </div>
                                 <div class="order-meta-item">
                                     <span>Số món</span>

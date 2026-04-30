@@ -53,6 +53,26 @@ class CartController extends Controller
         return $total;
     }
 
+    /**
+     * Tính số điểm tối đa khách được phép dùng theo giá trị đơn hàng:
+     * - Dưới 200.000đ  : làm tròn xuống bội 10.000đ (giảm phần dư % 10.000)
+     * - Từ 200.000 đến < 300.000đ : tương tự (làm tròn)
+     * - Từ 300.000đ trở lên        : tối đa 10% giá trị đơn
+     */
+    private function calcMaxPointsDiscount(int $baseTotal): int
+    {
+        if ($baseTotal >= 300000) {
+            return (int) floor($baseTotal * 0.1);
+        }
+        $remainder = $baseTotal % 10000;
+        // Đơn đã tròn bội 10.000 (vd: 120k, 140k) → áp dụng 10%
+        if ($remainder === 0) {
+            return (int) floor($baseTotal * 0.1);
+        }
+        // Đơn có lẻ → chỉ được giảm phần lẻ để làm tròn (vd: 45k→trừ 5k, 175k→trừ 5k)
+        return $remainder;
+    }
+
     // Xác định option nào hợp lệ theo category của sản phẩm.
     private function getProductOptionRules(Product $product): array
     {
@@ -236,14 +256,11 @@ class CartController extends Controller
             // Tạo record đơn hàng gốc với mặc định chung cho checkout của khách.
             $order = Order::create(array_merge([
                 'user_id' => auth()->id(),
-                'address_id' => null,
                 'assigned_staff_id' => null,
                 'voucher_id' => null,
-                'order_type' => 'in_store',
                 'status' => 'pending',
                 'total_price' => $total,
                 'discount_amount' => 0,
-                'shipping_fee' => 0,
                 'final_price' => $total,
                 'note' => null,
             ], $orderData));
@@ -407,8 +424,10 @@ class CartController extends Controller
 
         $cart = $this->getNormalizedSessionCart(true);
         $cartCount = $this->getCartCount($cart);
+        $total = $this->calculateCartTotal($cart);
+        $userPoints = auth()->check() ? (int) auth()->user()->loyalty_points : 0;
 
-        return view('cart', compact('cart', 'cartCount'));
+        return view('cart', compact('cart', 'cartCount', 'total', 'userPoints'));
     }
 
     // Xóa một item khỏi cart theo key biến thể.
@@ -538,18 +557,30 @@ class CartController extends Controller
             ], 422);
         }
 
-        $total = $this->calculateCartTotal($cart);
+        $user = auth()->user();
+        $baseTotal = $this->calculateCartTotal($cart);
+        $usePoints = (bool) $request->input('use_points', false);
+        $maxPointsAllowed = $this->calcMaxPointsDiscount((int) $baseTotal);
+        $pointsUsed = $usePoints ? (int) min($user->loyalty_points, $maxPointsAllowed) : 0;
+        $finalTotal = max(0, $baseTotal - $pointsUsed);
 
         // Đơn tiền mặt được xem là đã xác nhận và đã thanh toán ngay.
-        $order = $this->createOrderFromCart($cart, $total, [
+        $order = $this->createOrderFromCart($cart, $baseTotal, [
             'status' => 'confirmed',
+            'discount_amount' => $pointsUsed,
+            'points_used' => $pointsUsed,
+            'final_price' => $finalTotal,
             'note' => 'Thanh toán tiền mặt tại quầy - đơn hàng đã được xác nhận',
         ], [
             'method' => 'cash',
             'status' => 'paid',
-            'amount' => $total,
+            'amount' => $finalTotal,
             'paid_at' => now(),
         ]);
+
+        // Trừ điểm đã dùng và cộng điểm mới = số tiền thực trả / 10 (10đ = 1 điểm).
+        $user->loyalty_points = $user->loyalty_points - $pointsUsed + (int) floor($finalTotal / 10);
+        $user->save();
 
         // Đồng bộ báo cáo doanh thu vì đây là đơn đã paid.
         $this->syncDailyRevenueSnapshots();
@@ -557,9 +588,14 @@ class CartController extends Controller
         // Xóa cart khỏi session sau khi checkout thành công.
         session()->forget(['cart', 'pending_qr_order_id']);
 
+        $msg = 'Thanh toán thành công!';
+        if ($pointsUsed > 0) {
+            $msg .= ' Đã dùng ' . number_format($pointsUsed, 0, ',', '.') . ' điểm, tiết kiệm ' . number_format($pointsUsed, 0, ',', '.') . 'đ.';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Thanh toán thành công!',
+            'message' => $msg,
             'order_id' => $order->id,
             'cart_count' => 0,
             'redirect_url' => route('orders.history')
@@ -602,21 +638,35 @@ class CartController extends Controller
             }
         }
 
-        $total = $this->calculateCartTotal($cart);
+        $baseTotal = $this->calculateCartTotal($cart);
         $qrNote = trim((string) $request->input('qr_note', ''));
+        $usePoints = (bool) $request->input('use_points', false);
+        $user = auth()->user();
+        $maxPointsAllowed = $this->calcMaxPointsDiscount((int) $baseTotal);
+        $pointsUsed = $usePoints ? (int) min($user->loyalty_points, $maxPointsAllowed) : 0;
+        $finalTotal = max(0, $baseTotal - $pointsUsed);
 
         // Đơn QR ban đầu chỉ ở trạng thái pending cho tới khi staff đối chiếu payment thành công.
-        $order = $this->createOrderFromCart($cart, $total, [
+        $order = $this->createOrderFromCart($cart, $baseTotal, [
             'status' => 'pending',
+            'discount_amount' => $pointsUsed,
+            'points_used' => $pointsUsed,
+            'final_price' => $finalTotal,
             'note' => $qrNote !== ''
                 ? 'Khách đã gửi xác nhận chuyển khoản QR. Mã tham chiếu: ' . $qrNote
                 : 'Khách đã gửi xác nhận chuyển khoản QR.',
         ], [
             'method' => 'bank_transfer',
             'status' => 'pending',
-            'amount' => $total,
+            'amount' => $finalTotal,
             'ref_code' => $qrNote !== '' ? $qrNote : null,
         ]);
+
+        // Nếu dùng điểm, trừ ngay khi gửi đơn (trước khi QR được xác nhận) để tránh dùng 2 lần.
+        if ($pointsUsed > 0) {
+            $user->loyalty_points = max(0, $user->loyalty_points - $pointsUsed);
+            $user->save();
+        }
 
         // Lưu id đơn đang chờ để frontend có thể poll trạng thái xác nhận.
         session()->put('pending_qr_order_id', $order->id);
