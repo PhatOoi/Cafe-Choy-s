@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             VoucherSeeder::class,
             OrderSeeder::class,
             InventorySeeder::class,
+            IngredientSeeder::class,
         ]);
     }
 }

@@ -152,7 +152,7 @@
                 </div>
                 <div>
                     <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Đơn vị</div>
-                    <input type="text" name="unit" class="inventory-field" placeholder="Đơn vị" value="{{ old('unit', 'số lượng') }}" required>
+                    <input type="text" name="unit" class="inventory-field" placeholder="Đơn vị" value="{{ old('unit') }}" required>
                 </div>
                 <div>
                     <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Số lượng</div>
@@ -221,11 +221,13 @@
                         <tr>
                             <td>
                                 <div class="staff-cell-name">{{ $ingredient->name }}</div>
-                                <div class="staff-cell-sub">{{ $ingredient->note ?: 'Không có ghi chú' }}</div>
+                                @if(!empty($ingredient->note))
+                                    <div class="staff-cell-sub">{{ $ingredient->note }}</div>
+                                @endif
                             </td>
                             <td>{{ $ingredient->brand ?: '—' }}</td>
                             <td>{{ rtrim(rtrim(number_format($ingredient->stock_quantity, 2, ',', '.'), '0'), ',') }}</td>
-                            <td>{{ $ingredient->unit ?: 'số lượng' }}</td>
+                            <td>{{ $ingredient->unit ?? '' }}</td>
                             <td>{{ number_format($ingredient->unit_price, 0, ',', '.') }} ₫</td>
                             <td>{{ number_format($ingredient->total_amount, 0, ',', '.') }} ₫</td>
                             <td>{{ optional($ingredient->received_date)?->format('d/m/Y') ?: '—' }}</td>

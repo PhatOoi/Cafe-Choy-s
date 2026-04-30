@@ -309,11 +309,39 @@
             cursor: pointer;
         }
 
+        .global-back-btn {
+            position: fixed;
+            left: 22px;
+            bottom: 22px;
+            width: 46px;
+            height: 46px;
+            border: none;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #d4813a, #b8692a);
+            color: #fff;
+            box-shadow: 0 10px 24px rgba(212, 129, 58, .35);
+            font-size: 18px;
+            z-index: 1200;
+            cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .global-back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(212, 129, 58, .42);
+        }
+
+        .global-back-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(212, 129, 58, .25), 0 10px 24px rgba(212, 129, 58, .35);
+        }
+
         @media (max-width: 768px) {
             .staff-sidebar { transform: translateX(-100%); }
             .staff-sidebar.open { transform: translateX(0); }
             .staff-main { margin-left: 0; }
             .sidebar-toggle { display: block; }
+            .global-back-btn { left: 14px; bottom: 14px; width: 42px; height: 42px; }
         }
     </style>
 
@@ -428,9 +456,23 @@
     </div>
 </div>
 
+<button type="button" class="global-back-btn" id="globalBackBtn" aria-label="Lên đầu trang" title="Lên đầu trang">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
 <script src="{{ asset('js/jquery.min.js') }}"></script>
 <script src="{{ asset('js/popper.min.js') }}"></script>
 <script src="{{ asset('js/bootstrap.min.js') }}"></script>
+<script>
+(() => {
+    const backBtn = document.getElementById('globalBackBtn');
+    if (!backBtn) return;
+
+    backBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
+</script>
 <script>
 (() => {
     const storageKey = 'staffOrderStatusReminders';
