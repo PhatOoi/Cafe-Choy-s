@@ -305,6 +305,7 @@ class AdminController extends Controller
             'brand' => 'required|string|max:120',
             'unit' => 'required|string|max:30',
             'stock_quantity' => 'required|numeric|min:0',
+            'unit_price' => 'required|numeric|min:0',
             'received_date' => 'required|date',
             'manufacture_date' => 'required|date',
             'expiry_date' => 'required|date|after_or_equal:manufacture_date',
@@ -312,6 +313,7 @@ class AdminController extends Controller
             'note' => 'nullable|string|max:255',
         ]);
         $data['minimum_quantity'] = 0;
+        $data['total_amount'] = $data['stock_quantity'] * $data['unit_price'];
 
         Ingredient::create($data);
 
@@ -372,8 +374,8 @@ class AdminController extends Controller
 
     public function createUser()
     {
-        // Chỉ nạp các role chính để tạo tài khoản nội bộ hoặc khách hàng.
-        $roles = UserRole::whereIn('name', ['admin', 'staff', 'customer'])->get();
+        // Chỉ nạp các role nhân viên và khách hàng để tạo tài khoản.
+        $roles = UserRole::whereIn('name', ['staff', 'customer'])->get();
         return view('admin.users.create', compact('roles'));
     }
 

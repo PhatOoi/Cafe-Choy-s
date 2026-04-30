@@ -9,7 +9,7 @@
 <div class="page-header">
     <div>
         <div class="page-header-title">Tạo tài khoản mới</div>
-        <div class="page-header-sub">Thêm Admin, Nhân viên hoặc Khách hàng</div>
+        <div class="page-header-sub">Thêm Nhân viên hoặc Khách hàng</div>
     </div>
     <a href="{{ route('admin.users') }}" class="btn-outline-admin">
         <i class="fas fa-arrow-left"></i> Quay lại

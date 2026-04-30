@@ -138,42 +138,56 @@
         </div>
     </div>
     <div class="card-body">
-        <form method="POST" action="{{ route('admin.ingredients.store') }}" style="display:grid;grid-template-columns:2fr 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1.2fr;gap:10px;">
+        <form method="POST" action="{{ route('admin.ingredients.store') }}" style="display:flex;flex-direction:column;gap:10px;">
             @csrf
-            <div>
-                <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Tên nguyên liệu</div>
-                <input type="text" name="name" class="inventory-field" placeholder="Tên nguyên liệu" value="{{ old('name') }}" required>
+            {{-- Hàng 1: Tên, Thương hiệu, Đơn vị, Số lượng, Đơn giá, Số lô, Tổng tiền --}}
+            <div style="display:grid;grid-template-columns:2fr 1.2fr 1.2fr 1fr 1fr 1.2fr 1.2fr;gap:10px;">
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Tên nguyên liệu</div>
+                    <input type="text" name="name" class="inventory-field" placeholder="Tên nguyên liệu" value="{{ old('name') }}" required>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Thương hiệu</div>
+                    <input type="text" name="brand" class="inventory-field" placeholder="Thương hiệu" value="{{ old('brand') }}" required>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Đơn vị</div>
+                    <input type="text" name="unit" class="inventory-field" placeholder="Đơn vị" value="{{ old('unit', 'số lượng') }}" required>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Số lượng</div>
+                    <input type="number" step="0.01" min="0" name="stock_quantity" class="inventory-field inventory-quantity" placeholder="Số lượng" value="{{ old('stock_quantity', 0) }}" required>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Đơn giá</div>
+                    <input type="number" step="0.01" min="0" name="unit_price" class="inventory-field inventory-price" placeholder="Đơn giá" value="{{ old('unit_price', 0) }}" required>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Số lô</div>
+                    <input type="text" name="lot_number" class="inventory-field" placeholder="Số lô" value="{{ old('lot_number') }}" required>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Tổng tiền</div>
+                    <div class="inventory-field" id="totalAmountDisplay" style="padding:8px;background:#f1f5f9;border-radius:6px;font-weight:600;color:#334155;display:flex;align-items:center;">0 ₫</div>
+                </div>
             </div>
-            <div>
-                <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Thương hiệu</div>
-                <input type="text" name="brand" class="inventory-field" placeholder="Thương hiệu" value="{{ old('brand') }}" required>
+            {{-- Hàng 2: Ngày nhập hàng, Ngày sản xuất, Hạn sử dụng, Ghi chú, Thêm --}}
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 3fr auto;gap:10px;align-items:end;">
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Ngày nhập hàng</div>
+                    <input type="date" name="received_date" class="inventory-field" value="{{ old('received_date') }}" required>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Ngày sản xuất</div>
+                    <input type="date" name="manufacture_date" class="inventory-field" value="{{ old('manufacture_date') }}" required>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Hạn sử dụng</div>
+                    <input type="date" name="expiry_date" class="inventory-field" value="{{ old('expiry_date') }}" required>
+                </div>
+                <textarea name="note" class="inventory-field" placeholder="Ghi chú" style="min-height:42px;resize:vertical;">{{ old('note') }}</textarea>
+                <button type="submit" class="btn-primary-admin" style="align-self:stretch;"><i class="fas fa-plus"></i> Thêm</button>
             </div>
-            <div>
-                <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Đơn vị</div>
-                <input type="text" name="unit" class="inventory-field" placeholder="Đơn vị" value="{{ old('unit', 'số lượng') }}" required>
-            </div>
-            <div>
-                <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Số lượng</div>
-                <input type="number" step="0.01" min="0" name="stock_quantity" class="inventory-field" placeholder="Số lượng" value="{{ old('stock_quantity', 0) }}" required>
-            </div>
-            <div>
-                <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Ngày nhập hàng</div>
-                <input type="date" name="received_date" class="inventory-field" value="{{ old('received_date') }}" required>
-            </div>
-            <div>
-                <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Ngày sản xuất</div>
-                <input type="date" name="manufacture_date" class="inventory-field" value="{{ old('manufacture_date') }}" required>
-            </div>
-            <div>
-                <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Hạn sử dụng</div>
-                <input type="date" name="expiry_date" class="inventory-field" value="{{ old('expiry_date') }}" required>
-            </div>
-            <div>
-                <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Số lô</div>
-                <input type="text" name="lot_number" class="inventory-field" placeholder="Số lô" value="{{ old('lot_number') }}" required>
-            </div>
-            <textarea name="note" class="inventory-field" placeholder="Ghi chú" style="grid-column:1 / -2;min-height:42px;">{{ old('note') }}</textarea>
-            <button type="submit" class="btn-primary-admin" style="align-self:stretch;"><i class="fas fa-plus"></i> Thêm</button>
         </form>
     </div>
 </div>
@@ -193,6 +207,8 @@
                         <th>Thương hiệu</th>
                         <th>Số lượng</th>
                         <th>Đơn vị</th>
+                        <th>Đơn giá</th>
+                        <th>Tổng tiền</th>
                         <th>Ngày nhập hàng</th>
                         <th>Ngày sản xuất</th>
                         <th>Hạn sử dụng</th>
@@ -210,6 +226,8 @@
                             <td>{{ $ingredient->brand ?: '—' }}</td>
                             <td>{{ rtrim(rtrim(number_format($ingredient->stock_quantity, 2, ',', '.'), '0'), ',') }}</td>
                             <td>{{ $ingredient->unit ?: 'số lượng' }}</td>
+                            <td>{{ number_format($ingredient->unit_price, 0, ',', '.') }} ₫</td>
+                            <td>{{ number_format($ingredient->total_amount, 0, ',', '.') }} ₫</td>
                             <td>{{ optional($ingredient->received_date)?->format('d/m/Y') ?: '—' }}</td>
                             <td>{{ optional($ingredient->manufacture_date)?->format('d/m/Y') ?: '—' }}</td>
                             <td>{{ optional($ingredient->expiry_date)?->format('d/m/Y') ?: '—' }}</td>
@@ -294,6 +312,34 @@
         closeModal();
         formToSubmit.submit();
     });
+})();
+
+// Auto-calculate total amount
+(() => {
+    const quantityInput = document.querySelector('.inventory-quantity');
+    const priceInput = document.querySelector('.inventory-price');
+    const totalDisplay = document.getElementById('totalAmountDisplay');
+
+    if (!quantityInput || !priceInput || !totalDisplay) {
+        return;
+    }
+
+    const updateTotal = () => {
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const total = quantity * price;
+        
+        totalDisplay.textContent = new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(total);
+    };
+
+    quantityInput.addEventListener('input', updateTotal);
+    priceInput.addEventListener('input', updateTotal);
+
+    // Initial calculation
+    updateTotal();
 })();
 </script>
 @endsection

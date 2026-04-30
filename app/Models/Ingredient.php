@@ -22,6 +22,8 @@ class Ingredient extends Model
         'image_url',
         'is_active',
         'note',
+        'unit_price',
+        'total_amount',
     ];
 
     protected $casts = [
@@ -31,5 +33,7 @@ class Ingredient extends Model
         'manufacture_date' => 'date',
         'expiry_date' => 'date',
         'is_active' => 'boolean',
+        'unit_price' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 }
