@@ -692,9 +692,6 @@
         <a href="{{ route('staff.dashboard') }}" class="sidebar-link">
             <i class="fas fa-exchange-alt"></i> Xem giao diện Staff
         </a>
-        <a href="{{ url('/') }}" class="sidebar-link">
-            <i class="fas fa-store"></i> Về trang cửa hàng
-        </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -734,10 +731,6 @@
                 <i class="fas fa-calendar-alt" style="color:var(--primary);margin-right:5px;"></i>
                 {{ now()->locale('vi')->translatedFormat('l, d/m/Y') }}
             </div>
-
-            <a href="{{ url('/') }}" class="topbar-icon-btn" title="Xem trang cửa hàng" target="_blank">
-                <i class="fas fa-external-link-alt" style="font-size:13px;"></i>
-            </a>
 
             <form action="{{ url('/logout') }}" method="POST" style="margin:0;">
                 @csrf
