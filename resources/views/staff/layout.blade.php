@@ -372,10 +372,6 @@
            class="sidebar-link {{ request()->routeIs('staff.orders') ? 'active' : '' }}">
             <i class="fas fa-clipboard-list"></i> Danh sách đơn
         </a>
-        <a href="{{ route('staff.orders', ['status' => 'pending']) }}"
-           class="sidebar-link {{ request()->is('staff/orders') && request('status') === 'pending' ? 'active' : '' }}">
-            <i class="fas fa-clock"></i> Chờ xác nhận
-        </a>
         <a href="{{ route('staff.create-order') }}"
            class="sidebar-link {{ request()->routeIs('staff.create-order') ? 'active' : '' }}">
             <i class="fas fa-plus-circle"></i> Tạo đơn tại quán
