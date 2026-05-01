@@ -110,6 +110,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
     Route::get('/work-schedules', [StaffController::class, 'workSchedules'])->name('work-schedules.index');
     Route::post('/work-schedules', [StaffController::class, 'storeWorkSchedule'])->name('work-schedules.store');
     Route::post('/overtimes', [StaffController::class, 'storeOvertime'])->name('overtimes.store');
+    Route::get('/order-history',   [StaffController::class, 'orderHistory'])->name('order-history');
     Route::get('/orders',  [StaffController::class, 'orders'])->name('orders');
     // Chat hỗ trợ khách hàng
     Route::get('/support',                      fn() => view('staff.support'))->name('support');

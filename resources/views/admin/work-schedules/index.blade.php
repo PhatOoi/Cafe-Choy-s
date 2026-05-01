@@ -459,12 +459,30 @@
         </div>
 
         <div class="board-action-wrap">
-            <form method="POST" action="{{ route('admin.work-schedules.open-week-board') }}">
-                @csrf
-                <button type="submit" class="btn-lock-board" {{ (!$weekBoardLock || $isAutoClosedAtNight) ? 'disabled' : '' }}>
-                    <i class="fas fa-lock-open"></i> Mở bảng đăng ký giờ làm
-                </button>
-            </form>
+            @if(!$weekBoardLock)
+                {{-- Bảng đang mở → cho phép admin đóng lại --}}
+                <form method="POST" action="{{ route('admin.work-schedules.close-week-board') }}">
+                    @csrf
+                    <button type="submit" class="btn-lock-board" {{ $isAutoClosedAtNight ? 'disabled' : '' }}
+                            onclick="return confirm('Đóng bảng đăng ký tuần này? Nhân viên sẽ không đăng ký thêm được.')">
+                        <i class="fas fa-lock"></i> Đóng bảng đăng ký giờ làm
+                    </button>
+                </form>
+                <span style="font-size:12px;color:#15803d;margin-left:12px;">
+                    <i class="fas fa-circle" style="color:#27ae60;font-size:8px;"></i> Bảng đang mở
+                </span>
+            @else
+                {{-- Bảng đang đóng → cho phép admin mở lại --}}
+                <form method="POST" action="{{ route('admin.work-schedules.open-week-board') }}">
+                    @csrf
+                    <button type="submit" class="btn-lock-board" {{ $isAutoClosedAtNight ? 'disabled' : '' }}>
+                        <i class="fas fa-lock-open"></i> Mở bảng đăng ký giờ làm
+                    </button>
+                </form>
+                <span style="font-size:12px;color:#b45309;margin-left:12px;">
+                    <i class="fas fa-circle" style="color:#f6ad55;font-size:8px;"></i> Bảng đang đóng
+                </span>
+            @endif
         </div>
     </div>
 </div>

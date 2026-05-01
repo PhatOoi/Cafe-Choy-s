@@ -587,6 +587,28 @@ class StaffController extends Controller
     }
 
     // Mở trang xem/sửa đơn hiện tại cho staff.
+    // Lịch sử đơn 24h gần nhất: phân loại đơn nhân viên tạo vs khách đặt online.
+    public function orderHistory()
+    {
+        $since = now()->subHours(24);
+
+        $staffOrders = Order::with(['user', 'staff', 'payment'])
+            ->withCount('items')
+            ->whereNotNull('assigned_staff_id')
+            ->where('created_at', '>=', $since)
+            ->orderByDesc('created_at')
+            ->get();
+
+        $customerOrders = Order::with(['user', 'payment'])
+            ->withCount('items')
+            ->whereNull('assigned_staff_id')
+            ->where('created_at', '>=', $since)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('staff.order-history', compact('staffOrders', 'customerOrders'));
+    }
+
     public function editOrder($id) {
         $order = Order::with(['user','items.product','payment'])->findOrFail($id);
         return view('staff.order-detail', compact('order'));

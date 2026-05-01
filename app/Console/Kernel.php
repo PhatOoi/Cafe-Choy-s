@@ -11,6 +11,9 @@ class Kernel extends ConsoleKernel
     {
         // Xóa chat của khách không hoạt động trong 30 phút, chạy mỗi phút
         $schedule->command('chat:prune-old')->everyMinute();
+
+        // Xóa đơn hàng cũ hơn 7 ngày mỗi ngày lúc 00:05 để giữ DB nhẹ
+        $schedule->command('orders:prune-old')->dailyAt('00:05');
     }
 
     protected function commands()
