@@ -34,10 +34,18 @@
         color: #b45309;
     }
 
-    .employment-note-unknown {
-        background: #f1f5f9;
-        color: #475569;
+    .online-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 4px;
+        vertical-align: middle;
     }
+    .online-dot-green { background: #22c55e; box-shadow: 0 0 0 2px #bbf7d0; }
+    .online-dot-gray  { background: #cbd5e1; }
+    .badge-online  { background: #dcfce7; color: #15803d; }
+    .badge-offline { background: #f1f5f9; color: #64748b; }
 </style>
 
 <div class="page-header">
@@ -111,8 +119,13 @@
                 <tr>
                     <td>
                         <div class="user-cell">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background={{ optional($user->role)->name === 'admin' ? 'd97706' : (optional($user->role)->name === 'staff' ? '2563eb' : '16a34a') }}&color=fff&size=72"
-                                 class="user-avatar" alt="{{ $user->name }}">
+                            <div style="position:relative;display:inline-block;">
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background={{ optional($user->role)->name === 'admin' ? 'd97706' : (optional($user->role)->name === 'staff' ? '2563eb' : '16a34a') }}&color=fff&size=72"
+                                     class="user-avatar" alt="{{ $user->name }}">
+                                @if($user->isOnline())
+                                <span style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #fff;box-shadow:0 0 0 1px #bbf7d0;"></span>
+                                @endif
+                            </div>
                             <div>
                                 <div class="user-cell-name">
                                     {{ $user->name }}
@@ -139,9 +152,23 @@
                         </div>
                     </td>
                     <td>
-                        <span class="badge {{ $user->is_active ? 'badge-active' : 'badge-inactive' }}">
-                            {{ $user->is_active ? '✅ Hoạt động' : '🔒 Đã khóa' }}
-                        </span>
+                        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+                            <span class="badge {{ $user->is_active ? 'badge-active' : 'badge-inactive' }}">
+                                {{ $user->is_active ? '✅ Hoạt động' : '🔒 Đã khóa' }}
+                            </span>
+                            @if($user->is_active)
+                                @if($user->isOnline())
+                                <span class="badge badge-online" style="font-size:11px;">
+                                    <span class="online-dot online-dot-green"></span> Đang trực tuyến
+                                </span>
+                                @else
+                                <span class="badge badge-offline" style="font-size:11px;">
+                                    <span class="online-dot online-dot-gray"></span>
+                                    {{ $user->last_seen_at ? 'Offline · ' . $user->last_seen_at->diffForHumans() : 'Chưa đăng nhập' }}
+                                </span>
+                                @endif
+                            @endif
+                        </div>
                     </td>
                     <td style="color:var(--text-muted);font-size:12.5px;">{{ $user->created_at->format('d/m/Y') }}</td>
                     <td>

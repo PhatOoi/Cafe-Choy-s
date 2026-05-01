@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\DailyRevenue;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -31,67 +30,43 @@ class StaffController extends Controller
     // Tập hợp toàn bộ dữ liệu dùng cho trang doanh thu ngày của staff.
     private function getRevenueSnapshotData(): array
     {
-        $historyStart = now()->subDays(29)->startOfDay();
+        $staffId = Auth::id();
         $isStaffCreatedOrder = fn ($order) => in_array((int) optional($order->user)->role_id, [1, 2], true);
         $isWebAppOrder = fn ($order) => (int) optional($order->user)->role_id === 3;
 
-        // Mỗi lần vào trang báo cáo sẽ sync lại snapshot để hạn chế lệch dữ liệu hiển thị.
-        $this->syncDailyRevenueSnapshots();
-
-        // Lấy danh sách snapshot doanh thu 30 ngày gần nhất từ bảng daily_revenues.
-        $dailyRevenue = DailyRevenue::query()
-            ->where('revenue_date', '>=', $historyStart->toDateString())
-            ->orderByDesc('revenue_date')
-            ->get();
-
-        // Lấy snapshot của hôm nay, nếu chưa có thì dựng object rỗng để view không lỗi.
-        $todayRevenue = DailyRevenue::query()
-            ->whereDate('revenue_date', today())
-            ->first()
-            ?? new DailyRevenue([
-                'revenue_date' => now()->toDateString(),
-                'total_orders' => 0,
-                'total_revenue' => 0,
-                'staff_created_revenue' => 0,
-                'customer_revenue' => 0,
-                'cash_revenue' => 0,
-                'transfer_revenue' => 0,
-            ]);
-
-        // Query riêng các đơn paid trong ngày để tách số đơn theo nguồn tạo đơn.
+        // Toàn bộ đơn đã thanh toán trong ngày (doanh thu quán hôm nay).
         $todayOrders = Order::with(['payment', 'user'])
             ->whereDate('created_at', today())
             ->whereHas('payment', fn ($query) => $query->where('status', 'paid'))
-            ->where(function ($query) {
-                $query->where(function ($staffQuery) {
-                    $staffQuery->whereHas('user', fn ($userQuery) => $userQuery->whereIn('role_id', [1, 2]));
-                })->orWhereHas('user', fn ($userQuery) => $userQuery->where('role_id', 3));
-            })
             ->get();
 
-        // Thống kê số đơn trong ngày theo 2 nguồn: staff tạo tại quán và khách tự đặt trên web.
+        // Đơn tại quán do chính nhân viên hiện tại tạo hôm nay.
+        $staffCreatedOrders = $todayOrders->filter(
+            fn ($order) => (int) $order->assigned_staff_id === (int) $staffId && $isStaffCreatedOrder($order)
+        );
+
+        // Thống kê số đơn trong ngày theo nguồn.
         $todayOrderBreakdown = [
-            'total_orders' => (int) $todayOrders->count(),
-            'staff_created_orders' => (int) $todayOrders
-                ->filter($isStaffCreatedOrder)
-                ->count(),
-            'web_app_orders' => (int) $todayOrders
-                ->filter($isWebAppOrder)
-                ->count(),
+            'total_orders'        => (int) $todayOrders->count(),
+            'staff_created_orders' => (int) $staffCreatedOrders->count(),
+            'web_app_orders'      => (int) $todayOrders->filter($isWebAppOrder)->count(),
         ];
 
-        // Summary chung cho khối thống kê tổng quan của 30 ngày gần nhất.
-        $summary = [
-            'combined_revenue' => (float) $dailyRevenue->sum('total_revenue'),
-            'staff_created_revenue' => (float) $dailyRevenue->sum('staff_created_revenue'),
-            'customer_revenue' => (float) $dailyRevenue->sum('customer_revenue'),
-            'cash_revenue' => (float) $dailyRevenue->sum('cash_revenue'),
-            'transfer_revenue' => (float) $dailyRevenue->sum('transfer_revenue'),
-            'active_days' => $dailyRevenue->count(),
-            'range_label' => $historyStart->format('d/m/Y') . ' - ' . now()->format('d/m/Y'),
+        $todayRevenue = (object) [
+            'revenue_date'         => now()->copy()->startOfDay(),
+            'total_orders'         => $todayOrderBreakdown['total_orders'],
+            'total_revenue'        => (float) $todayOrders->sum('final_price'),
+            'staff_created_revenue' => (float) $staffCreatedOrders->sum('final_price'),
+            'customer_revenue'     => (float) $todayOrders->filter($isWebAppOrder)->sum('final_price'),
+            'cash_revenue'         => (float) $todayOrders
+                ->filter(fn ($order) => optional($order->payment)->method === 'cash')
+                ->sum('final_price'),
+            'transfer_revenue'     => (float) $todayOrders
+                ->filter(fn ($order) => optional($order->payment)->method === 'bank_transfer')
+                ->sum('final_price'),
         ];
 
-        return compact('dailyRevenue', 'todayRevenue', 'todayOrderBreakdown', 'summary');
+        return compact('todayRevenue', 'todayOrderBreakdown');
     }
 
     // ─── Dashboard ───────────────────────────────────────────────────────────
@@ -185,82 +160,6 @@ class StaffController extends Controller
             ->values();
 
         return response()->json(['ids' => $ids]);
-    }
-
-    public function createdOrderHistory()
-    {
-        // Chỉ lấy các đơn tại quán do chính nhân viên hiện tại tạo trong 1 tháng gần nhất.
-        $staffId = Auth::id();
-        $historyStart = now()->subMonth()->startOfDay();
-
-        $orders = Order::with(['items.product', 'payment'])
-            ->where('assigned_staff_id', $staffId)
-            ->where('created_at', '>=', $historyStart)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $revenueOrders = Order::with(['payment', 'user'])
-            ->where('created_at', '>=', $historyStart)
-            ->whereHas('payment', fn ($query) => $query->where('status', 'paid'))
-            ->where(function ($query) use ($staffId) {
-                $query->where(function ($staffQuery) use ($staffId) {
-                    $staffQuery->where('assigned_staff_id', $staffId);
-                })->orWhereHas('user', fn ($userQuery) => $userQuery->where('role_id', 3));
-            })
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Gom doanh thu theo từng ngày để view lịch sử hiển thị theo block ngày.
-        $dailyGroups = $revenueOrders
-            ->groupBy(fn ($order) => $order->created_at->format('Y-m-d'))
-            ->map(function ($group, $date) use ($orders, $staffId) {
-                $staffOrdersForDay = $orders->filter(fn ($order) => $order->created_at->format('Y-m-d') === $date)->values();
-                $staffCreatedRevenue = (float) $group
-                    ->filter(fn ($order) => (int) $order->assigned_staff_id === (int) $staffId)
-                    ->sum('final_price');
-                $customerRevenue = (float) $group
-                    ->filter(fn ($order) => optional($order->user)->role_id === 3)
-                    ->sum('final_price');
-                $cashRevenue = (float) $group
-                    ->filter(fn ($order) => optional($order->payment)->method === 'cash')
-                    ->sum('final_price');
-                $transferRevenue = (float) $group
-                    ->filter(fn ($order) => optional($order->payment)->method === 'bank_transfer')
-                    ->sum('final_price');
-
-                return [
-                    'date' => $group->first()->created_at->copy()->startOfDay(),
-                    'total_orders' => $group->count(),
-                    'total_revenue' => $staffCreatedRevenue + $customerRevenue,
-                    'staff_created_revenue' => $staffCreatedRevenue,
-                    'customer_revenue' => $customerRevenue,
-                    'cash_revenue' => $cashRevenue,
-                    'transfer_revenue' => $transferRevenue,
-                    'orders' => $staffOrdersForDay,
-                ];
-            })
-            ->sortByDesc(fn ($group) => $group['date']->timestamp)
-            ->values();
-
-        // Summary tổng quan cho phần đầu trang lịch sử tạo đơn.
-        $summary = [
-            'total_orders' => $orders->count(),
-            'total_revenue' => (float) $orders->sum('final_price'),
-            'customer_revenue' => (float) $revenueOrders
-                ->filter(fn ($order) => optional($order->user)->role_id === 3)
-                ->sum('final_price'),
-            'cash_revenue' => (float) $revenueOrders
-                ->filter(fn ($order) => optional($order->payment)->method === 'cash')
-                ->sum('final_price'),
-            'transfer_revenue' => (float) $revenueOrders
-                ->filter(fn ($order) => optional($order->payment)->method === 'bank_transfer')
-                ->sum('final_price'),
-            'combined_revenue' => (float) $revenueOrders->sum('final_price'),
-            'active_days' => $dailyGroups->count(),
-            'range_label' => $historyStart->format('d/m/Y') . ' - ' . now()->format('d/m/Y'),
-        ];
-
-        return view('staff.created-order-history', compact('dailyGroups', 'summary'));
     }
 
     public function dailyRevenueReport()

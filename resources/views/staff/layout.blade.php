@@ -376,10 +376,6 @@
            class="sidebar-link {{ request()->routeIs('staff.create-order') ? 'active' : '' }}">
             <i class="fas fa-plus-circle"></i> Tạo đơn tại quán
         </a>
-        <a href="{{ route('staff.orders.created-history') }}"
-           class="sidebar-link {{ request()->routeIs('staff.orders.created-history') ? 'active' : '' }}">
-            <i class="fas fa-receipt"></i> Lịch sử tạo đơn
-        </a>
         <a href="{{ route('staff.revenue.daily') }}"
            class="sidebar-link {{ request()->routeIs('staff.revenue.daily') ? 'active' : '' }}">
                 <i class="fas fa-calendar-day"></i> Doanh thu ngày

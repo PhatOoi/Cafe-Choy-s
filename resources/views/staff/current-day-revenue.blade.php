@@ -205,118 +205,34 @@
         <div class="daily-highlight-date">{{ $currentRevenueDate->format('d/m/Y') }}</div>
     </div>
     <div class="daily-highlight-value">{{ number_format($todayRevenue->total_revenue, 0, ',', '.') }}đ</div>
-    <div class="daily-highlight-note">Hôm nay có {{ $todayOrderBreakdown['web_app_orders'] }} đơn khách mua trên web app và {{ $todayOrderBreakdown['staff_created_orders'] }} đơn do nhân viên tạo.</div>
+    <div class="daily-highlight-note">Hôm nay quán ghi nhận {{ $todayOrderBreakdown['web_app_orders'] }} đơn khách đặt qua web và {{ $todayOrderBreakdown['staff_created_orders'] }} đơn do bạn tạo tại quầy.</div>
 </div>
 
 <div class="daily-grid">
     <div class="daily-box">
         <div class="daily-box-label">Số đơn hôm nay</div>
         <div class="daily-box-value">{{ $todayOrderBreakdown['total_orders'] }}</div>
-        <div class="daily-box-note">Tổng số đơn đã ghi nhận doanh thu hôm nay</div>
+        <div class="daily-box-note">Tổng số đơn đã ghi nhận doanh thu của quán hôm nay</div>
     </div>
     <div class="daily-box">
         <div class="daily-box-label">Đơn khách web app</div>
         <div class="daily-box-value">{{ $todayOrderBreakdown['web_app_orders'] }}</div>
-        <div class="daily-box-note">Số đơn khách tự đặt và thanh toán trên web app</div>
+        <div class="daily-box-note">Số đơn khách tự đặt trên web app hôm nay</div>
     </div>
     <div class="daily-box">
         <div class="daily-box-label">Đơn nhân viên tạo</div>
         <div class="daily-box-value">{{ $todayOrderBreakdown['staff_created_orders'] }}</div>
-        <div class="daily-box-note">Số đơn tại quán do nhân viên trực tiếp tạo</div>
+        <div class="daily-box-note">Số đơn tại quầy do bạn trực tiếp tạo hôm nay</div>
     </div>
     <div class="daily-box">
         <div class="daily-box-label">Tiền mặt</div>
         <div class="daily-box-value">{{ number_format($todayRevenue->cash_revenue, 0, ',', '.') }}đ</div>
-        <div class="daily-box-note">Các giao dịch thanh toán tiền mặt hôm nay</div>
+        <div class="daily-box-note">Tổng giao dịch tiền mặt của quán hôm nay</div>
     </div>
     <div class="daily-box">
         <div class="daily-box-label">Chuyển khoản</div>
         <div class="daily-box-value">{{ number_format($todayRevenue->transfer_revenue, 0, ',', '.') }}đ</div>
-        <div class="daily-box-note">Các giao dịch thanh toán chuyển khoản hôm nay</div>
+        <div class="daily-box-note">Tổng giao dịch chuyển khoản của quán hôm nay</div>
     </div>
 </div>
-
-<div class="daily-section-title">
-    <i class="fas fa-chart-line"></i>
-    <span>Tổng quan 30 ngày gần nhất</span>
-</div>
-
-<div class="summary-grid">
-    <div class="summary-card">
-        <div class="summary-card-label">Tổng doanh thu 30 ngày</div>
-        <div class="summary-card-value">{{ number_format($summary['combined_revenue'], 0, ',', '.') }}đ</div>
-        <div class="summary-card-note">Trong {{ $summary['range_label'] }}</div>
-    </div>
-    <div class="summary-card">
-        <div class="summary-card-label">Nhân viên tạo đơn</div>
-        <div class="summary-card-value">{{ number_format($summary['staff_created_revenue'], 0, ',', '.') }}đ</div>
-        <div class="summary-card-note">Đơn tại quán do nhân viên tạo</div>
-    </div>
-    <div class="summary-card">
-        <div class="summary-card-label">User tự mua</div>
-        <div class="summary-card-value">{{ number_format($summary['customer_revenue'], 0, ',', '.') }}đ</div>
-        <div class="summary-card-note">Đơn khách hàng tự thanh toán</div>
-    </div>
-    <div class="summary-card">
-        <div class="summary-card-label">Tiền mặt</div>
-        <div class="summary-card-value">{{ number_format($summary['cash_revenue'], 0, ',', '.') }}đ</div>
-        <div class="summary-card-note">Các đơn đã thanh toán tiền mặt</div>
-    </div>
-    <div class="summary-card">
-        <div class="summary-card-label">Chuyển khoản</div>
-        <div class="summary-card-value">{{ number_format($summary['transfer_revenue'], 0, ',', '.') }}đ</div>
-        <div class="summary-card-note">Các đơn đã thanh toán chuyển khoản</div>
-    </div>
-</div>
-
-<div class="daily-section-title">
-    <i class="fas fa-calendar-day"></i>
-    <span>Lịch sử doanh thu theo ngày</span>
-</div>
-
-@if($dailyRevenue->isEmpty())
-    <div class="empty-history">
-        <i class="fas fa-chart-line"></i>
-        <div style="font-size:16px;font-weight:600;">Chưa có doanh thu trong 30 ngày gần nhất</div>
-        <div style="font-size:13px;margin-top:6px;">Dữ liệu sẽ xuất hiện khi có đơn hàng đã thanh toán được đồng bộ vào snapshot.</div>
-    </div>
-@else
-    <div class="history-card">
-        <div class="history-card-header">Bảng doanh thu ngày</div>
-        <div style="overflow-x:auto;">
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Ngày</th>
-                        <th>Số đơn</th>
-                        <th>Nhân viên tạo</th>
-                        <th>User tự mua</th>
-                        <th>Tiền mặt</th>
-                        <th>Chuyển khoản</th>
-                        <th>Tổng doanh thu</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($dailyRevenue as $day)
-                        @php
-                            $revenueDate = $day->revenue_date ?? now();
-                        @endphp
-                        <tr>
-                            <td>
-                                <span class="history-date">{{ $revenueDate->format('d/m/Y') }}</span>
-                                <span class="history-sub">{{ $revenueDate->isoFormat('dddd') }}</span>
-                            </td>
-                            <td>{{ $day->total_orders }} đơn</td>
-                            <td>{{ number_format($day->staff_created_revenue, 0, ',', '.') }}đ</td>
-                            <td>{{ number_format($day->customer_revenue, 0, ',', '.') }}đ</td>
-                            <td>{{ number_format($day->cash_revenue, 0, ',', '.') }}đ</td>
-                            <td>{{ number_format($day->transfer_revenue, 0, ',', '.') }}đ</td>
-                            <td><span class="history-amount">{{ number_format($day->total_revenue, 0, ',', '.') }}đ</span></td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-@endif
 @endsection

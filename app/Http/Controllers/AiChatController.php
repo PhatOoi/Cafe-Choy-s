@@ -184,9 +184,6 @@ class AiChatController extends Controller
         $isDirectRequest = $this->isDrinkNavigationIntent($normalized);
         $isFollowupNavigation = $this->isNavigationFollowupIntent($normalized);
 
-        if (!$isDirectRequest && !$isFollowupNavigation) {
-            return null;
-        }
 
         $products = Product::query()
             ->where('status', 'available')
@@ -288,7 +285,7 @@ class AiChatController extends Controller
 
     private function isDrinkNavigationIntent(string $normalizedMessage): bool
     {
-        if (!preg_match('/\b(muon|uong|tim|co\s+mon|goi|dat|thich|lay|chon)\b/u', $normalizedMessage)) {
+        if (!preg_match('/\b(muon|uong|tim|co\s+mon|goi|dat|thich|lay|chon|di|luon|ngay)\b/u', $normalizedMessage)) {
             return false;
         }
 
@@ -382,7 +379,11 @@ class AiChatController extends Controller
             return [$reply, null];
         }
 
-        if (($candidateAction['intent'] ?? null) === 'product_found' && $this->isDrinkNavigationIntent($normalized)) {
+        if (($candidateAction['intent'] ?? null) === 'product_found') {
+            if ($this->isAffirmativeIntent($normalized) || $this->isNavigationFollowupIntent($normalized)) {
+                return [$reply, $candidateAction];
+            }
+
             session([$pendingKey => $candidateAction]);
 
             $productName = trim((string) preg_replace('/^Di den mon:\s*/u', '', (string) ($candidateAction['label'] ?? '')));
@@ -399,7 +400,7 @@ class AiChatController extends Controller
     private function isAffirmativeIntent(string $normalizedMessage): bool
     {
         return (bool) preg_match(
-            '/\b(co|ok|oke|dong\s*y|gui\s+nut|chuyen\s+den|di\s+den|mo\s+mon|xac\s+nhan)\b/u',
+            '/\b(co|ok|oke|dong\s*y|gui\s+nut|chuyen\s+den|di\s+den|mo\s+mon|xac\s+nhan|di|luon|ngay)\b/u',
             $normalizedMessage
         );
     }

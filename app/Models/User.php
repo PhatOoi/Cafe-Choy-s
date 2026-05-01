@@ -10,7 +10,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     // Các trường có thể gán hàng loạt khi tạo/cập nhật user.
-    protected $fillable = ['name','email','password','role_id','employment_type','citizen_id','is_active','phone','avatar_url','loyalty_points'];
+    protected $fillable = ['name','email','password','role_id','employment_type','citizen_id','is_active','phone','avatar_url','loyalty_points','last_seen_at'];
 
     // Các trường nhạy cảm không trả ra khi serialize model.
     protected $hidden   = ['password','remember_token'];
@@ -18,8 +18,15 @@ class User extends Authenticatable
     // Cast kiểu dữ liệu để dùng thuận tiện trong code.
     protected $casts    = [
         'email_verified_at' => 'datetime',
-        'is_active'         => 'boolean', // FIX: thiếu cast này
+        'is_active'         => 'boolean',
+        'last_seen_at'      => 'datetime',
     ];
+
+    // Nhân viên được coi là online nếu last_seen_at trong vòng 5 phút gần nhất.
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at !== null && $this->last_seen_at->diffInMinutes(now()) < 5;
+    }
 
     // Vai trò của user trong hệ thống.
     public function role() { return $this->belongsTo(UserRole::class, 'role_id'); }

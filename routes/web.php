@@ -119,7 +119,6 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
     Route::get('/chat/unread',                  [ChatController::class, 'unreadCount'])->name('chat.unread');
     Route::get('/orders/confirmed-reminder-ids', [StaffController::class, 'confirmedOrderReminderIds'])->name('orders.confirmed-reminder-ids');
     Route::get('/orders/reminder-statuses', [StaffController::class, 'orderReminderStatuses'])->name('orders.reminder-statuses');
-    Route::get('/orders/created-history', [StaffController::class, 'createdOrderHistory'])->name('orders.created-history');
     Route::get('/revenue/daily', [StaffController::class, 'dailyRevenueReport'])->name('revenue.daily');
     Route::get('/revenue/monthly', [StaffController::class, 'monthlyRevenueReport'])->name('revenue.monthly');
     Route::get('/orders/create',        [StaffController::class, 'createOrder'])->name('create-order');

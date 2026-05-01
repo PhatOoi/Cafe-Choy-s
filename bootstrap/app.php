@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Gắn middleware đồng bộ thanh toán QR vào nhóm web để chạy sau mỗi request của khách.
         $middleware->web(append: [
             \App\Http\Middleware\SyncPaidQrOrderMiddleware::class,
+            \App\Http\Middleware\UpdateLastSeen::class,
         ]);
 
         // Đăng ký alias middleware để dùng ngắn gọn trong routes/web.php.
