@@ -204,12 +204,13 @@
             <div class="card-header">
                 <div class="card-header-title">
                     <i class="fas fa-trophy" style="color:var(--admin-gold);"></i>
-                    Top sản phẩm bán chạy
+                    Top 10 sản phẩm bán chạy
                 </div>
+                <span id="top-products-updated" style="font-size:11px;color:#9ca3af;"></span>
             </div>
             <div class="card-body">
                 @php $maxSold = $topProducts->max('total_sold') ?: 1; @endphp
-                <div class="top-products-list">
+                <div class="top-products-list" id="top-products-list">
                     @forelse($topProducts as $i => $product)
                     <div class="top-product-item">
                         <div class="top-product-rank {{ $i === 0 ? 'rank-1' : ($i === 1 ? 'rank-2' : ($i === 2 ? 'rank-3' : 'rank-other')) }}">
@@ -309,5 +310,47 @@ new Chart(ctx, {
         }
     }
 });
+
+// Auto-refresh top 10 sản phẩm bán chạy mỗi 60 giây.
+const topProductsUrl = '{{ route('admin.dashboard.top-products') }}';
+
+function renderTopProducts(products) {
+    const list = document.getElementById('top-products-list');
+    const label = document.getElementById('top-products-updated');
+    if (!list) return;
+
+    if (!products.length) {
+        list.innerHTML = '<p style="color:#9ca3af;text-align:center;">Chưa có dữ liệu</p>';
+        return;
+    }
+
+    const maxSold = Math.max(...products.map(p => p.total_sold));
+    const rankClass = i => i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : (i === 2 ? 'rank-3' : 'rank-other'));
+
+    list.innerHTML = products.map((p, i) => `
+        <div class="top-product-item">
+            <div class="top-product-rank ${rankClass(i)}">${i + 1}</div>
+            <div class="top-product-info">
+                <div class="top-product-name">${p.name}</div>
+                <div class="top-product-bar-wrap">
+                    <div class="top-product-bar" style="width:${Math.round(p.total_sold / maxSold * 100)}%;"></div>
+                </div>
+                <div class="top-product-sold">${Number(p.total_sold).toLocaleString('vi-VN')} ly · ${Number(p.revenue).toLocaleString('vi-VN')}đ</div>
+            </div>
+        </div>
+    `).join('');
+
+    const now = new Date();
+    label.textContent = 'Cập nhật ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function fetchTopProducts() {
+    fetch(topProductsUrl)
+        .then(r => r.json())
+        .then(data => renderTopProducts(data))
+        .catch(() => {});
+}
+
+setInterval(fetchTopProducts, 60000);
 </script>
 @endsection

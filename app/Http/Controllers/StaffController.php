@@ -377,7 +377,18 @@ class StaffController extends Controller
             'payment_method'     => 'nullable|string|max:50',
             'qr_note'            => 'nullable|string|max:50',
             'note'               => 'nullable|string|max:500',
+            'customer_phone'     => 'nullable|string|max:20',
+            'use_points'         => 'nullable|boolean',
         ]);
+
+        // Tra cứu khách hàng theo SĐT nếu staff có nhập để gắn đơn vào tài khoản khách.
+        $customerUser = null;
+        if ($request->filled('customer_phone')) {
+            $cleanPhone = preg_replace('/\D/', '', trim($request->customer_phone));
+            if ($cleanPhone !== '') {
+                $customerUser = \App\Models\User::where('phone', $cleanPhone)->where('role_id', 3)->first();
+            }
+        }
 
         // Tạo đơn và payment tại quán trong transaction để rollback được nếu có lỗi.
         DB::beginTransaction();
@@ -421,6 +432,16 @@ class StaffController extends Controller
                 ];
             }
 
+            // Tính giảm giá bằng điểm nếu khách đồng ý dùng điểm.
+            $pointsUsed = 0;
+            $discountAmount = 0;
+            if ($customerUser && $request->boolean('use_points') && $customerUser->loyalty_points > 0) {
+                $maxDiscount = $this->calcMaxPointsDiscountForStaff((int) $totalPrice, (int) $customerUser->loyalty_points);
+                $pointsUsed  = $maxDiscount;
+                $discountAmount = $pointsUsed;
+            }
+            $finalPrice = max(0, $totalPrice - $discountAmount);
+
             // Xác định phương thức thanh toán và note của đơn tại quán.
             $paymentMethod = $request->payment_method ?? 'cash';
             $qrNote = trim((string) $request->input('qr_note', ''));
@@ -436,13 +457,16 @@ class StaffController extends Controller
                 : 'delivered';
 
             // Tạo đơn gốc tại quán do staff hiện tại phụ trách.
+            // Nếu khách có tài khoản → gán user_id của khách để đơn xuất hiện trong lịch sử của họ.
+            $orderUserId = $customerUser ? $customerUser->id : Auth::id();
             $order = Order::create([
-                'user_id'           => Auth::id(),
+                'user_id'           => $orderUserId,
                 'assigned_staff_id' => Auth::id(),
                 'status'            => $initialStatus,
                 'total_price'       => $totalPrice,
-                'discount_amount'   => 0,
-                'final_price'       => $totalPrice,
+                'discount_amount'   => $discountAmount,
+                'points_used'       => $pointsUsed,
+                'final_price'       => $finalPrice,
                 'note'              => $orderNote !== '' ? $orderNote : 'Bán tại quán',
                 'created_at'        => now(),
             ]);
@@ -476,18 +500,34 @@ class StaffController extends Controller
                 'order_id' => $order->id,
                 'method'   => $paymentMethod,
                 'status'   => 'paid',
-                'amount'   => $totalPrice,
+                'amount'   => $finalPrice,
                 'paid_at'  => now(),
                 'ref_code' => $paymentMethod === 'bank_transfer' && $qrNote !== '' ? $qrNote : null,
             ]);
 
             DB::commit();
 
+            // Cập nhật điểm tích lũy cho khách: trừ điểm đã dùng, cộng điểm từ đơn mới.
+            if ($customerUser) {
+                $pointsEarned = (int) floor($finalPrice / 10);
+                $customerUser->loyalty_points = max(0, $customerUser->loyalty_points - $pointsUsed) + $pointsEarned;
+                $customerUser->save();
+            }
+
             // Đồng bộ báo cáo sau khi đơn tại quán đã được tạo và thanh toán.
             $this->syncDailyRevenueSnapshots();
 
+            $successMsg = 'Tạo đơn tại quán thành công! Mã đơn #' . $order->id;
+            if ($customerUser) {
+                $pointsEarned = (int) floor($finalPrice / 10);
+                $parts = [];
+                if ($pointsUsed > 0) $parts[] = 'giảm ' . number_format($pointsUsed, 0, ',', '.') . 'đ bằng điểm';
+                $parts[] = 'cộng ' . $pointsEarned . ' điểm';
+                $successMsg .= ' — ' . $customerUser->name . ': ' . implode(', ', $parts) . '.';
+            }
+
             $response = redirect()->route('staff.order.detail', $order->id)
-                ->with('success', 'Tạo đơn tại quán thành công! Mã đơn #' . $order->id);
+                ->with('success', $successMsg);
 
             if ($initialStatus === 'confirmed') {
                 $response->with('start_order_reminder_id', $order->id);
@@ -504,6 +544,47 @@ class StaffController extends Controller
     // Alias để map với các route cũ/tên route đang dùng trong dự án.
     public function createOrder() { return $this->createInStoreOrder(); }
     public function storeOrder(Request $request) { return $this->storeInStoreOrder($request); }
+
+    // Tìm khách hàng theo SĐT để staff tra cứu nhanh khi tạo đơn tại quán.
+    public function lookupCustomer(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $phone = preg_replace('/\D/', '', trim((string) $request->input('phone', '')));
+
+        if (strlen($phone) < 9) {
+            return response()->json(['found' => false]);
+        }
+
+        $user = \App\Models\User::where('phone', $phone)->where('role_id', 3)->first();
+
+        if (!$user) {
+            return response()->json(['found' => false]);
+        }
+
+        // Tính số điểm tối đa có thể dùng (dựa trên tổng đơn nếu truyền lên, hoặc trả điểm thô).
+        $baseTotal = (int) $request->input('total', 0);
+        $maxDiscount = $baseTotal > 0 ? $this->calcMaxPointsDiscountForStaff($baseTotal, (int) $user->loyalty_points) : null;
+
+        return response()->json([
+            'found'          => true,
+            'id'             => $user->id,
+            'name'           => $user->name,
+            'phone'          => $user->phone,
+            'loyalty_points' => $user->loyalty_points,
+            'max_discount'   => $maxDiscount,
+        ]);
+    }
+
+    // Tính số điểm có thể dùng tối đa cho một đơn tại quán (copy logic CartController).
+    private function calcMaxPointsDiscountForStaff(int $baseTotal, int $userPoints): int
+    {
+        if ($baseTotal >= 300000) {
+            $max = (int) floor($baseTotal * 0.1);
+        } else {
+            $remainder = $baseTotal % 10000;
+            $max = $remainder === 0 ? (int) floor($baseTotal * 0.1) : $remainder;
+        }
+        return min($max, $userPoints);
+    }
 
     // Mở trang xem/sửa đơn hiện tại cho staff.
     public function editOrder($id) {

@@ -152,6 +152,38 @@
     }
     .payment-select:focus { border-color: var(--primary); }
 
+    .loyalty-lookup-wrap {
+        background: #fffbf2;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    .loyalty-lookup-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .loyalty-lookup-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .customer-found-card {
+        background: #f0fdf4;
+        border: 1px solid #86efac;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    .customer-found-name { font-weight: 700; color: #15803d; }
+    .customer-found-pts  { color: #6b7280; font-size: 12px; margin-top: 2px; }
+    .customer-clear-btn  { font-size: 11px; color: #ef4444; cursor: pointer; text-decoration: underline; margin-top: 4px; display: inline-block; }
+    .customer-not-found  { font-size: 13px; color: #ef4444; }
+
     .btn-submit-order {
         width: 100%;
         padding: 14px;
@@ -741,6 +773,22 @@
                 <option value="vnpay">💳 VNPay</option>
             </select>
 
+            {{-- Tích điểm khách hàng --}}
+            <div class="loyalty-lookup-wrap">
+                <div class="loyalty-lookup-label"><i class="fas fa-star" style="color:#f59e0b;margin-right:5px;"></i>Tích điểm khách hàng</div>
+                <div class="loyalty-lookup-row">
+                    <input type="text" id="customerPhoneInput" placeholder="Nhập SĐT khách..." inputmode="tel" maxlength="15"
+                           style="flex:1;border:1px solid #e2e6ef;border-radius:8px;padding:8px 12px;font-size:13px;outline:none;">
+                    <button type="button" id="lookupBtn" onclick="lookupCustomer()"
+                            style="padding:8px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;">
+                        Tra cứu
+                    </button>
+                </div>
+                <div id="customerResult" style="margin-top:8px;display:none;"></div>
+                <input type="hidden" name="customer_phone" id="customerPhoneHidden">
+                <input type="hidden" name="use_points" id="usePointsHidden" value="0">
+            </div>
+
             <textarea class="note-input" name="note" rows="2" placeholder="Ghi chú đơn hàng (tuỳ chọn)..."></textarea>
             <input type="hidden" name="qr_note" id="staffQrNoteInput" value="">
 
@@ -1148,6 +1196,8 @@ function renderCart() {
     submitBtn.disabled = ids.length === 0;
     resetStaffQrReference();
     resetStaffBillCode();
+    // Áp dụng giảm điểm nếu đang dùng
+    if (typeof applyPointsDiscount === 'function') applyPointsDiscount();
 
     if (ids.length === 0) {
         emptyCart.style.display = 'block';
@@ -1391,5 +1441,102 @@ document.getElementById('orderForm').addEventListener('submit', function (e) {
     const ok = confirm(`Xác nhận tạo đơn tại quán?\nTổng tiền: ${total.toLocaleString('vi-VN')}đ`);
     if (!ok) e.preventDefault();
 });
+
+// ── Tra cứu khách hàng theo SĐT ──────────────────────────────────────────
+const lookupUrl = '{{ route('staff.orders.lookup-customer') }}';
+let linkedCustomer = null;
+let currentPointsDiscount = 0;
+
+function getCartBaseTotal() {
+    return Object.keys(cart).reduce((s, id) => s + cart[id].price * cart[id].quantity, 0);
+}
+
+function applyPointsDiscount() {
+    const useEl = document.getElementById('usePointsHidden');
+    const totalDisplay = document.getElementById('totalDisplay');
+    const base = getCartBaseTotal();
+
+    if (linkedCustomer && currentPointsDiscount > 0 && useEl.value === '1') {
+        totalDisplay.textContent = Math.max(0, base - currentPointsDiscount).toLocaleString('vi-VN') + 'đ';
+    } else {
+        totalDisplay.textContent = base.toLocaleString('vi-VN') + 'đ';
+    }
+}
+
+function toggleUsePoints(checked) {
+    document.getElementById('usePointsHidden').value = checked ? '1' : '0';
+    applyPointsDiscount();
+}
+
+function renderCustomerCard() {
+    const d = linkedCustomer;
+    const resultBox = document.getElementById('customerResult');
+    const hasPoints = d.loyalty_points > 0 && d.max_discount > 0;
+    resultBox.innerHTML = `
+        <div class="customer-found-card">
+            <div class="customer-found-name">✅ ${d.name}</div>
+            <div class="customer-found-pts">SĐT: ${d.phone} · Điểm hiện tại: <strong>${d.loyalty_points.toLocaleString('vi-VN')}</strong></div>
+            ${hasPoints ? `
+            <label class="use-points-toggle" style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:13px;color:#15803d;">
+                <input type="checkbox" id="usePointsCheck" onchange="toggleUsePoints(this.checked)"
+                       style="width:16px;height:16px;accent-color:#15803d;cursor:pointer;">
+                <span>Dùng điểm giảm <strong>${d.max_discount.toLocaleString('vi-VN')}đ</strong> (${d.max_discount} điểm)</span>
+            </label>` : '<div style="font-size:12px;color:#9ca3af;margin-top:6px;">Không đủ điểm để giảm giá đơn này</div>'}
+            <span class="customer-clear-btn" onclick="clearCustomer()">Xóa liên kết</span>
+        </div>`;
+    resultBox.style.display = 'block';
+}
+
+function lookupCustomer() {
+    const phone = document.getElementById('customerPhoneInput').value.trim();
+    const resultBox = document.getElementById('customerResult');
+    if (!phone) return;
+
+    // Tính total hiện tại để gửi lên server tính max_discount đúng.
+    const base = getCartBaseTotal();
+
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = '<span style="color:#9ca3af;font-size:13px;">Đang tìm...</span>';
+
+    fetch(lookupUrl + '?phone=' + encodeURIComponent(phone) + '&total=' + base)
+        .then(r => r.json())
+        .then(data => {
+            if (data.found) {
+                linkedCustomer = data;
+                currentPointsDiscount = data.max_discount ?? 0;
+                document.getElementById('customerPhoneHidden').value = data.phone;
+                document.getElementById('usePointsHidden').value = '0';
+                renderCustomerCard();
+            } else {
+                linkedCustomer = null;
+                currentPointsDiscount = 0;
+                document.getElementById('customerPhoneHidden').value = '';
+                document.getElementById('usePointsHidden').value = '0';
+                resultBox.innerHTML = '<div class="customer-not-found">❌ Không tìm thấy tài khoản khách với SĐT này.</div>';
+            }
+        })
+        .catch(() => {
+            resultBox.innerHTML = '<div class="customer-not-found">Lỗi kết nối, vui lòng thử lại.</div>';
+        });
+}
+
+function clearCustomer() {
+    linkedCustomer = null;
+    currentPointsDiscount = 0;
+    document.getElementById('customerPhoneInput').value = '';
+    document.getElementById('customerPhoneHidden').value = '';
+    document.getElementById('usePointsHidden').value = '0';
+    document.getElementById('customerResult').style.display = 'none';
+    applyPointsDiscount();
+}
+
+// Cho phép nhấn Enter trong ô SĐT để tra cứu.
+document.getElementById('customerPhoneInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); lookupCustomer(); }
+});
+
+// Khi cart thay đổi, cập nhật lại hiển thị tổng tiền (có trừ điểm nếu đang dùng).
+const _origRenderCart = renderCart;
+window.addEventListener('cartUpdated', applyPointsDiscount);
 </script>
 @endsection

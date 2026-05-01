@@ -93,17 +93,8 @@ class AdminController extends Controller
             ->orderBy('date')
             ->get();
 
-        // Top 5 sản phẩm bán chạy theo số lượng và doanh thu.
-        $topProducts = DB::table('order_items')
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->join('payments', 'payments.order_id', '=', 'orders.id')
-            ->where('payments.status', 'paid')
-            ->selectRaw('products.name, SUM(order_items.quantity) as total_sold, SUM(order_items.quantity * order_items.unit_price) as revenue')
-            ->groupBy('products.id', 'products.name')
-            ->orderByDesc('total_sold')
-            ->limit(5)
-            ->get();
+        // Top 10 sản phẩm bán chạy nhất toàn thời gian (cả đơn staff và khách web app).
+        $topProducts = $this->getTop10Products();
 
         // 10 đơn gần nhất để admin theo dõi nhanh hoạt động hệ thống.
         $recentOrders = Order::with(['user', 'payment'])
@@ -112,6 +103,27 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.dashboard', compact('stats', 'revenueChart', 'topProducts', 'recentOrders'));
+    }
+
+    // Trả về top 10 sản phẩm bán chạy dạng JSON cho AJAX auto-refresh dashboard.
+    public function topProductsJson(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json($this->getTop10Products());
+    }
+
+    // Query dùng chung để lấy top 10 sản phẩm bán chạy từ tất cả đơn đã thanh toán.
+    private function getTop10Products(): \Illuminate\Support\Collection
+    {
+        return DB::table('order_items')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('payments', 'payments.order_id', '=', 'orders.id')
+            ->where('payments.status', 'paid')
+            ->selectRaw('products.id, products.name, SUM(order_items.quantity) as total_sold, SUM(order_items.quantity * order_items.unit_price) as revenue')
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('total_sold')
+            ->limit(10)
+            ->get();
     }
 
     // ─── Quản lý sản phẩm ────────────────────────────────────────────────────

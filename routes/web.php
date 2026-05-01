@@ -122,6 +122,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
     Route::get('/revenue/daily', [StaffController::class, 'dailyRevenueReport'])->name('revenue.daily');
     Route::get('/revenue/monthly', [StaffController::class, 'monthlyRevenueReport'])->name('revenue.monthly');
     Route::get('/orders/create',        [StaffController::class, 'createOrder'])->name('create-order');
+    Route::get('/orders/lookup-customer', [StaffController::class, 'lookupCustomer'])->name('orders.lookup-customer');
     Route::post('/orders',              [StaffController::class, 'storeOrder'])->name('store-order');
     Route::get('/orders/{id}',          [StaffController::class, 'orderDetail'])->name('order.detail');
     Route::get('/orders/{id}/edit',     [StaffController::class, 'editOrder'])->name('order.edit');
@@ -140,6 +141,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
 Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(function () {
     Route::get('/',          fn() => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard/top-products', [AdminController::class, 'topProductsJson'])->name('dashboard.top-products');
     Route::get('/reports',   [AdminController::class, 'reports'])->name('reports');
     Route::get('/work-schedules', [AdminController::class, 'workSchedules'])->name('work-schedules.index');
     Route::get('/payroll',   [AdminController::class, 'payroll'])->name('payroll');
