@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\AI\GeminiService;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AiChatController extends Controller
 {
@@ -29,11 +31,23 @@ class AiChatController extends Controller
 
         $message = trim($request->message);
         $history = session('ai_chat_history', []);
-        [$reply, $escalate] = array_slice($this->callGemini($message, $history, 'ai_chat_history'), 0, 2);
+        [$reply, $escalate] = $this->callGemini($message, $history, 'ai_chat_history');
+        [$reply, $quickAction] = $this->resolveQuickActionFlow(
+            $message,
+            $history,
+            $reply,
+            'ai_chat_pending_quick_action'
+        );
+        $reply = $this->alignReplyWithQuickAction($reply, $quickAction);
+
+        if ($quickAction !== null && ($quickAction['intent'] ?? null) === 'not_found') {
+            $reply = "Xin loi anh/chi, hien mon nay chua co trong thuc don cua quan.\nBe gui menu hien co de anh/chi chon nhanh hon nha.";
+        }
 
         return response()->json([
-            'reply'    => $reply,
-            'escalate' => $escalate,
+            'reply'        => $reply,
+            'escalate'     => $escalate,
+            'quick_action' => $quickAction,
         ]);
     }
 
@@ -47,10 +61,22 @@ class AiChatController extends Controller
         $message = trim($request->message);
         $history = session('widget_ai_history', []);
         [$reply, $escalate] = $this->callGemini($message, $history, 'widget_ai_history');
+        [$reply, $quickAction] = $this->resolveQuickActionFlow(
+            $message,
+            $history,
+            $reply,
+            'widget_ai_pending_quick_action'
+        );
+        $reply = $this->alignReplyWithQuickAction($reply, $quickAction);
+
+        if ($quickAction !== null && ($quickAction['intent'] ?? null) === 'not_found') {
+            $reply = "Xin loi anh/chi, hien mon nay chua co trong thuc don cua quan.\nBe gui menu hien co de anh/chi chon nhanh hon nha.";
+        }
 
         return response()->json([
-            'reply'    => $reply,
-            'escalate' => $escalate,
+            'reply'        => $reply,
+            'escalate'     => $escalate,
+            'quick_action' => $quickAction,
         ]);
     }
 
@@ -58,6 +84,7 @@ class AiChatController extends Controller
     public function clear()
     {
         session()->forget('ai_chat_history');
+        session()->forget('ai_chat_pending_quick_action');
         return response()->json(['ok' => true]);
     }
 
@@ -65,6 +92,7 @@ class AiChatController extends Controller
     public function widgetClear()
     {
         session()->forget('widget_ai_history');
+        session()->forget('widget_ai_pending_quick_action');
         return response()->json(['ok' => true]);
     }
 
@@ -107,7 +135,7 @@ class AiChatController extends Controller
     private function stripRepeatedGreeting(string $reply): string
     {
         $cleaned = preg_replace(
-            '/^(xin\s+chào[^\n.!?]*[.!?]?|chào\s+bạn[^\n.!?]*[.!?]?|hello[^\n.!?]*[.!?]?|hi[^\n.!?]*[.!?]?|chào\s+buổi\s+(sáng|trưa|chiều|tối)[^\n.!?]*[.!?]?)\s*/iu',
+            '/^(xin\s+chào\b[\s,:;!?.-]*|chào\s+bạn\b[\s,:;!?.-]*|\bhello\b[\s,:;!?.-]*|\bhi\b[\s,:;!?.-]*|chào\s+buổi\s+(sáng|trưa|chiều|tối)\b[\s,:;!?.-]*)/iu',
             '',
             trim($reply)
         );
@@ -144,5 +172,260 @@ class AiChatController extends Controller
         $text = preg_replace('/\n{3,}/u', "\n\n", $text) ?? $text;
 
         return trim($text);
+    }
+
+    private function buildQuickActionForProductIntent(string $message, array $history = []): ?array
+    {
+        $normalized = $this->normalizeText($message);
+        if ($normalized === '') {
+            return null;
+        }
+
+        $isDirectRequest = $this->isDrinkNavigationIntent($normalized);
+        $isFollowupNavigation = $this->isNavigationFollowupIntent($normalized);
+
+        if (!$isDirectRequest && !$isFollowupNavigation) {
+            return null;
+        }
+
+        $products = Product::query()
+            ->where('status', 'available')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $candidates = [$normalized];
+        if ($isFollowupNavigation) {
+            $recentModelText = $this->latestHistoryText($history, 'model', 2);
+            $recentUserText = $this->latestHistoryText($history, 'user', 2);
+
+            if ($recentModelText !== '') {
+                $candidates[] = $this->normalizeText($recentModelText);
+            }
+            if ($recentUserText !== '') {
+                $candidates[] = $this->normalizeText($recentUserText);
+            }
+        }
+
+        $bestMatch = null;
+        foreach ($candidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+
+            $bestMatch = $this->findBestMatchingProduct($candidate, $products->all());
+            if ($bestMatch !== null) {
+                break;
+            }
+        }
+
+        if ($bestMatch !== null) {
+            $productName = (string) $bestMatch->name;
+
+            return [
+                'intent' => 'product_found',
+                'label' => 'Di den mon: ' . $productName,
+                'url' => '/search?q=' . urlencode($productName) . '&ai_jump=1',
+            ];
+        }
+
+        // Chỉ fallback "không có món" khi user hỏi trực tiếp tên món trong lượt hiện tại.
+        if (!$isDirectRequest) {
+            return null;
+        }
+
+        return [
+            'intent' => 'not_found',
+            'label' => 'Xem menu hien co',
+            'url' => '/menu',
+        ];
+    }
+
+    private function findBestMatchingProduct(string $normalizedMessage, array $products): ?Product
+    {
+        $messageTokens = $this->tokenize($normalizedMessage);
+        $bestProduct = null;
+        $bestScore = -1;
+
+        foreach ($products as $product) {
+            if (!$product instanceof Product) {
+                continue;
+            }
+
+            $normalizedProductName = $this->normalizeText((string) $product->name);
+            if ($normalizedProductName === '') {
+                continue;
+            }
+
+            if (str_contains($normalizedMessage, $normalizedProductName)) {
+                return $product;
+            }
+
+            if (str_contains($normalizedProductName, $normalizedMessage) && strlen($normalizedMessage) >= 6) {
+                return $product;
+            }
+
+            $productTokens = $this->tokenize($normalizedProductName);
+            if (empty($productTokens)) {
+                continue;
+            }
+
+            $overlapCount = count(array_intersect($messageTokens, $productTokens));
+            if ($overlapCount < 2) {
+                continue;
+            }
+
+            $coverage = $overlapCount / max(count($productTokens), 1);
+            $score = ($coverage * 10) + $overlapCount;
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestProduct = $product;
+            }
+        }
+
+        return $bestScore >= 6 ? $bestProduct : null;
+    }
+
+    private function isDrinkNavigationIntent(string $normalizedMessage): bool
+    {
+        if (!preg_match('/\b(muon|uong|tim|co\s+mon|goi|dat|thich|lay|chon)\b/u', $normalizedMessage)) {
+            return false;
+        }
+
+        return (bool) preg_match('/\b(ca\s?phe|tra\s?sua|tra|nuoc|sinh\s?to|ep|matcha|latte|bac\s?xiu|da\s?xay|cake|banh)\b/u', $normalizedMessage);
+    }
+
+    private function isNavigationFollowupIntent(string $normalizedMessage): bool
+    {
+        return (bool) preg_match('/\b(nut|button|chuyen\s+den|di\s+den|link|mo\s+mon|mo\s+toi\s+mon|den\s+mon)\b/u', $normalizedMessage);
+    }
+
+    private function latestHistoryText(array $history, string $role, int $limit = 2): string
+    {
+        $texts = [];
+
+        for ($i = count($history) - 1; $i >= 0 && count($texts) < $limit; $i--) {
+            $turn = $history[$i] ?? null;
+            if (!is_array($turn) || ($turn['role'] ?? '') !== $role) {
+                continue;
+            }
+
+            $text = trim((string) ($turn['text'] ?? ''));
+            if ($text !== '') {
+                $texts[] = $text;
+            }
+        }
+
+        return implode(' ', $texts);
+    }
+
+    private function alignReplyWithQuickAction(string $reply, ?array $quickAction): string
+    {
+        if ($quickAction === null || ($quickAction['intent'] ?? null) !== 'product_found') {
+            return $reply;
+        }
+
+        $normalizedReply = Str::lower(Str::ascii($reply));
+        $hasContradiction = (bool) preg_match(
+            '/(khong\s+co\s+(chuc\s+nang|nut|button))|(khong\s+the\s+(tao|chuyen))/u',
+            $normalizedReply
+        );
+
+        $productName = trim((string) preg_replace('/^Di den mon:\s*/u', '', (string) ($quickAction['label'] ?? '')));
+
+        if ($hasContradiction) {
+            $cleanProductName = $productName !== '' ? $productName : 'mon ban vua chon';
+
+            return "Da tim thay {$cleanProductName}.\nAnh/chi bam nut ben duoi de mo dung mon nha.";
+        }
+
+        $trimmed = trim($reply);
+        if ($trimmed === '') {
+            return 'Anh/chi bam nut ben duoi de di den dung mon nha.';
+        }
+
+        if (stripos($normalizedReply, 'bam nut') === false && stripos($normalizedReply, 'di den mon') === false) {
+            $trimmed .= "\n\nAnh/chi bam nut ben duoi de di den mon nha.";
+        }
+
+        return $trimmed;
+    }
+
+    /**
+     * @return array{0: string, 1: array|null}
+     */
+    private function resolveQuickActionFlow(string $message, array $history, string $reply, string $pendingKey): array
+    {
+        $normalized = $this->normalizeText($message);
+        $pendingAction = session($pendingKey);
+
+        if (is_array($pendingAction) && !empty($pendingAction['label']) && !empty($pendingAction['url'])) {
+            if ($this->isAffirmativeIntent($normalized)) {
+                session()->forget($pendingKey);
+
+                $productName = trim((string) preg_replace('/^Di den mon:\s*/u', '', (string) ($pendingAction['label'] ?? '')));
+                $replyText = $productName !== ''
+                    ? "Oke anh/chi, be gui nut de di den {$productName} nha."
+                    : 'Oke anh/chi, be gui nut de di den mon ban vua chon nha.';
+
+                return [$replyText, $pendingAction];
+            }
+
+            if ($this->isNegativeIntent($normalized)) {
+                session()->forget($pendingKey);
+                return ['Dạ oke anh/chị, khi nào cần thì nhắn bé để gửi nút chuyển món nha.', null];
+            }
+        }
+
+        $candidateAction = $this->buildQuickActionForProductIntent($message, $history);
+        if ($candidateAction === null) {
+            return [$reply, null];
+        }
+
+        if (($candidateAction['intent'] ?? null) === 'product_found' && $this->isDrinkNavigationIntent($normalized)) {
+            session([$pendingKey => $candidateAction]);
+
+            $productName = trim((string) preg_replace('/^Di den mon:\s*/u', '', (string) ($candidateAction['label'] ?? '')));
+            $askReply = $productName !== ''
+                ? "Anh/chi co muon be chuyen den mon {$productName} khong? Neu dong y, chi can nhan 'co' hoac 'gui nut chuyen'."
+                : "Anh/chi co muon be gui nut chuyen den mon nay khong? Neu dong y, chi can nhan 'co' hoac 'gui nut chuyen'.";
+
+            return [$askReply, null];
+        }
+
+        return [$reply, $candidateAction];
+    }
+
+    private function isAffirmativeIntent(string $normalizedMessage): bool
+    {
+        return (bool) preg_match(
+            '/\b(co|ok|oke|dong\s*y|gui\s+nut|chuyen\s+den|di\s+den|mo\s+mon|xac\s+nhan)\b/u',
+            $normalizedMessage
+        );
+    }
+
+    private function isNegativeIntent(string $normalizedMessage): bool
+    {
+        return (bool) preg_match('/\b(khong|ko|khong\s+can|thoi|huy|dung)\b/u', $normalizedMessage);
+    }
+
+    private function normalizeText(string $text): string
+    {
+        $ascii = Str::lower(Str::ascii($text));
+        $ascii = preg_replace('/[^a-z0-9\s]+/u', ' ', $ascii) ?? $ascii;
+        $ascii = preg_replace('/\s+/u', ' ', trim($ascii)) ?? trim($ascii);
+
+        return $ascii;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function tokenize(string $normalizedText): array
+    {
+        $parts = preg_split('/\s+/u', trim($normalizedText)) ?: [];
+        $parts = array_filter($parts, static fn ($part) => strlen((string) $part) >= 2);
+
+        return array_values(array_unique(array_map('strval', $parts)));
     }
 }

@@ -495,6 +495,30 @@
 
         .ai-disclaimer i { margin-right: 4px; }
 
+        .ai-quick-action-wrap {
+            margin: 0 0 10px 58px;
+        }
+
+        .ai-quick-action-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(200,162,107,.45);
+            background: rgba(200,162,107,.12);
+            color: #e8cba2;
+            border-radius: 10px;
+            padding: 7px 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .ai-quick-action-link:hover {
+            color: #fff;
+            text-decoration: none;
+            background: rgba(200,162,107,.25);
+        }
+
         @media (max-width: 600px) {
             .ai-hero h1 { font-size: 32px; }
             .ai-chat-messages { min-height: 300px; max-height: 400px; }
@@ -574,6 +598,36 @@
                 .replace(/\n/g, '<br>');
         }
 
+        function normalizeSafeUrl(url) {
+            const cleaned = String(url || '').trim();
+            if (!cleaned) return '';
+            if (/^\/\//.test(cleaned)) return '';
+            if (/^[a-z]+:/i.test(cleaned)) return '';
+
+            return cleaned.charAt(0) === '/' ? cleaned : '/' + cleaned;
+        }
+
+        function appendQuickAction(action) {
+            if (!action || typeof action !== 'object') return;
+
+            const safeUrl = normalizeSafeUrl(action.url || '');
+            const label = String(action.label || '').trim();
+            if (!safeUrl || !label) return;
+
+            const container = document.getElementById('aiChatMessages');
+            const wrap = document.createElement('div');
+            wrap.className = 'ai-quick-action-wrap';
+
+            const link = document.createElement('a');
+            link.className = 'ai-quick-action-link';
+            link.href = safeUrl;
+            link.innerHTML = '<i class="fas fa-location-arrow"></i><span>' + escapeHtml(label) + '</span>';
+
+            wrap.appendChild(link);
+            container.appendChild(wrap);
+            scrollToBottom();
+        }
+
         function sendAiMessage() {
             if (aiIsSending) return;
 
@@ -601,6 +655,7 @@
             .then(data => {
                 hideTyping();
                 appendMessage('ai', escapeHtml(data.reply || 'Xin lỗi, không thể nhận phản hồi.'));
+                appendQuickAction(data.quick_action);
             })
             .catch(() => {
                 hideTyping();

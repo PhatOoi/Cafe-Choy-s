@@ -408,6 +408,32 @@
 
 .aibot-escalate-btns button:hover { opacity: .85; }
 
+.aibot-quick-action {
+    margin: 0 14px 6px 49px;
+}
+
+.aibot-quick-action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(200,162,107,.4);
+    background: rgba(200,162,107,.16);
+    color: #f5e6cf;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s, border-color .2s;
+}
+
+.aibot-quick-action-link:hover {
+    text-decoration: none;
+    color: #fff;
+    background: rgba(200,162,107,.3);
+    border-color: rgba(200,162,107,.65);
+}
+
 /* Input */
 .aibot-input-row {
     padding: 10px 12px;
@@ -594,6 +620,9 @@
             .then(function (data) {
                 hideTyping();
                 appendMsg('ai', escHtml(data.reply || 'Xin lỗi, thử lại sau.'));
+                if (data.quick_action) {
+                    appendQuickAction(data.quick_action);
+                }
                 if (data.escalate) showEscalate();
             })
             .catch(function () {
@@ -767,6 +796,32 @@
         return row;
     }
 
+    function appendQuickAction(action) {
+        if (!action || typeof action !== 'object') {
+            return;
+        }
+
+        var url = normalizeActionUrl(action.url || '');
+        var label = String(action.label || '').trim();
+
+        if (!url || !label) {
+            return;
+        }
+
+        var container = document.getElementById('aiBotMessages');
+        var wrap = document.createElement('div');
+        wrap.className = 'aibot-quick-action';
+
+        var link = document.createElement('a');
+        link.className = 'aibot-quick-action-link';
+        link.href = url;
+        link.innerHTML = '<i class="fas fa-location-arrow"></i><span>' + escHtml(label) + '</span>';
+
+        wrap.appendChild(link);
+        container.appendChild(wrap);
+        container.scrollTop = container.scrollHeight;
+    }
+
     function showTyping() {
         var container = document.getElementById('aiBotMessages');
         var row = document.createElement('div');
@@ -816,6 +871,18 @@
             .replace(/"/g, '&quot;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
+    }
+
+    function normalizeActionUrl(url) {
+        var cleaned = String(url || '').trim();
+        if (!cleaned) return '';
+        if (/^\/\//.test(cleaned)) return '';
+        if (/^[a-z]+:/i.test(cleaned)) return '';
+        if (cleaned.charAt(0) !== '/') {
+            cleaned = '/' + cleaned;
+        }
+
+        return cleaned;
     }
 
     function startHumanPoll() {

@@ -988,6 +988,21 @@
             box-shadow: 0 18px 40px rgba(26, 17, 13, .13);
         }
 
+        .product-card.ai-target-highlight {
+            border-color: rgba(201, 128, 51, .9);
+            box-shadow: 0 0 0 3px rgba(201, 128, 51, .25), 0 18px 40px rgba(26, 17, 13, .13);
+            animation: ai-target-glow 1.2s ease-in-out 2;
+        }
+
+        @keyframes ai-target-glow {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
         .card-image-wrap {
             position: relative;
             aspect-ratio: 4/3;
@@ -1977,10 +1992,74 @@
                 window.location.href = "{{ url('/login') }}";
             }, 1200);
         }
+
+        function normalizeTextForMatch(value) {
+            return String(value || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function findBestSearchCard(keyword) {
+            const cards = Array.from(document.querySelectorAll('.product-card'));
+            if (!cards.length) return null;
+
+            const normalizedKeyword = normalizeTextForMatch(keyword);
+            if (!normalizedKeyword) return cards[0];
+
+            let bestCard = null;
+            let bestScore = -1;
+
+            cards.forEach((card) => {
+                const nameEl = card.querySelector('.card-name');
+                const normalizedName = normalizeTextForMatch(nameEl ? nameEl.textContent : '');
+                if (!normalizedName) return;
+
+                if (normalizedName.includes(normalizedKeyword) || normalizedKeyword.includes(normalizedName)) {
+                    bestCard = card;
+                    bestScore = 999;
+                    return;
+                }
+
+                const nameTokens = new Set(normalizedName.split(' ').filter(Boolean));
+                const queryTokens = normalizedKeyword.split(' ').filter(Boolean);
+                const overlap = queryTokens.filter((token) => nameTokens.has(token)).length;
+                if (overlap > bestScore) {
+                    bestScore = overlap;
+                    bestCard = card;
+                }
+            });
+
+            return bestScore > 0 ? bestCard : cards[0];
+        }
+
+        function focusProductFromAiJump() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('ai_jump') !== '1') {
+                return;
+            }
+
+            const q = params.get('q') || '';
+            const targetCard = findBestSearchCard(q);
+
+            if (!targetCard) {
+                return;
+            }
+
+            targetCard.classList.add('ai-target-highlight');
+            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => targetCard.classList.remove('ai-target-highlight'), 3800);
+        }
+
          document.addEventListener('DOMContentLoaded', function() {
         const userMenuBtn = document.getElementById('userMenuBtn');
         const userDropdownMenu = document.getElementById('userDropdownMenu');
         const dropdownContainer = document.querySelector('.user-dropdown-container');
+
+        focusProductFromAiJump();
 
         if (userMenuBtn && userDropdownMenu) {
             // Show dropdown on click
