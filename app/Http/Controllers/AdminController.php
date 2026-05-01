@@ -64,14 +64,20 @@ class AdminController extends Controller
         ],
     ];
 
+    // Query doanh thu chuẩn: chỉ lấy các đơn đã thanh toán thành công.
+    private function paidRevenueOrders()
+    {
+        return Order::query()->whereHas('payment', fn ($query) => $query->where('status', 'paid'));
+    }
+
     // ─── Dashboard ───────────────────────────────────────────────────────────
 
     public function dashboard()
     {
         // Tổng hợp các chỉ số chính để render dashboard admin.
         $stats = [
-            'total_revenue'   => Order::where('status', 'delivered')->sum('final_price'),
-            'today_revenue'   => Order::where('status', 'delivered')->whereDate('created_at', today())->sum('final_price'),
+            'total_revenue'   => $this->paidRevenueOrders()->sum('final_price'),
+            'today_revenue'   => $this->paidRevenueOrders()->whereDate('created_at', today())->sum('final_price'),
             'total_orders'    => Order::count(),
             'pending_orders'  => Order::where('status', 'pending')->count(),
             'total_products'  => Product::count(),
@@ -80,7 +86,7 @@ class AdminController extends Controller
         ];
 
         // Dữ liệu biểu đồ doanh thu 7 ngày gần nhất.
-        $revenueChart = Order::where('status', 'delivered')
+        $revenueChart = $this->paidRevenueOrders()
             ->selectRaw('DATE(created_at) as date, SUM(final_price) as total')
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
             ->groupBy('date')
@@ -91,7 +97,8 @@ class AdminController extends Controller
         $topProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->where('orders.status', 'delivered')
+            ->join('payments', 'payments.order_id', '=', 'orders.id')
+            ->where('payments.status', 'paid')
             ->selectRaw('products.name, SUM(order_items.quantity) as total_sold, SUM(order_items.quantity * order_items.unit_price) as revenue')
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_sold')
@@ -393,6 +400,13 @@ class AdminController extends Controller
         ]);
 
         $selectedRoleName = UserRole::whereKey($data['role_id'])->value('name');
+
+        if ($selectedRoleName === 'admin') {
+            return back()->withInput()->withErrors([
+                'role_id' => 'Không thể tạo tài khoản admin từ màn hình này.',
+            ]);
+        }
+
         $isStaffRole = $selectedRoleName === 'staff';
 
         // Chỉ staff mới có loại nhân viên; các role khác luôn để null.
@@ -1083,7 +1097,8 @@ class AdminController extends Controller
         $topProducts = DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->where('orders.status', 'delivered')
+            ->join('payments', 'payments.order_id', '=', 'orders.id')
+            ->where('payments.status', 'paid')
             ->selectRaw('products.name, SUM(order_items.quantity) as total_sold, SUM(order_items.quantity * order_items.unit_price) as revenue')
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_sold')
@@ -1098,7 +1113,7 @@ class AdminController extends Controller
         $from = $request?->input('from') ? now()->parse($request->input('from')) : now()->subDays(29)->startOfDay();
         $to   = $request?->input('to')   ? now()->parse($request->input('to'))->endOfDay() : now()->endOfDay();
 
-        return Order::where('status', 'delivered')
+            return $this->paidRevenueOrders()
             ->selectRaw('DATE(created_at) as label, SUM(final_price) as total')
             ->whereBetween('created_at', [$from, $to])
             ->groupBy('label')
@@ -1109,7 +1124,7 @@ class AdminController extends Controller
     private function revenueByMonth()
     {
         // Gom doanh thu theo tháng cho 12 tháng gần nhất.
-        return Order::where('status', 'delivered')
+        return $this->paidRevenueOrders()
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as label, SUM(final_price) as total")
             ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
             ->groupBy('label')
@@ -1120,7 +1135,7 @@ class AdminController extends Controller
     private function revenueByYear()
     {
         // Gom doanh thu theo năm để nhìn xu hướng dài hạn.
-        return Order::where('status', 'delivered')
+        return $this->paidRevenueOrders()
             ->selectRaw("YEAR(created_at) as label, SUM(final_price) as total")
             ->groupBy('label')
             ->orderBy('label')

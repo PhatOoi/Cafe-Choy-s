@@ -73,13 +73,14 @@
                     <div class="form-group" style="grid-column:1/-1;">
                         <label class="form-label">Phân quyền <span style="color:#e11d48;">*</span></label>
                         <select name="role_id" class="form-select" required>
+                            @php($defaultRoleId = old('role_id', optional($roles->firstWhere('name', 'staff'))->id ?? optional($roles->firstWhere('name', 'customer'))->id))
                             @foreach($roles as $role)
-                            <option value="{{ $role->id }}" {{ old('role_id', 3) == $role->id ? 'selected' : '' }}>
-                                {{ $role->name === 'admin' ? '👑 Admin — Toàn quyền hệ thống' : ($role->name === 'staff' ? '👷 Nhân viên — Vận hành đơn hàng' : '🧑 Khách hàng — Đặt hàng và mua sắm') }}
+                            @continue($role->name === 'admin')
+                            <option value="{{ $role->id }}" {{ (string) $defaultRoleId === (string) $role->id ? 'selected' : '' }}>
+                                {{ $role->name === 'staff' ? '👷 Nhân viên — Vận hành đơn hàng' : '🧑 Khách hàng — Đặt hàng và mua sắm' }}
                             </option>
                             @endforeach
                         </select>
-                        <div class="form-text">Chọn cẩn thận — Admin có toàn quyền hệ thống</div>
                         @error('role_id')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                     </div>
 
