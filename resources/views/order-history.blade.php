@@ -240,7 +240,7 @@
                         </h2>
                         <p> Hân hạnh đồng hành cùng quý khách!.</p>
                         <div class="social-links">
-                            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="https://www.facebook.com/share/1CvQdbW463/?mibextid=wwXIfr" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                             <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
                             <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
                         </div>
@@ -250,8 +250,8 @@
                         <h4>Khám phá</h4>
                         <ul>
                             <li><a href="#">Menu</a></li>
-                            <li><a href="#">Cửa hàng</a></li>
                             <li><a href="#">Đặt hàng online</a></li>
+                            <li><a href="#">Tuyển dụng</a></li>
                         </ul>
                     </div>
 
@@ -268,11 +268,11 @@
                         <h4>Liên hệ</h4>
                         <div class="contact-item">
                             <i class="fas fa-phone"></i>
-                            <span>+190099</span>
+                            <span>+84 346901474</span>
                         </div>
                         <div class="contact-item">
                             <i class="fas fa-clock"></i>
-                            <span>8:00 - 21:00</span>
+                            <span>8:00 - 24:00</span>
                         </div>
                     </div>
                 </div>

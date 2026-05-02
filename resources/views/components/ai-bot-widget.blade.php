@@ -167,6 +167,16 @@
     transition: opacity .25s, transform .25s;
 }
 
+#aiBotWidget.aibot-side-left .aibot-panel {
+    left: 0;
+    right: auto;
+}
+
+#aiBotWidget.aibot-side-right .aibot-panel {
+    right: 0;
+    left: auto;
+}
+
 .aibot-hidden {
     opacity: 0;
     pointer-events: none;
@@ -954,9 +964,17 @@
         var dragging = false;
         var dragMoved = false;
         var startX, startY, origLeft, origTop;
+        var snapGap = 28;
+        var currentSide = 'right';
 
         function getWidgetRect() {
             return widget.getBoundingClientRect();
+        }
+
+        function setSideClass(side) {
+            currentSide = side === 'left' ? 'left' : 'right';
+            widget.classList.toggle('aibot-side-left', currentSide === 'left');
+            widget.classList.toggle('aibot-side-right', currentSide === 'right');
         }
 
         function initPos() {
@@ -966,10 +984,87 @@
             widget.style.right = 'auto';
             widget.style.top = rect.top + 'px';
             widget.style.left = rect.left + 'px';
+            setSideClass(rect.left + (rect.width / 2) < (window.innerWidth / 2) ? 'left' : 'right');
         }
 
         function clamp(val, min, max) {
             return Math.max(min, Math.min(max, val));
+        }
+
+        function getVisibleBackToTop() {
+            var candidates = document.querySelectorAll('.back-to-top-btn, #backToTopBtn, .js-top');
+            for (var i = 0; i < candidates.length; i++) {
+                var el = candidates[i];
+                var cs = window.getComputedStyle(el);
+                if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity || '1') === 0) {
+                    continue;
+                }
+                var r = el.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) return { el: el, rect: r };
+            }
+            return null;
+        }
+
+        function getSnapGap() {
+            var target = getVisibleBackToTop();
+            if (!target) return snapGap;
+
+            var rightGap = window.innerWidth - target.rect.right;
+            var leftGap = target.rect.left;
+            var inferred = target.rect.left > (window.innerWidth / 2) ? rightGap : leftGap;
+
+            // Keep spacing in a reasonable range in case the button animates from off-screen.
+            return clamp(Math.round(inferred), 12, 48);
+        }
+
+        function isOverlapping(a, b) {
+            return !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+        }
+
+        function avoidOverlapWithBackToTop() {
+            var target = getVisibleBackToTop();
+            if (!target) return;
+            var liveGap = getSnapGap();
+
+            var widgetRect = getWidgetRect();
+            if (!isOverlapping(widgetRect, target.rect)) return;
+
+            var maxTop = window.innerHeight - widget.offsetHeight - liveGap;
+            var movedTop = clamp(target.rect.top - widget.offsetHeight - 12, liveGap, maxTop);
+            widget.style.top = movedTop + 'px';
+
+            widgetRect = getWidgetRect();
+            if (!isOverlapping(widgetRect, target.rect)) return;
+
+            var buttonCenterX = target.rect.left + (target.rect.width / 2);
+            var oppositeSide = buttonCenterX > (window.innerWidth / 2) ? 'left' : 'right';
+            snapToSide(oppositeSide);
+        }
+
+        function snapToSide(side) {
+            if (!widget.style.top || widget.style.top === '' || widget.style.top === 'auto') {
+                initPos();
+            }
+
+            var liveGap = getSnapGap();
+
+            var topValue = parseInt(widget.style.top, 10);
+            var clampedTop = clamp(topValue, liveGap, window.innerHeight - widget.offsetHeight - liveGap);
+            var leftValue = side === 'left'
+                ? liveGap
+                : window.innerWidth - widget.offsetWidth - liveGap;
+
+            widget.style.left = leftValue + 'px';
+            widget.style.top = clampedTop + 'px';
+            setSideClass(side);
+            avoidOverlapWithBackToTop();
+        }
+
+        function snapToNearestSide() {
+            var rect = getWidgetRect();
+            var widgetCenterX = rect.left + (rect.width / 2);
+            var side = widgetCenterX < (window.innerWidth / 2) ? 'left' : 'right';
+            snapToSide(side);
         }
 
         function onStart(clientX, clientY) {
@@ -1000,6 +1095,7 @@
             if (!dragging) return;
             dragging = false;
             trigger.style.cursor = 'grab';
+            snapToNearestSide();
         }
 
         // Mouse
@@ -1031,8 +1127,22 @@
             onEnd();
         });
 
+        window.addEventListener('resize', function () {
+            if (!widget.style.top || widget.style.top === '' || widget.style.top === 'auto') {
+                initPos();
+            }
+            snapToSide(currentSide);
+        });
+
+        window.addEventListener('scroll', function () {
+            avoidOverlapWithBackToTop();
+        }, { passive: true });
+
         // Xóa onclick gốc để không bị gọi 2 lần sau khi drag
         trigger.removeAttribute('onclick');
+
+        initPos();
+        snapToSide('right');
     }());
 })();
 </script>
