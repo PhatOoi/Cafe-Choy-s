@@ -471,6 +471,13 @@ class AdminController extends Controller
         ]);
 
         $selectedRoleName = UserRole::whereKey($data['role_id'])->value('name');
+
+        if ($selectedRoleName === 'admin') {
+            return back()->withInput()->withErrors([
+                'role_id' => 'Không thể cấp quyền Admin từ màn hình này.',
+            ]);
+        }
+
         $isStaffRole = $selectedRoleName === 'staff';
 
         // Chỉ staff mới giữ được loại nhân viên; role khác sẽ reset về null.

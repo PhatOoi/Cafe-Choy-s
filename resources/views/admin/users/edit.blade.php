@@ -77,9 +77,9 @@
                         <label class="form-label">Phân quyền <span style="color:#e11d48;">*</span></label>
                         <select name="role_id" class="form-select"
                                 {{ $user->id === Auth::id() ? 'disabled' : '' }}>
-                            @foreach($roles as $role)
+                            @foreach($roles->whereNotIn('name', ['admin']) as $role)
                             <option value="{{ $role->id }}" {{ old('role_id', $user->role_id) == $role->id ? 'selected' : '' }}>
-                                {{ $role->name === 'admin' ? '👑 Admin' : ($role->name === 'staff' ? '👷 Nhân viên' : '🧑 Khách hàng') }}
+                                {{ $role->name === 'staff' ? '👷 Nhân viên' : '🧑 Khách hàng' }}
                             </option>
                             @endforeach
                         </select>
