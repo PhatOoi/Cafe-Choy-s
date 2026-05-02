@@ -265,7 +265,8 @@
 
                     <div class="menu-grid">
                         @foreach($group['products'] as $product)
-                            <div class="product-card">
+                            @php $isUnavailable = $product->status !== 'available'; @endphp
+                            <div class="product-card{{ $isUnavailable ? ' product-card--unavailable' : '' }}">
                                 <div class="card-image-wrap">
                                     @php
                                         // Nếu image_url là URL (bắt đầu bằng http), dùng trực tiếp; nếu không, thêm đường dẫn local
@@ -299,27 +300,41 @@
                                                     ? $product->image_url 
                                                     : asset('images/' . $product->image_url);
                                             @endphp
-                                            <button class="btn-add-cart" onclick='openModal(
-                                                            {{ $product->id }},
-                                                            @json($product->name),
-                                                            {{ $product->price }},
-                                                            @json($category->name),
-                                                            @json($buttonImageUrl),
-                                                            @json(\Illuminate\Support\Str::slug($category->name)),
-                                                            @json($product->description ?? "")
-                                                        )'>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <circle cx="9" cy="21" r="1" />
-                                                    <circle cx="20" cy="21" r="1" />
-                                                    <path d="M1 1h4l2.68 13.39..." />
-                                                </svg>
-                                                <span>Thêm vào giỏ</span>
-                                            </button>
+                                            @if($isUnavailable)
+                                                <button class="btn-add-cart btn-unavailable" disabled>
+                                                    <i class="fas fa-lock" style="font-size:12px;"></i>
+                                                    <span>Đang cập nhật</span>
+                                                </button>
+                                            @else
+                                                <button class="btn-add-cart" onclick='openModal(
+                                                                {{ $product->id }},
+                                                                @json($product->name),
+                                                                {{ $product->price }},
+                                                                @json($category->name),
+                                                                @json($buttonImageUrl),
+                                                                @json(\Illuminate\Support\Str::slug($category->name)),
+                                                                @json($product->description ?? "")
+                                                            )'>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="9" cy="21" r="1" />
+                                                        <circle cx="20" cy="21" r="1" />
+                                                        <path d="M1 1h4l2.68 13.39..." />
+                                                    </svg>
+                                                    <span>Thêm vào giỏ</span>
+                                                </button>
+                                            @endif
                                         @else
-                                            <button class="btn-add-cart" onclick="redirectLogin()">
-                                                <span>Đăng nhập để mua</span>
-                                            </button>
+                                            @if($isUnavailable)
+                                                <button class="btn-add-cart btn-unavailable" disabled>
+                                                    <i class="fas fa-lock" style="font-size:12px;"></i>
+                                                    <span>Đang cập nhật</span>
+                                                </button>
+                                            @else
+                                                <button class="btn-add-cart" onclick="redirectLogin()">
+                                                    <span>Đăng nhập để mua</span>
+                                                </button>
+                                            @endif
                                         @endauth
                                     </div>
                                 </div>
@@ -1230,6 +1245,28 @@
 
         .product-card:hover .card-img {
             transform: scale(1.07);
+        }
+
+        /* Món đang cập nhật (unavailable) — xám + không hover effect */
+        .product-card--unavailable {
+            opacity: .55;
+            filter: grayscale(60%);
+            pointer-events: none;
+        }
+        .product-card--unavailable .btn-unavailable {
+            pointer-events: auto;
+        }
+        .btn-unavailable {
+            background: #e8e8ee !important;
+            color: #999 !important;
+            border: 1.5px solid #ddd !important;
+            cursor: not-allowed !important;
+            gap: 6px;
+        }
+        .btn-unavailable:hover {
+            background: #e8e8ee !important;
+            color: #999 !important;
+            transform: none !important;
         }
 
         .card-shine {

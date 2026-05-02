@@ -358,6 +358,14 @@ class CartController extends Controller
             ], 404);
         }
 
+        // Chặn thêm vào giỏ nếu sản phẩm đang tạm ngưng.
+        if ($product->status !== 'available') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Món này đang tạm ngưng, vui lòng chọn món khác.'
+            ], 422);
+        }
+
         $cart = $this->getNormalizedSessionCart(true);
         $options = $this->normalizeCartOptions($product, $request->all());
         $cartKey = $this->buildCartKey($request->product_id, $options);

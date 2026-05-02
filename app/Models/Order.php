@@ -109,6 +109,7 @@ class Order extends Model
             'confirmed'  => ['processing', 'cancelled'],
             'processing' => ['ready'],
             'ready'      => ['delivered'],
+            'delivering' => ['delivered'],
             default      => [],
         };
     }

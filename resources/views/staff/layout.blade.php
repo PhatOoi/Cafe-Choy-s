@@ -385,6 +385,12 @@
                 <i class="fas fa-calendar-day"></i> Doanh thu ngày
         </a>
 
+        <div class="nav-section-label">Quản lý món</div>
+        <a href="{{ route('staff.products') }}"
+           class="sidebar-link {{ request()->routeIs('staff.products') ? 'active' : '' }}">
+            <i class="fas fa-utensils"></i> Danh sách món
+        </a>
+
         <div class="nav-section-label">Hỗ trợ</div>
         <a href="{{ route('staff.support') }}"
            class="sidebar-link {{ request()->routeIs('staff.support') ? 'active' : '' }}"

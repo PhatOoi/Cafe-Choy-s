@@ -9,7 +9,7 @@
 <div class="page-header">
     <div>
         <div class="page-header-title">Danh sách sản phẩm</div>
-        <div class="page-header-sub">{{ $products->total() }} sản phẩm trong hệ thống</div>
+        <div class="page-header-sub">{{ $products->count() }} sản phẩm trong hệ thống</div>
     </div>
     <a href="{{ route('admin.products.create') }}" class="btn-primary-admin">
         <i class="fas fa-plus"></i> Thêm sản phẩm
@@ -123,14 +123,7 @@
         </table>
     </div>
 
-    @if($products->hasPages())
-    <div style="padding:16px 22px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-        <div style="font-size:13px;color:var(--text-muted);">
-            Hiển thị {{ $products->firstItem() }}–{{ $products->lastItem() }} / {{ $products->total() }} sản phẩm
-        </div>
-        {{ $products->withQueryString()->links() }}
-    </div>
-    @endif
+
 </div>
 
 @endsection

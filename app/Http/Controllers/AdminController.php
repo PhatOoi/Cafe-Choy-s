@@ -143,7 +143,7 @@ class AdminController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $products   = $query->latest()->paginate(15)->withQueryString();
+        $products   = $query->latest()->get();
         $categories = Category::orderBy('name')->get();
 
         return view('admin.products.index', compact('products', 'categories'));

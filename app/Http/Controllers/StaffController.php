@@ -922,5 +922,39 @@ class StaffController extends Controller
 
         return back()->with('success', 'Đăng ký tăng ca thành công. Chờ admin duyệt.');
     }
+
+    // Danh sách tất cả sản phẩm để nhân viên xem và thay đổi trạng thái khóa/mở.
+    public function staffProducts(Request $request)
+    {
+        $query = Product::with('category')->orderBy('category_id')->orderBy('name');
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $products   = $query->get();
+        $categories = \App\Models\Category::orderBy('sort_order')->get();
+
+        return view('staff.products', compact('products', 'categories'));
+    }
+
+    // Nhân viên bật/tắt trạng thái sản phẩm (available ↔ unavailable).
+    public function toggleProductStatus($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->status = $product->status === 'available' ? 'unavailable' : 'available';
+        $product->save();
+
+        $label = $product->status === 'available' ? 'Đã mở bán' : 'Đã khóa';
+        return back()->with('success', "{$product->name}: {$label}.");
+    }
 }
 

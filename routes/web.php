@@ -135,6 +135,9 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
     Route::post('/orders/{id}/assign',  [StaffController::class, 'assignStaff'])->name('order.assign');
     Route::post('/shift/start', [StaffController::class, 'startShift'])->name('shift.start');
     Route::post('/shift/end',   [StaffController::class, 'endShift'])->name('shift.end');
+    // Danh sách món — nhân viên xem và cập nhật trạng thái sản phẩm.
+    Route::get('/products',              [StaffController::class, 'staffProducts'])->name('products');
+    Route::patch('/products/{id}/toggle',[StaffController::class, 'toggleProductStatus'])->name('products.toggle');
 });
 
 // ── ADMIN ──────────────────────────────────────────────────────
