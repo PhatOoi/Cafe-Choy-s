@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\Overtime;
 use App\Models\Ingredient;
+use App\Models\MonthlyProfit;
 use App\Models\UserRole;
 use App\Models\WorkScheduleBoardLock;
 use App\Models\WorkScheduleRegistration;
@@ -704,129 +705,15 @@ class AdminController extends Controller
         $monthInput = $request->input('month', now()->format('Y-m'));
         $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
-        $now = now();
-        $today = $now->copy()->startOfDay();
 
-        // Lấy toàn bộ đăng ký trong tháng để tổng hợp bảng lương.
-        $scheduleQuery = WorkScheduleRegistration::with('staff:id,name,email,employment_type')
-            ->whereBetween('work_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
-            ->orderByDesc('work_date')
-            ->orderBy('start_time');
+        $payrollData = $this->buildPayrollDataForMonth(
+            $monthStart,
+            $monthEnd,
+            $request->input('employment_type')
+        );
 
-        if ($request->filled('employment_type')) {
-            $scheduleQuery->where('employment_type', $request->employment_type);
-        }
-
-        $scheduleRows = $scheduleQuery->get();
-
-        // Chỉ cộng lương khi ca đã hoàn thành (đã qua giờ kết thúc ca) và không phải ca vắng.
-        $payrollSourceRows = $scheduleRows
-            ->whereIn('status', ['approved', 'closed'])
-            ->filter(function ($row) use ($now, $today) {
-                $workDate = Carbon::parse($row->work_date)->startOfDay();
-                $endTime = substr((string) $row->end_time, 0, 5);
-                $shiftEndAt = Carbon::parse($workDate->toDateString() . ' ' . $endTime);
-
-                if ($workDate->lt($today)) {
-                    return true;
-                }
-
-                return $workDate->isSameDay($today) && $now->greaterThanOrEqualTo($shiftEndAt);
-            })
-            ->reject(function ($row) {
-                $note = strtoupper((string) ($row->note ?? ''));
-                return str_contains($note, '[ABSENT]');
-            });
-
-        // Tổng hợp giờ tăng ca đã duyệt và ngày tăng ca đã kết thúc.
-        $overtimeQuery = Overtime::query()
-            ->select(['staff_id', 'overtime_date', 'hours'])
-            ->whereBetween('overtime_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
-            ->where('status', 'approved')
-            ->whereDate('overtime_date', '<', $today->toDateString())
-            ->orderBy('overtime_date');
-
-        if ($request->filled('employment_type')) {
-            $overtimeQuery->whereHas('staff', function ($query) use ($request) {
-                $query->where('employment_type', $request->employment_type);
-            });
-        }
-
-        $overtimeByStaff = $overtimeQuery
-            ->get()
-            ->groupBy('staff_id')
-            ->map(function ($rows) {
-                $normalHours = 0.0;
-                $holidayHours = 0.0;
-
-                foreach ($rows as $row) {
-                    $hours = (float) $row->hours;
-                    $isHoliday = $this->isHolidayDate(Carbon::parse($row->overtime_date));
-
-                    if ($isHoliday) {
-                        $holidayHours += $hours;
-                    } else {
-                        $normalHours += $hours;
-                    }
-                }
-
-                return [
-                    'normal_hours' => round($normalHours, 2),
-                    'holiday_hours' => round($holidayHours, 2),
-                ];
-            });
-
-        $payrollRows = $payrollSourceRows
-            ->groupBy('staff_id')
-            ->map(function ($rows) use ($overtimeByStaff) {
-                $staff = $rows->first()->staff;
-                $normalMinutes = 0;
-                $holidayMinutes = 0;
-
-                foreach ($rows as $row) {
-                    $minutes = $this->calculateWorkMinutes((string) $row->start_time, (string) $row->end_time);
-                    $isHoliday = $this->isHolidayDate(Carbon::parse($row->work_date));
-
-                    if ($isHoliday) {
-                        $holidayMinutes += $minutes;
-                    } else {
-                        $normalMinutes += $minutes;
-                    }
-                }
-
-                $employmentType = $rows->first()->employment_type;
-                $hourlyRate = self::PAYROLL_RATES[$employmentType] ?? 0;
-                $overtimeRate = self::OVERTIME_RATES[$employmentType] ?? 0;
-                $staffOvertime = $overtimeByStaff[(int) $staff->id] ?? ['normal_hours' => 0, 'holiday_hours' => 0];
-                $normalOvertimeHours = (float) ($staffOvertime['normal_hours'] ?? 0);
-                $holidayOvertimeHours = (float) ($staffOvertime['holiday_hours'] ?? 0);
-                $overtimeHours = round($normalOvertimeHours + $holidayOvertimeHours, 2);
-
-                $baseSalary = round(($normalMinutes / 60) * $hourlyRate)
-                    + round(($holidayMinutes / 60) * $hourlyRate * self::HOLIDAY_HOURLY_MULTIPLIER);
-
-                $overtimeSalary = round($normalOvertimeHours * $overtimeRate)
-                    + round($holidayOvertimeHours * $overtimeRate * self::HOLIDAY_HOURLY_MULTIPLIER);
-
-                return [
-                    'staff' => $staff,
-                    'employment_type' => $employmentType,
-                    'shift_count' => $rows->count(),
-                    'total_hours' => round(($normalMinutes + $holidayMinutes) / 60, 2),
-                    'hourly_rate' => $hourlyRate,
-                    'overtime_hours' => $overtimeHours,
-                    'overtime_rate' => $overtimeRate,
-                    'overtime_salary' => $overtimeSalary,
-                    'gross_salary' => $baseSalary + $overtimeSalary,
-                ];
-            })
-            ->sortBy('staff.name')
-            ->values();
-
-        $payrollStats = [
-            'completed_shift_count' => $payrollSourceRows->count(),
-            'gross_salary_total' => $payrollRows->sum('gross_salary'),
-        ];
+        $payrollRows = $payrollData['payrollRows'];
+        $payrollStats = $payrollData['payrollStats'];
 
         return view('admin.payroll.index', compact(
             'monthInput',
@@ -1127,6 +1014,119 @@ class AdminController extends Controller
         return view('admin.reports', compact('revenueData', 'topProducts', 'period'));
     }
 
+    // Trang lợi nhuận tháng: nhập chi phí và xem lợi nhuận sau khi trừ toàn bộ chi phí vận hành.
+    public function monthlyProfit(Request $request)
+    {
+        $monthInput = $request->input('month', now()->format('Y-m'));
+        $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
+        $record = MonthlyProfit::query()
+            ->whereDate('month_start', $monthStart->toDateString())
+            ->first();
+
+        $monthlyRevenue = (float) $this->paidRevenueOrders()
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->sum('final_price');
+
+        $salaryCost = (float) ($this->buildPayrollDataForMonth($monthStart, $monthEnd)['payrollStats']['gross_salary_total'] ?? 0);
+
+        $costs = [
+            'ingredient_cost' => (float) ($record->ingredient_cost ?? 0),
+            'electricity_cost' => (float) ($record->electricity_cost ?? 0),
+            'water_cost' => (float) ($record->water_cost ?? 0),
+            'service_cost' => (float) ($record->service_cost ?? 0),
+            'depreciation_cost' => (float) ($record->depreciation_cost ?? 0),
+            'rent_cost' => (float) ($record->rent_cost ?? 0),
+            'salary_cost' => $salaryCost,
+        ];
+
+        $totalExpense = array_sum($costs);
+        $netProfit = $monthlyRevenue - $totalExpense;
+
+        $historyRows = collect(range(0, 11))
+            ->map(function ($offset) {
+                $targetStart = now()->startOfMonth()->subMonths($offset);
+                $targetEnd = $targetStart->copy()->endOfMonth();
+
+                $saved = MonthlyProfit::query()
+                    ->whereDate('month_start', $targetStart->toDateString())
+                    ->first();
+
+                $revenue = (float) $this->paidRevenueOrders()
+                    ->whereBetween('created_at', [$targetStart, $targetEnd])
+                    ->sum('final_price');
+
+                $salary = (float) ($this->buildPayrollDataForMonth($targetStart, $targetEnd)['payrollStats']['gross_salary_total'] ?? 0);
+
+                $expense =
+                    (float) ($saved->ingredient_cost ?? 0) +
+                    (float) ($saved->electricity_cost ?? 0) +
+                    (float) ($saved->water_cost ?? 0) +
+                    (float) ($saved->service_cost ?? 0) +
+                    (float) ($saved->depreciation_cost ?? 0) +
+                    (float) ($saved->rent_cost ?? 0) +
+                    $salary;
+
+                return [
+                    'month_key' => $targetStart->format('Y-m'),
+                    'month_label' => $targetStart->format('m/Y'),
+                    'revenue' => $revenue,
+                    'expense' => $expense,
+                    'profit' => $revenue - $expense,
+                ];
+            })
+            ->values();
+
+        return view('admin.profits.index', compact(
+            'monthInput',
+            'record',
+            'monthlyRevenue',
+            'costs',
+            'totalExpense',
+            'netProfit',
+            'historyRows'
+        ));
+    }
+
+    // Lưu chi phí thủ công theo tháng để hệ thống tự tính lợi nhuận ròng.
+    public function saveMonthlyProfit(Request $request)
+    {
+        $data = $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'ingredient_cost' => 'required|numeric|min:0',
+            'electricity_cost' => 'required|numeric|min:0',
+            'water_cost' => 'required|numeric|min:0',
+            'service_cost' => 'required|numeric|min:0',
+            'depreciation_cost' => 'required|numeric|min:0',
+            'rent_cost' => 'required|numeric|min:0',
+        ]);
+
+        $monthStart = Carbon::createFromFormat('Y-m', $data['month'])->startOfMonth()->toDateString();
+
+        MonthlyProfit::query()->updateOrCreate(
+            ['month_start' => $monthStart],
+            [
+                'ingredient_cost' => $data['ingredient_cost'],
+                'electricity_cost' => $data['electricity_cost'],
+                'water_cost' => $data['water_cost'],
+                'service_cost' => $data['service_cost'],
+                'depreciation_cost' => $data['depreciation_cost'],
+                'rent_cost' => $data['rent_cost'],
+            ]
+        );
+
+        // Chỉ giữ lại dữ liệu 12 tháng gần nhất để bảng lợi nhuận gọn và đúng phạm vi quản trị.
+        $cutoffMonthStart = Carbon::now()->startOfMonth()->subMonths(11)->toDateString();
+        MonthlyProfit::query()
+            ->whereDate('month_start', '<', $cutoffMonthStart)
+            ->delete();
+
+        return redirect()
+            ->route('admin.profits', ['month' => $data['month']])
+            ->with('success', 'Đã lưu chi phí tháng thành công.');
+    }
+
         private function revenueByDay(Request $request = null)
     {
         $from = $request?->input('from') ? now()->parse($request->input('from')) : now()->subDays(29)->startOfDay();
@@ -1159,6 +1159,142 @@ class AdminController extends Controller
             ->groupBy('label')
             ->orderBy('label')
             ->get();
+    }
+
+    // Tính tổng lương tháng từ chính nguồn dữ liệu bảng lương để luôn đồng nhất với màn hình Payroll.
+    private function calculateMonthlyPayrollTotal(Carbon $monthStart, Carbon $monthEnd): int
+    {
+        return (int) ($this->buildPayrollDataForMonth($monthStart, $monthEnd)['payrollStats']['gross_salary_total'] ?? 0);
+    }
+
+    // Build dữ liệu bảng lương theo tháng để tái sử dụng cho màn hình Bảng lương và Lợi nhuận.
+    private function buildPayrollDataForMonth(Carbon $monthStart, Carbon $monthEnd, ?string $employmentType = null): array
+    {
+        $now = now();
+        $today = $now->copy()->startOfDay();
+
+        $scheduleQuery = WorkScheduleRegistration::with('staff:id,name,email,employment_type')
+            ->whereBetween('work_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->orderByDesc('work_date')
+            ->orderBy('start_time');
+
+        if (!empty($employmentType)) {
+            $scheduleQuery->where('employment_type', $employmentType);
+        }
+
+        $scheduleRows = $scheduleQuery->get();
+
+        $payrollSourceRows = $scheduleRows
+            ->whereIn('status', ['approved', 'closed'])
+            ->filter(function ($row) use ($now, $today) {
+                $workDate = Carbon::parse($row->work_date)->startOfDay();
+                $endTime = substr((string) $row->end_time, 0, 5);
+                $shiftEndAt = Carbon::parse($workDate->toDateString() . ' ' . $endTime);
+
+                if ($workDate->lt($today)) {
+                    return true;
+                }
+
+                return $workDate->isSameDay($today) && $now->greaterThanOrEqualTo($shiftEndAt);
+            })
+            ->reject(function ($row) {
+                $note = strtoupper((string) ($row->note ?? ''));
+                return str_contains($note, '[ABSENT]');
+            });
+
+        $overtimeQuery = Overtime::query()
+            ->select(['staff_id', 'overtime_date', 'hours'])
+            ->whereBetween('overtime_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->where('status', 'approved')
+            ->whereDate('overtime_date', '<', $today->toDateString())
+            ->orderBy('overtime_date');
+
+        if (!empty($employmentType)) {
+            $overtimeQuery->whereHas('staff', function ($query) use ($employmentType) {
+                $query->where('employment_type', $employmentType);
+            });
+        }
+
+        $overtimeByStaff = $overtimeQuery
+            ->get()
+            ->groupBy('staff_id')
+            ->map(function ($rows) {
+                $normalHours = 0.0;
+                $holidayHours = 0.0;
+
+                foreach ($rows as $row) {
+                    $hours = (float) $row->hours;
+                    $isHoliday = $this->isHolidayDate(Carbon::parse($row->overtime_date));
+
+                    if ($isHoliday) {
+                        $holidayHours += $hours;
+                    } else {
+                        $normalHours += $hours;
+                    }
+                }
+
+                return [
+                    'normal_hours' => round($normalHours, 2),
+                    'holiday_hours' => round($holidayHours, 2),
+                ];
+            });
+
+        $payrollRows = $payrollSourceRows
+            ->groupBy('staff_id')
+            ->map(function ($rows) use ($overtimeByStaff) {
+                $staff = $rows->first()->staff;
+                $normalMinutes = 0;
+                $holidayMinutes = 0;
+
+                foreach ($rows as $row) {
+                    $minutes = $this->calculateWorkMinutes((string) $row->start_time, (string) $row->end_time);
+                    $isHoliday = $this->isHolidayDate(Carbon::parse($row->work_date));
+
+                    if ($isHoliday) {
+                        $holidayMinutes += $minutes;
+                    } else {
+                        $normalMinutes += $minutes;
+                    }
+                }
+
+                $rowEmploymentType = $rows->first()->employment_type;
+                $hourlyRate = self::PAYROLL_RATES[$rowEmploymentType] ?? 0;
+                $overtimeRate = self::OVERTIME_RATES[$rowEmploymentType] ?? 0;
+                $staffOvertime = $overtimeByStaff[(int) $staff->id] ?? ['normal_hours' => 0, 'holiday_hours' => 0];
+                $normalOvertimeHours = (float) ($staffOvertime['normal_hours'] ?? 0);
+                $holidayOvertimeHours = (float) ($staffOvertime['holiday_hours'] ?? 0);
+                $overtimeHours = round($normalOvertimeHours + $holidayOvertimeHours, 2);
+
+                $baseSalary = round(($normalMinutes / 60) * $hourlyRate)
+                    + round(($holidayMinutes / 60) * $hourlyRate * self::HOLIDAY_HOURLY_MULTIPLIER);
+
+                $overtimeSalary = round($normalOvertimeHours * $overtimeRate)
+                    + round($holidayOvertimeHours * $overtimeRate * self::HOLIDAY_HOURLY_MULTIPLIER);
+
+                return [
+                    'staff' => $staff,
+                    'employment_type' => $rowEmploymentType,
+                    'shift_count' => $rows->count(),
+                    'total_hours' => round(($normalMinutes + $holidayMinutes) / 60, 2),
+                    'hourly_rate' => $hourlyRate,
+                    'overtime_hours' => $overtimeHours,
+                    'overtime_rate' => $overtimeRate,
+                    'overtime_salary' => $overtimeSalary,
+                    'gross_salary' => $baseSalary + $overtimeSalary,
+                ];
+            })
+            ->sortBy('staff.name')
+            ->values();
+
+        $payrollStats = [
+            'completed_shift_count' => $payrollSourceRows->count(),
+            'gross_salary_total' => $payrollRows->sum('gross_salary'),
+        ];
+
+        return [
+            'payrollRows' => $payrollRows,
+            'payrollStats' => $payrollStats,
+        ];
     }
 
     // Tính tổng phút làm việc của một ca, có bù 1 phút cho slot 24h được lưu thành 23:59.

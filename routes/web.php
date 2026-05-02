@@ -149,6 +149,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('/reports',   [AdminController::class, 'reports'])->name('reports');
     Route::get('/work-schedules', [AdminController::class, 'workSchedules'])->name('work-schedules.index');
     Route::get('/payroll',   [AdminController::class, 'payroll'])->name('payroll');
+    Route::get('/profits', [AdminController::class, 'monthlyProfit'])->name('profits');
+    Route::post('/profits', [AdminController::class, 'saveMonthlyProfit'])->name('profits.save');
     Route::post('/work-schedules/open-week-board', [AdminController::class, 'openWeeklyWorkScheduleBoard'])->name('work-schedules.open-week-board');
     Route::post('/work-schedules/close-week-board', [AdminController::class, 'closeWeeklyWorkScheduleBoard'])->name('work-schedules.close-week-board');
     Route::patch('/work-schedules/{id}/approve', [AdminController::class, 'approveWorkSchedule'])->name('work-schedules.approve');

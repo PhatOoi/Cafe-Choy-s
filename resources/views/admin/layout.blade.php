@@ -683,6 +683,10 @@
         class="sidebar-link {{ request()->routeIs('admin.payroll') ? 'active' : '' }}">
             <i class="fas fa-wallet"></i> Bảng lương
         </a>
+        <a href="{{ route('admin.profits') }}"
+        class="sidebar-link {{ request()->routeIs('admin.profits*') ? 'active' : '' }}">
+            <i class="fas fa-hand-holding-usd"></i> Lợi nhuận tháng
+        </a>
         <div class="nav-label">Sản phẩm</div>
         <a href="{{ route('admin.products') }}"
            class="sidebar-link {{ request()->routeIs('admin.products*') ? 'active' : '' }}">
