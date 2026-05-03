@@ -766,6 +766,7 @@
     <script src="{{ asset('js/owl.carousel.min.js') }}"></script>
     <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
     <script src="{{ asset('js/aos.js') }}"></script>
+    <script src="{{ asset('js/scrollax.min.js') }}"></script>
     <script src="{{ asset('js/main.js') }}"></script>
     <script>
         // FAQ accordion

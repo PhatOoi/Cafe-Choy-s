@@ -319,7 +319,7 @@
                                                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                                         <circle cx="9" cy="21" r="1" />
                                                         <circle cx="20" cy="21" r="1" />
-                                                        <path d="M1 1h4l2.68 13.39..." />
+                                                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                                                     </svg>
                                                     <span>Thêm vào giỏ</span>
                                                 </button>
@@ -2575,6 +2575,11 @@
         }
     });
     </script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery-migrate-3.0.1.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
     <script src="js/footer.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 

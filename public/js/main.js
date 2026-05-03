@@ -19,7 +19,9 @@
   });
 
   // Scrollax
-  $.Scrollax();
+  if ($.Scrollax) {
+    $.Scrollax();
+  }
 
 
 	var fullHeight = function() {
@@ -43,7 +45,9 @@
 	loader();
 
 	// Scrollax
-   $.Scrollax();
+   if ($.Scrollax) {
+    $.Scrollax();
+   }
 
 	var carousel = function() {
 		$('.home-slider').owlCarousel({
@@ -284,12 +288,16 @@
   });
 
 
-  $('.appointment_date').datepicker({
-	  'format': 'm/d/yyyy',
-	  'autoclose': true
-	});
+  if (typeof $.fn.datepicker === 'function') {
+    $('.appointment_date').datepicker({
+      'format': 'm/d/yyyy',
+      'autoclose': true
+    });
+  }
 
-	$('.appointment_time').timepicker();
+  if (typeof $.fn.timepicker === 'function') {
+    $('.appointment_time').timepicker();
+  }
 
 
 
