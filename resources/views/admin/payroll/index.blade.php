@@ -98,135 +98,145 @@
     <button type="submit" class="btn-primary-admin"><i class="fas fa-filter"></i> Lọc dữ liệu</button>
 </form>
 
-<div class="stat-grid">
-    <div class="stat-card">
-        <div class="stat-icon si-gold"><i class="fas fa-check-circle"></i></div>
-        <div>
-            <div class="stat-value">{{ $payrollStats['completed_shift_count'] }}</div>
-            <div class="stat-label">Ca đã hoàn thành</div>
-        </div>
+@if(!$isPayrollVisible)
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        Bảng lương tháng {{ $monthStart->format('m/Y') }} sẽ hiển thị sau khi kết thúc tháng (sau {{ $monthEnd->format('d/m/Y') }} 23:59).
     </div>
-    <div class="stat-card">
-        <div class="stat-icon si-green"><i class="fas fa-wallet"></i></div>
-        <div>
-            <div class="stat-value">{{ number_format($payrollStats['gross_salary_total'], 0, ',', '.') }}đ</div>
-            <div class="stat-label">Tổng lương tạm tính</div>
-        </div>
-    </div>
-</div>
+@endif
 
-@php
-    $fullTimeRows = $payrollRows->filter(fn($r) => $r['employment_type'] === 'full_time')->values();
-    $partTimeRows = $payrollRows->filter(fn($r) => $r['employment_type'] === 'part_time')->values();
-    $fullTimeTotal = $fullTimeRows->sum('gross_salary');
-    $partTimeTotal = $partTimeRows->sum('gross_salary');
-@endphp
-
-{{-- Full-time --}}
-<div class="card" style="margin-bottom:20px;">
-    <div class="card-header">
-        <div>
-            <div class="card-header-title">
-                <i class="fas fa-user-tie" style="color:#0369a1;"></i>
-                Bảng lương <span class="payroll-status type-full" style="font-size:13px;">Full-time</span>
+@if($isPayrollVisible)
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-icon si-gold"><i class="fas fa-check-circle"></i></div>
+            <div>
+                <div class="stat-value">{{ $payrollStats['completed_shift_count'] }}</div>
+                <div class="stat-label">Ca đã hoàn thành</div>
             </div>
-            <p class="payroll-table-note">Cộng dồn số ca và giờ công của nhân viên full-time trong tháng đang lọc.</p>
         </div>
-    </div>
-    <div class="card-body" style="padding:0;">
-        @if($fullTimeRows->isNotEmpty())
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Nhân viên</th>
-                        <th>Số ca</th>
-                        <th>Giờ công</th>
-                        <th>Giờ tăng ca</th>
-                        <th>Đơn giá/giờ</th>
-                        <th>Đơn giá tăng ca</th>
-                        <th>Tạm tính</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($fullTimeRows as $row)
-                        <tr>
-                            <td>
-                                <div class="staff-cell-name">{{ $row['staff']->name }}</div>
-                                <div class="staff-cell-sub">{{ $row['staff']->email }}</div>
-                            </td>
-                            <td>{{ $row['shift_count'] }}</td>
-                            <td>{{ $row['total_hours'] == floor($row['total_hours']) ? number_format($row['total_hours'], 0, ',', '.') : number_format($row['total_hours'], 2, ',', '.') }} giờ</td>
-                            <td>{{ $row['overtime_hours'] == floor($row['overtime_hours']) ? number_format($row['overtime_hours'], 0, ',', '.') : number_format($row['overtime_hours'], 2, ',', '.') }} giờ</td>
-                            <td>{{ number_format($row['hourly_rate'], 0, ',', '.') }}đ</td>
-                            <td>{{ number_format($row['overtime_rate'], 0, ',', '.') }}đ</td>
-                            <td><strong>{{ number_format($row['gross_salary'], 0, ',', '.') }}đ</strong></td>
-                        </tr>
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr style="background:#e0f2fe; font-weight:700;">
-                        <td colspan="6" style="text-align:right; padding-right:16px;">Tổng lương full-time:</td>
-                        <td>{{ number_format($fullTimeTotal, 0, ',', '.') }}đ</td>
-                    </tr>
-                </tfoot>
-            </table>
-        @else
-            <div class="payroll-empty">Chưa có dữ liệu lương full-time trong tháng này.</div>
-        @endif
-    </div>
-</div>
 
-{{-- Part-time --}}
-<div class="card">
-    <div class="card-header">
-        <div>
-            <div class="card-header-title">
-                <i class="fas fa-user-clock" style="color:#b45309;"></i>
-                Bảng lương <span class="payroll-status type-part" style="font-size:13px;">Part-time</span>
+        <div class="stat-card">
+            <div class="stat-icon si-green"><i class="fas fa-wallet"></i></div>
+            <div>
+                <div class="stat-value">{{ number_format($payrollStats['gross_salary_total'], 0, ',', '.') }}đ</div>
+                <div class="stat-label">Tổng lương tạm tính</div>
             </div>
-            <p class="payroll-table-note">Cộng dồn số ca và giờ công của nhân viên part-time trong tháng đang lọc.</p>
         </div>
     </div>
-    <div class="card-body" style="padding:0;">
-        @if($partTimeRows->isNotEmpty())
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Nhân viên</th>
-                        <th>Số ca</th>
-                        <th>Giờ công</th>
-                        <th>Giờ tăng ca</th>
-                        <th>Đơn giá/giờ</th>
-                        <th>Đơn giá tăng ca</th>
-                        <th>Tạm tính</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($partTimeRows as $row)
+
+    @php
+        $fullTimeRows = $payrollRows->filter(fn($r) => $r['employment_type'] === 'full_time')->values();
+        $partTimeRows = $payrollRows->filter(fn($r) => $r['employment_type'] === 'part_time')->values();
+        $fullTimeTotal = $fullTimeRows->sum('gross_salary');
+        $partTimeTotal = $partTimeRows->sum('gross_salary');
+    @endphp
+
+    {{-- Full-time --}}
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+            <div>
+                <div class="card-header-title">
+                    <i class="fas fa-user-tie" style="color:#0369a1;"></i>
+                    Bảng lương <span class="payroll-status type-full" style="font-size:13px;">Full-time</span>
+                </div>
+                <p class="payroll-table-note">Cộng dồn số ca và giờ công của nhân viên full-time trong tháng đang lọc.</p>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+            @if($fullTimeRows->isNotEmpty())
+                <table class="admin-table">
+                    <thead>
                         <tr>
-                            <td>
-                                <div class="staff-cell-name">{{ $row['staff']->name }}</div>
-                                <div class="staff-cell-sub">{{ $row['staff']->email }}</div>
-                            </td>
-                            <td>{{ $row['shift_count'] }}</td>
-                            <td>{{ $row['total_hours'] == floor($row['total_hours']) ? number_format($row['total_hours'], 0, ',', '.') : number_format($row['total_hours'], 2, ',', '.') }} giờ</td>
-                            <td>{{ $row['overtime_hours'] == floor($row['overtime_hours']) ? number_format($row['overtime_hours'], 0, ',', '.') : number_format($row['overtime_hours'], 2, ',', '.') }} giờ</td>
-                            <td>{{ number_format($row['hourly_rate'], 0, ',', '.') }}đ</td>
-                            <td>{{ number_format($row['overtime_rate'], 0, ',', '.') }}đ</td>
-                            <td><strong>{{ number_format($row['gross_salary'], 0, ',', '.') }}đ</strong></td>
+                            <th>Nhân viên</th>
+                            <th>Số ca</th>
+                            <th>Giờ công</th>
+                            <th>Giờ tăng ca</th>
+                            <th>Đơn giá/giờ</th>
+                            <th>Đơn giá tăng ca</th>
+                            <th>Tạm tính</th>
                         </tr>
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr style="background:#fef3c7; font-weight:700;">
-                        <td colspan="6" style="text-align:right; padding-right:16px;">Tổng lương part-time:</td>
-                        <td>{{ number_format($partTimeTotal, 0, ',', '.') }}đ</td>
-                    </tr>
-                </tfoot>
-            </table>
-        @else
-            <div class="payroll-empty">Chưa có dữ liệu lương part-time trong tháng này.</div>
-        @endif
+                    </thead>
+                    <tbody>
+                        @foreach($fullTimeRows as $row)
+                            <tr>
+                                <td>
+                                    <div class="staff-cell-name">{{ $row['staff']->name }}</div>
+                                    <div class="staff-cell-sub">{{ $row['staff']->email }}</div>
+                                </td>
+                                <td>{{ $row['shift_count'] }}</td>
+                                <td>{{ $row['total_hours'] == floor($row['total_hours']) ? number_format($row['total_hours'], 0, ',', '.') : number_format($row['total_hours'], 2, ',', '.') }} giờ</td>
+                                <td>{{ $row['overtime_hours'] == floor($row['overtime_hours']) ? number_format($row['overtime_hours'], 0, ',', '.') : number_format($row['overtime_hours'], 2, ',', '.') }} giờ</td>
+                                <td>{{ number_format($row['hourly_rate'], 0, ',', '.') }}đ</td>
+                                <td>{{ number_format($row['overtime_rate'], 0, ',', '.') }}đ</td>
+                                <td><strong>{{ number_format($row['gross_salary'], 0, ',', '.') }}đ</strong></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr style="background:#e0f2fe; font-weight:700;">
+                            <td colspan="6" style="text-align:right; padding-right:16px;">Tổng lương full-time:</td>
+                            <td>{{ number_format($fullTimeTotal, 0, ',', '.') }}đ</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            @else
+                <div class="payroll-empty">Chưa có dữ liệu lương full-time trong tháng này.</div>
+            @endif
+        </div>
     </div>
-</div>
+
+    {{-- Part-time --}}
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-header-title">
+                    <i class="fas fa-user-clock" style="color:#b45309;"></i>
+                    Bảng lương <span class="payroll-status type-part" style="font-size:13px;">Part-time</span>
+                </div>
+                <p class="payroll-table-note">Cộng dồn số ca và giờ công của nhân viên part-time trong tháng đang lọc.</p>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+            @if($partTimeRows->isNotEmpty())
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Nhân viên</th>
+                            <th>Số ca</th>
+                            <th>Giờ công</th>
+                            <th>Giờ tăng ca</th>
+                            <th>Đơn giá/giờ</th>
+                            <th>Đơn giá tăng ca</th>
+                            <th>Tạm tính</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($partTimeRows as $row)
+                            <tr>
+                                <td>
+                                    <div class="staff-cell-name">{{ $row['staff']->name }}</div>
+                                    <div class="staff-cell-sub">{{ $row['staff']->email }}</div>
+                                </td>
+                                <td>{{ $row['shift_count'] }}</td>
+                                <td>{{ $row['total_hours'] == floor($row['total_hours']) ? number_format($row['total_hours'], 0, ',', '.') : number_format($row['total_hours'], 2, ',', '.') }} giờ</td>
+                                <td>{{ $row['overtime_hours'] == floor($row['overtime_hours']) ? number_format($row['overtime_hours'], 0, ',', '.') : number_format($row['overtime_hours'], 2, ',', '.') }} giờ</td>
+                                <td>{{ number_format($row['hourly_rate'], 0, ',', '.') }}đ</td>
+                                <td>{{ number_format($row['overtime_rate'], 0, ',', '.') }}đ</td>
+                                <td><strong>{{ number_format($row['gross_salary'], 0, ',', '.') }}đ</strong></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr style="background:#fef3c7; font-weight:700;">
+                            <td colspan="6" style="text-align:right; padding-right:16px;">Tổng lương part-time:</td>
+                            <td>{{ number_format($partTimeTotal, 0, ',', '.') }}đ</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            @else
+                <div class="payroll-empty">Chưa có dữ liệu lương part-time trong tháng này.</div>
+            @endif
+        </div>
+    </div>
+@endif
 @endsection

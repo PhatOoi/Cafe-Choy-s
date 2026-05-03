@@ -237,7 +237,7 @@
                     <div class="cost-item-value">{{ number_format($costs['rent_cost'], 0, ',', '.') }}đ</div>
                 </div>
                 <div class="cost-item" style="background:#fffbeb;border-color:#f3e8cc;">
-                    <div class="cost-item-label">Lương nhân viên (tự tính)</div>
+                    <div class="cost-item-label">Lương nhân viên</div>
                     <div class="cost-item-value">{{ number_format($costs['salary_cost'], 0, ',', '.') }}đ</div>
                 </div>
             </div>

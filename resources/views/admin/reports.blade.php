@@ -20,6 +20,29 @@
     .period-tab:not(.active) { background:#fff; color:var(--text-muted); border:1px solid var(--border); }
     .period-tab:hover:not(.active) { border-color:var(--primary); color:var(--primary); text-decoration:none; }
     .chart-wrapper { position:relative; height:280px; }
+    .daily-highlight {
+        background: linear-gradient(135deg, #fff8f1, #ffffff);
+        border: 1px solid #f3dfcb;
+        border-radius: 12px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+    }
+    .daily-highlight-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .daily-highlight-title { font-size:20px; font-weight:700; color:#1a1a2e; }
+    .daily-highlight-date { font-size:13px; color:#8a8fa8; }
+    .daily-highlight-value { font-size:36px; font-weight:700; color:var(--primary); line-height:1.1; }
+    .daily-highlight-note { margin-top:10px; font-size:13px; color:#6f768b; }
+    .daily-grid {
+        display:grid;
+        grid-template-columns: repeat(5, minmax(0,1fr));
+        gap:16px;
+    }
+    @media (max-width:1100px) { .daily-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:640px)  { .daily-grid { grid-template-columns:1fr; } }
+    .daily-box { background:#fff; border:1px solid #eef0f4; border-radius:12px; padding:18px 20px; }
+    .daily-box-label { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#8a8fa8; margin-bottom:8px; font-weight:600; }
+    .daily-box-value { font-size:26px; font-weight:700; color:#1a1a2e; }
+    .daily-box-note { margin-top:6px; font-size:12px; color:#8a8fa8; }
     .report-grid {
         display:grid;
         grid-template-columns:1fr 360px;
@@ -51,11 +74,10 @@
 <div class="page-header">
     <div>
         <div class="page-header-title">Báo cáo & Thống kê</div>
-        <div class="page-header-sub">Phân tích doanh thu và hiệu suất bán hàng</div>
     </div>
     <div class="period-tabs">
         <a href="{{ route('admin.reports', ['period'=>'day']) }}"
-           class="period-tab {{ $period === 'day' ? 'active' : '' }}">30 Ngày</a>
+           class="period-tab {{ $period === 'day' ? 'active' : '' }}">Theo ngày</a>
         <a href="{{ route('admin.reports', ['period'=>'month']) }}"
            class="period-tab {{ $period === 'month' ? 'active' : '' }}">12 Tháng</a>
         <a href="{{ route('admin.reports', ['period'=>'year']) }}"
@@ -64,6 +86,45 @@
 </div>
 
 {{-- Summary --}}
+@if($period === 'day')
+{{-- Daily revenue layout giống staff --}}
+<div class="daily-highlight">
+    <div class="daily-highlight-head">
+        <div class="daily-highlight-title">Doanh thu ngày hiện tại</div>
+        <div class="daily-highlight-date">{{ now()->format('d/m/Y') }}</div>
+    </div>
+    <div class="daily-highlight-value">{{ number_format($todayRevenue->total_revenue, 0, ',', '.') }}đ</div>
+    <div class="daily-highlight-note">Hôm nay quán ghi nhận {{ $todayOrderBreakdown['web_app_orders'] }} đơn khách đặt qua web và {{ $todayOrderBreakdown['staff_created_orders'] }} đơn do nhân viên tạo tại quầy.</div>
+</div>
+<div class="daily-grid">
+    <div class="daily-box">
+        <div class="daily-box-label">Số đơn hôm nay</div>
+        <div class="daily-box-value">{{ $todayOrderBreakdown['total_orders'] }}</div>
+        <div class="daily-box-note">Tổng số đơn đã ghi nhận doanh thu của quán hôm nay</div>
+    </div>
+    <div class="daily-box">
+        <div class="daily-box-label">Đơn khách web app</div>
+        <div class="daily-box-value">{{ $todayOrderBreakdown['web_app_orders'] }}</div>
+        <div class="daily-box-note">Số đơn khách tự đặt trên web app hôm nay</div>
+    </div>
+    <div class="daily-box">
+        <div class="daily-box-label">Đơn nhân viên tạo</div>
+        <div class="daily-box-value">{{ $todayOrderBreakdown['staff_created_orders'] }}</div>
+        <div class="daily-box-note">Số đơn tại quầy do nhân viên trực tiếp tạo hôm nay</div>
+    </div>
+    <div class="daily-box">
+        <div class="daily-box-label">Tiền mặt</div>
+        <div class="daily-box-value">{{ number_format($todayRevenue->cash_revenue, 0, ',', '.') }}đ</div>
+        <div class="daily-box-note">Tổng giao dịch tiền mặt của quán hôm nay</div>
+    </div>
+    <div class="daily-box">
+        <div class="daily-box-label">Chuyển khoản</div>
+        <div class="daily-box-value">{{ number_format($todayRevenue->transfer_revenue, 0, ',', '.') }}đ</div>
+        <div class="daily-box-note">Tổng giao dịch chuyển khoản của quán hôm nay</div>
+    </div>
+</div>
+@else
+{{-- Summary cho month/year --}}
 @php
 $totalRevenue = $revenueData->sum('total');
 $maxRevenue   = $revenueData->max('total') ?: 1;
@@ -99,7 +160,9 @@ $avgRevenue   = $revenueData->count() ? $totalRevenue / $revenueData->count() : 
         </div>
     </div>
 </div>
+@endif
 
+@if($period !== 'day')
 <div class="report-grid">
 
     {{-- Chart --}}
@@ -108,7 +171,7 @@ $avgRevenue   = $revenueData->count() ? $totalRevenue / $revenueData->count() : 
             <div class="card-header-title">
                 <i class="fas fa-chart-line" style="color:var(--primary);"></i>
                 Biểu đồ doanh thu —
-                {{ $period === 'day' ? '30 ngày gần nhất' : ($period === 'month' ? '12 tháng gần nhất' : 'Theo năm') }}
+                {{ $period === 'day' ? 'Hôm nay' : ($period === 'month' ? '12 tháng gần nhất' : 'Theo năm') }}
             </div>
         </div>
         <div class="card-body">
@@ -181,10 +244,12 @@ $avgRevenue   = $revenueData->count() ? $totalRevenue / $revenueData->count() : 
         </div>
     </div>
 </div>
+@endif
 
 @endsection
 
 @section('scripts')
+@if($period !== 'day')
 <script>
 const raw = @json($revenueData);
 const labels = raw.map(d => d.label);
@@ -237,4 +302,5 @@ new Chart(ctx, {
     }
 });
 </script>
+@endif
 @endsection

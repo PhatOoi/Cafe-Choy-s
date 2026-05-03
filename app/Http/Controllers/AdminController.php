@@ -705,18 +705,30 @@ class AdminController extends Controller
         $monthInput = $request->input('month', now()->format('Y-m'));
         $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
+        $isPayrollVisible = now()->greaterThan($monthEnd->copy()->endOfDay());
 
-        $payrollData = $this->buildPayrollDataForMonth(
-            $monthStart,
-            $monthEnd,
-            $request->input('employment_type')
-        );
+        $payrollRows = collect();
+        $payrollStats = [
+            'completed_shift_count' => 0,
+            'gross_salary_total' => 0,
+        ];
 
-        $payrollRows = $payrollData['payrollRows'];
-        $payrollStats = $payrollData['payrollStats'];
+        if ($isPayrollVisible) {
+            $payrollData = $this->buildPayrollDataForMonth(
+                $monthStart,
+                $monthEnd,
+                $request->input('employment_type')
+            );
+
+            $payrollRows = $payrollData['payrollRows'];
+            $payrollStats = $payrollData['payrollStats'];
+        }
 
         return view('admin.payroll.index', compact(
             'monthInput',
+            'monthStart',
+            'monthEnd',
+            'isPayrollVisible',
             'payrollRows',
             'payrollStats'
         ));
@@ -1021,7 +1033,35 @@ class AdminController extends Controller
             ->limit(10)
             ->get();
 
-        return view('admin.reports', compact('revenueData', 'topProducts', 'period'));
+        // Dữ liệu doanh thu hôm nay chi tiết (dùng cho tab period=day).
+        $todayRevenue = null;
+        $todayOrderBreakdown = null;
+        if ($period === 'day') {
+            $isWebAppOrder = fn ($order) => (int) optional($order->user)->role_id === 3;
+
+            $todayOrders = Order::with(['payment', 'user'])
+                ->whereDate('created_at', today())
+                ->whereHas('payment', fn ($q) => $q->where('status', 'paid'))
+                ->get();
+
+            $todayOrderBreakdown = [
+                'total_orders'         => (int) $todayOrders->count(),
+                'staff_created_orders' => (int) $todayOrders->filter(fn ($o) => in_array((int) optional($o->user)->role_id, [1, 2], true))->count(),
+                'web_app_orders'       => (int) $todayOrders->filter($isWebAppOrder)->count(),
+            ];
+
+            $todayRevenue = (object) [
+                'revenue_date'          => now()->startOfDay(),
+                'total_orders'          => $todayOrderBreakdown['total_orders'],
+                'total_revenue'         => (float) $todayOrders->sum('final_price'),
+                'staff_created_revenue' => (float) $todayOrders->filter(fn ($o) => in_array((int) optional($o->user)->role_id, [1, 2], true))->sum('final_price'),
+                'customer_revenue'      => (float) $todayOrders->filter($isWebAppOrder)->sum('final_price'),
+                'cash_revenue'          => (float) $todayOrders->filter(fn ($o) => optional($o->payment)->method === 'cash')->sum('final_price'),
+                'transfer_revenue'      => (float) $todayOrders->filter(fn ($o) => optional($o->payment)->method === 'bank_transfer')->sum('final_price'),
+            ];
+        }
+
+        return view('admin.reports', compact('revenueData', 'topProducts', 'period', 'todayRevenue', 'todayOrderBreakdown'));
     }
 
     // Trang lợi nhuận tháng: nhập chi phí và xem lợi nhuận sau khi trừ toàn bộ chi phí vận hành.
@@ -1139,10 +1179,11 @@ class AdminController extends Controller
 
         private function revenueByDay(Request $request = null)
     {
-        $from = $request?->input('from') ? now()->parse($request->input('from')) : now()->subDays(29)->startOfDay();
-        $to   = $request?->input('to')   ? now()->parse($request->input('to'))->endOfDay() : now()->endOfDay();
+        // Chỉ lấy doanh thu trong ngày hôm nay.
+        $from = now()->startOfDay();
+        $to   = now()->endOfDay();
 
-            return $this->paidRevenueOrders()
+        return $this->paidRevenueOrders()
             ->selectRaw('DATE(created_at) as label, SUM(final_price) as total')
             ->whereBetween('created_at', [$from, $to])
             ->groupBy('label')
