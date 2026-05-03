@@ -34,9 +34,10 @@ class StaffController extends Controller
         $isStaffCreatedOrder = fn ($order) => in_array((int) optional($order->user)->role_id, [1, 2], true);
         $isWebAppOrder = fn ($order) => (int) optional($order->user)->role_id === 3;
 
-        // Toàn bộ đơn đã thanh toán trong ngày (doanh thu quán hôm nay).
+        // Toàn bộ đơn đã thanh toán trong ngày (doanh thu quán hôm nay), không tính đơn đã hủy.
         $todayOrders = Order::with(['payment', 'user'])
             ->whereDate('created_at', today())
+            ->where('status', '!=', 'cancelled')
             ->whereHas('payment', fn ($query) => $query->where('status', 'paid'))
             ->get();
 

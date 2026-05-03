@@ -1320,7 +1320,7 @@ function submitBankTransferOrder() {
 
 function ensureStaffBillCode() {
     if (!staffBillCode) {
-        staffBillCode = String(Math.floor(1000 + Math.random() * 9000));
+        staffBillCode = String(nextOrderNumber).padStart(6, '0');
     }
 
     return staffBillCode;

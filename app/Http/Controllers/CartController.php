@@ -434,8 +434,9 @@ class CartController extends Controller
         $cartCount = $this->getCartCount($cart);
         $total = $this->calculateCartTotal($cart);
         $userPoints = auth()->check() ? (int) auth()->user()->loyalty_points : 0;
+        $nextOrderNumber = ((int) Order::max('id')) + 1;
 
-        return view('cart', compact('cart', 'cartCount', 'total', 'userPoints'));
+        return view('cart', compact('cart', 'cartCount', 'total', 'userPoints', 'nextOrderNumber'));
     }
 
     // Xóa một item khỏi cart theo key biến thể.

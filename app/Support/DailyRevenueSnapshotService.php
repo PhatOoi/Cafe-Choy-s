@@ -26,9 +26,10 @@ class DailyRevenueSnapshotService
             $isStaffCreatedOrder = fn ($order) => in_array((int) optional($order->user)->role_id, [1, 2], true);
             $isWebAppOrder = fn ($order) => (int) optional($order->user)->role_id === 3;
 
-            // Chỉ lấy các đơn đã paid và thuộc 2 nguồn doanh thu cần thống kê.
+            // Chỉ lấy các đơn đã paid, chưa bị hủy, và thuộc 2 nguồn doanh thu cần thống kê.
             $orders = Order::with(['payment', 'user'])
                 ->whereDate('created_at', $dateString)
+                ->where('status', '!=', 'cancelled')
                 ->whereHas('payment', fn ($query) => $query->where('status', 'paid'))
                 ->where(function ($query) {
                     $query->where(function ($staffQuery) {

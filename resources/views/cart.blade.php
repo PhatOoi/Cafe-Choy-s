@@ -37,6 +37,7 @@
         window.hasPendingQrOrder = {{ $hasPendingQrOrder ? 'true' : 'false' }};
         window.initialCartState = @json($cart);
         window.initialCartTotal = {{ json_encode($initialCartTotal) }};
+        window.nextOrderNumber = {{ json_encode($nextOrderNumber ?? 1) }};
     </script>
 	 <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
         <div class="container">
@@ -1066,7 +1067,7 @@
                                             var now = new Date();
                                             var date = now.toLocaleDateString('vi-VN');
                                             var time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                                            var code = Math.floor(1000 + Math.random() * 9000);
+                                            var code = String(window.nextOrderNumber || 1).padStart(6, '0');
                                             document.getElementById('bill-date').textContent = date;
                                             document.getElementById('bill-time').textContent = time;
                                             document.getElementById('bill-code').textContent = code;

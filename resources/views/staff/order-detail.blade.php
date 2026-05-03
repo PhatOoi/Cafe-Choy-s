@@ -1,7 +1,7 @@
 @extends('staff.layout')
 
-@section('title', 'Đơn hàng #' . $order->id)
-@section('page-title', 'Chi tiết đơn #' . $order->id)
+@section('title', 'Đơn hàng #' . str_pad($order->id, 6, '0', STR_PAD_LEFT))
+@section('page-title', 'Chi tiết đơn #' . str_pad($order->id, 6, '0', STR_PAD_LEFT))
 
 @section('styles')
 <style>
@@ -158,7 +158,7 @@
             <div class="card-body">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                     <div>
-                        <h2 style="font-size:20px;font-weight:700;margin:0;color:#1a1a2e;">Đơn hàng #{{ $order->id }}</h2>
+                        <h2 style="font-size:20px;font-weight:700;margin:0;color:#1a1a2e;">Đơn hàng #{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</h2>
                         <p style="font-size:13px;color:#8a8fa8;margin:4px 0 0;">
                             {{ \Carbon\Carbon::parse($order->created_at)->format('H:i — d/m/Y') }}
                             &nbsp;·&nbsp;
@@ -247,7 +247,7 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">Số thứ tự đơn</span>
-                    <span class="info-value">#{{ $order->id }}</span>
+                    <span class="info-value">#{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Hình thức</span>

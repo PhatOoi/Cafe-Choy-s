@@ -65,10 +65,12 @@ class AdminController extends Controller
         ],
     ];
 
-    // Query doanh thu chuẩn: chỉ lấy các đơn đã thanh toán thành công.
+    // Query doanh thu chuẩn: chỉ lấy các đơn đã thanh toán thành công và chưa bị hủy.
     private function paidRevenueOrders()
     {
-        return Order::query()->whereHas('payment', fn ($query) => $query->where('status', 'paid'));
+        return Order::query()
+            ->where('status', '!=', 'cancelled')
+            ->whereHas('payment', fn ($query) => $query->where('status', 'paid'));
     }
 
     // ─── Dashboard ───────────────────────────────────────────────────────────
@@ -79,7 +81,7 @@ class AdminController extends Controller
         $stats = [
             'total_revenue'   => $this->paidRevenueOrders()->sum('final_price'),
             'today_revenue'   => $this->paidRevenueOrders()->whereDate('created_at', today())->sum('final_price'),
-            'total_orders'    => Order::count(),
+            'total_orders'    => Order::where('status', '!=', 'cancelled')->count(),
             'pending_orders'  => Order::where('status', 'pending')->count(),
             'total_products'  => Product::count(),
             'total_customers' => User::where('role_id', 3)->count(),
@@ -1041,6 +1043,7 @@ class AdminController extends Controller
 
             $todayOrders = Order::with(['payment', 'user'])
                 ->whereDate('created_at', today())
+                ->where('status', '!=', 'cancelled')
                 ->whereHas('payment', fn ($q) => $q->where('status', 'paid'))
                 ->get();
 

@@ -126,7 +126,7 @@
                     <tbody>
                         @foreach($staffOrders as $order)
                         <tr>
-                            <td><strong>#{{ $order->id }}</strong></td>
+                            <td><strong>#{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</strong></td>
                             <td>
                                 {{ $order->user->name ?? 'Khách vãng lai' }}
                                 @if($order->user?->phone)
@@ -201,7 +201,7 @@
                     <tbody>
                         @foreach($customerOrders as $order)
                         <tr>
-                            <td><strong>#{{ $order->id }}</strong></td>
+                            <td><strong>#{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</strong></td>
                             <td>
                                 {{ $order->user->name ?? '—' }}
                                 @if($order->user?->phone)
