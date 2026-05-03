@@ -474,27 +474,6 @@
     </div>
 </div>
 
-<div class="schedule-card" style="margin-top:20px;">
-    <div class="schedule-card-header">
-        <div>
-            <h3 class="schedule-card-title">Đăng ký gần đây của tôi</h3>
-            <p class="schedule-card-sub">Hiển thị 6 đăng ký mới nhất.</p>
-        </div>
-    </div>
-    <div class="recent-list">
-        @forelse($myRegistrations as $registration)
-            <div class="recent-item">
-                <div class="recent-item-title">
-                    {{ $registration->work_date->format('d/m/Y') }} · {{ $registration->shift_label ?: (substr($registration->start_time, 0, 5) . ' - ' . substr($registration->end_time, 0, 5)) }}
-                </div>
-                <div class="recent-item-sub">{{ substr($registration->start_time, 0, 5) }} - {{ substr($registration->end_time, 0, 5) }}</div>
-            </div>
-        @empty
-            <div class="schedule-empty">Bạn chưa có đăng ký giờ làm nào.</div>
-        @endforelse
-    </div>
-</div>
-
 {{-- Bảng đăng ký giờ tăng ca --}}
 <div class="schedule-card" style="margin-top:20px;">
     <div class="schedule-card-header">
@@ -626,6 +605,50 @@
                 @empty
                     <tr id="overtimeEmptyRow">
                         <td colspan="5" class="schedule-empty">Bạn chưa có đơn tăng ca nào.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{{-- Đăng ký giờ làm gần đây --}}
+<div class="schedule-card" style="margin-top:20px;">
+    <div class="schedule-card-header">
+        <div>
+            <h3 class="schedule-card-title">🗓️ Đăng ký gần đây của tôi</h3>
+            <p class="schedule-card-sub">Hiển thị 6 đăng ký giờ làm mới nhất.</p>
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="schedule-table" style="min-width:500px;">
+            <thead>
+                <tr>
+                    <th>Ngày làm việc</th>
+                    <th>Khung giờ</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($myRegistrations as $registration)
+                    <tr>
+                        <td style="font-weight:700;">{{ $registration->work_date->format('d/m/Y') }}</td>
+                        <td>{{ substr($registration->start_time, 0, 5) }} – {{ substr($registration->end_time, 0, 5) }}</td>
+                        <td>
+                            @if($registration->status === 'pending')
+                                <span style="display:inline-block;background:#fef3c7;color:#b45309;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;">Chờ duyệt</span>
+                            @elseif($registration->status === 'approved')
+                                <span style="display:inline-block;background:#dcfce7;color:#166534;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;">Đã duyệt</span>
+                            @elseif($registration->status === 'closed')
+                                <span style="display:inline-block;background:#f1f5f9;color:#475569;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;">Đã chốt</span>
+                            @else
+                                <span style="color:#94a3b8;font-size:12px;">{{ $registration->status }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="3" class="schedule-empty">Bạn chưa có đăng ký giờ làm nào.</td>
                     </tr>
                 @endforelse
             </tbody>

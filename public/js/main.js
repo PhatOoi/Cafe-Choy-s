@@ -1,22 +1,26 @@
- AOS.init({
- 	duration: 800,
- 	easing: 'slide'
- });
+ if (typeof AOS !== 'undefined') {
+   AOS.init({
+     duration: 800,
+     easing: 'slide'
+   });
+ }
 
 (function($) {
 
 	"use strict";
 
-	$(window).stellar({
-    responsive: true,
-    parallaxBackgrounds: true,
-    parallaxElements: true,
-    horizontalScrolling: false,
-    hideDistantElements: false,
-    scrollProperty: 'scroll',
-    horizontalOffset: 0,
-	  verticalOffset: 0
+	if (typeof $.fn.stellar === 'function') {
+		$(window).stellar({
+      responsive: true,
+      parallaxBackgrounds: true,
+      parallaxElements: true,
+      horizontalScrolling: false,
+      hideDistantElements: false,
+      scrollProperty: 'scroll',
+      horizontalOffset: 0,
+	    verticalOffset: 0
   });
+  } // end stellar guard
 
   // Scrollax
   if ($.Scrollax) {
@@ -50,6 +54,7 @@
    }
 
 	var carousel = function() {
+		if (typeof $.fn.owlCarousel !== 'function') return;
 		$('.home-slider').owlCarousel({
 	    loop:true,
 	    autoplay: true,
@@ -169,7 +174,7 @@
 
 	
 	var counter = function() {
-		
+		if (typeof $.fn.waypoint !== 'function') return;
 		$('#section-counter').waypoint( function( direction ) {
 
 			if( direction === 'down' && !$(this.element).hasClass('ftco-animated') ) {
@@ -195,6 +200,7 @@
 	counter();
 
 	var contentWayPoint = function() {
+		if (typeof $.fn.waypoint !== 'function') return;
 		var i = 0;
 		$('.ftco-animate').waypoint( function( direction ) {
 
@@ -257,6 +263,7 @@
 
 
 	// magnific popup
+  if (typeof $.fn.magnificPopup === 'function') {
 	$('.image-popup').magnificPopup({
     type: 'image',
     closeOnContentClick: true,
@@ -286,7 +293,7 @@
 
     fixedContentPos: false
   });
-
+  } // end magnificPopup guard
 
   if (typeof $.fn.datepicker === 'function') {
     $('.appointment_date').datepicker({

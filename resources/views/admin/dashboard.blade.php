@@ -257,6 +257,77 @@
     </div>
 </div>
 
+{{-- Widget lịch làm việc tuần này --}}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">
+
+    {{-- Hôm nay --}}
+    <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+                <div class="card-header-title"><i class="fas fa-calendar-day" style="color:var(--primary);"></i> Ca làm hôm nay</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">{{ now()->format('d/m/Y') }}</div>
+            </div>
+            <a href="{{ route('admin.work-schedules.index') }}" style="font-size:12px;color:var(--primary);font-weight:600;text-decoration:none;">Xem toàn bộ →</a>
+        </div>
+        <div style="padding:14px 18px;">
+            @if($todaySchedule->isEmpty())
+                <div style="text-align:center;padding:18px;color:#94a3b8;font-size:13px;">Không có nhân viên nào được duyệt ca hôm nay.</div>
+            @else
+                <div style="display:grid;gap:8px;">
+                    @foreach($todaySchedule as $entry)
+                        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:#f8fafc;border:1px solid #eef1f6;">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#475569;">
+                                {{ mb_substr($entry->staff->name ?? '?', 0, 1) }}
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:13px;font-weight:700;color:#172033;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $entry->staff->name ?? '—' }}</div>
+                                <div style="font-size:11px;color:#64748b;">{{ substr($entry->start_time,0,5) }}–{{ substr($entry->end_time,0,5) }} · {{ $entry->employment_type === 'full_time' ? 'Full-time' : 'Part-time' }}</div>
+                            </div>
+                            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;background:#dcfce7;color:#166534;flex-shrink:0;">Đã duyệt</span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- Tuần này --}}
+    <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+                <div class="card-header-title"><i class="fas fa-calendar-week" style="color:var(--primary);"></i> Lịch tuần này</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">{{ $thisWeekStart->format('d/m') }} – {{ $thisWeekEnd->format('d/m/Y') }}</div>
+            </div>
+            <a href="{{ route('admin.work-schedules.index') }}" style="font-size:12px;color:var(--primary);font-weight:600;text-decoration:none;">Chi tiết →</a>
+        </div>
+        <div style="padding:14px 18px;">
+            @if($thisWeekSchedule->isEmpty())
+                <div style="text-align:center;padding:18px;color:#94a3b8;font-size:13px;">Chưa có lịch được duyệt trong tuần này.</div>
+            @else
+                <div style="display:grid;gap:8px;max-height:280px;overflow-y:auto;">
+                    @foreach($thisWeekSchedule as $dateKey => $entries)
+                        @php $day = \Carbon\Carbon::parse($dateKey); @endphp
+                        <div>
+                            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">
+                                {{ ['CN','T2','T3','T4','T5','T6','T7'][$day->dayOfWeek] }} {{ $day->format('d/m') }}
+                                @if($day->isToday())<span style="background:#fde68a;color:#92400e;padding:1px 6px;border-radius:6px;font-size:10px;margin-left:4px;">Hôm nay</span>@endif
+                            </div>
+                            @foreach($entries as $entry)
+                                <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:#f8fafc;border:1px solid #eef1f6;margin-bottom:4px;">
+                                    <span style="font-size:12px;font-weight:600;color:#172033;">{{ $entry->staff->name ?? '—' }}</span>
+                                    <span style="font-size:11px;color:#94a3b8;">{{ substr($entry->start_time,0,5) }}–{{ substr($entry->end_time,0,5) }}</span>
+                                    <span style="margin-left:auto;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:{{ $entry->employment_type === 'full_time' ? '#e0f2fe' : '#fef3c7' }};color:{{ $entry->employment_type === 'full_time' ? '#0369a1' : '#b45309' }};">{{ $entry->employment_type === 'full_time' ? 'FT' : 'PT' }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+
+</div>
+
 @endsection
 
 @section('scripts')

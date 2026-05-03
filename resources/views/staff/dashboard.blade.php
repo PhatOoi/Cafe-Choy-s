@@ -179,6 +179,96 @@
         </div>
     </div>
 </div>
+
+{{-- Widget lịch tuần này --}}
+<div class="card" style="margin-top:20px;">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+            <div class="card-header-title" style="display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-calendar-week" style="color:var(--primary);"></i> Lịch làm việc tuần này
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+                {{ $dashWeekStart->format('d/m') }} – {{ $dashWeekEnd->format('d/m/Y') }}
+            </div>
+        </div>
+        <a href="{{ route('staff.work-schedules.index') }}" style="font-size:12px;color:var(--primary);font-weight:600;text-decoration:none;">Xem chi tiết →</a>
+    </div>
+    <div style="padding:16px 20px;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:600px;">
+            <thead>
+                <tr>
+                    <th style="padding:9px 10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:11px;font-weight:700;color:#475569;min-width:90px;">Khung giờ</th>
+                    @foreach($dashWeekDays as $day)
+                        @php $isToday = $day->isToday(); @endphp
+                        <th style="padding:9px 8px;border:1px solid #e2e8f0;background:{{ $isToday ? '#f0fdf4' : '#f8fafc' }};text-align:center;">
+                            <div style="font-size:11px;font-weight:800;color:{{ $isToday ? '#166534' : '#334155' }};">
+                                {{ ['CN','T2','T3','T4','T5','T6','T7'][$day->dayOfWeek] }}
+                                @if($isToday) <span style="display:inline-block;background:#166534;color:#fff;font-size:9px;padding:1px 5px;border-radius:999px;margin-left:2px;">nay</span>@endif
+                            </div>
+                            <div style="font-size:10px;color:#94a3b8;">{{ $day->format('d/m') }}</div>
+                        </th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $allSlots = [
+                        '08_16' => '8h–16h',
+                        '16_24' => '16h–24h',
+                        '08_12' => '8h–12h',
+                        '12_16' => '12h–16h',
+                        '16_20' => '16h–20h',
+                        '20_24' => '20h–24h',
+                    ];
+                    $hasAnyRow = false;
+                @endphp
+                @foreach($allSlots as $slotKey => $slotLabel)
+                    <tr>
+                        <td style="padding:8px 10px;border:1px solid #e2e8f0;background:#fafbff;font-size:12px;font-weight:700;color:#475569;white-space:nowrap;">{{ $slotLabel }}</td>
+                        @foreach($dashWeekDays as $day)
+                            @php
+                                $dateKey = $day->toDateString();
+                                $isToday = $day->isToday();
+                                $cellEntries = collect($thisWeekSchedule[$dateKey] ?? [])->filter(function($e) use ($slotKey) {
+                                    $s = substr($e->start_time, 0, 5);
+                                    $et = $e->employment_type;
+                                    if ($et === 'full_time') {
+                                        if ($slotKey === '08_16') return $s === '08:00';
+                                        if ($slotKey === '16_24') return $s === '16:00';
+                                    } else {
+                                        if ($slotKey === '08_12') return $s === '08:00';
+                                        if ($slotKey === '12_16') return $s === '12:00';
+                                        if ($slotKey === '16_20') return $s === '16:00';
+                                        if ($slotKey === '20_24') return $s === '20:00';
+                                    }
+                                    return false;
+                                });
+                            @endphp
+                            <td style="padding:6px 8px;border:1px solid #e2e8f0;text-align:center;vertical-align:middle;background:{{ $isToday ? '#f9fefb' : '#fff' }};">
+                                @if($cellEntries->isNotEmpty())
+                                    <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+                                        @foreach($cellEntries as $entry)
+                                            @php $isMe = (int)$entry->staff_id === auth()->id(); @endphp
+                                            <span style="display:inline-block;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:700;background:{{ $isMe ? '#dcfce7' : ($entry->employment_type==='full_time'?'#e0f2fe':'#fef3c7') }};color:{{ $isMe ? '#166534' : ($entry->employment_type==='full_time'?'#0369a1':'#b45309') }};white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;" title="{{ $entry->staff->name ?? '' }}">
+                                                @if($isMe)
+                                                    Bạn
+                                                @else
+                                                    {{ $entry->staff->name ?? '—' }}
+                                                @endif
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span style="color:#e2e8f0;font-size:13px;">—</span>
+                                @endif
+                            </td>
+                        @endforeach
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection
 
 @section('scripts')

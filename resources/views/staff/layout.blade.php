@@ -426,6 +426,9 @@
             <h1 class="topbar-title">@yield('page-title', 'Dashboard')</h1>
         </div>
         <div class="topbar-right">
+            <button type="button" class="btn-audio-reminder" id="notifToggleButton" style="background:#f1f5f9;color:#475569;border-color:#d1d5db;">
+                <i class="fas fa-bell"></i> Thông báo: Bật
+            </button>
             <button type="button" class="btn-audio-reminder" id="enableReminderAudioButton">
                 <i class="fas fa-volume-up"></i> Bật âm thanh nhắc
             </button>
@@ -479,6 +482,7 @@
 (() => {
     const storageKey = 'staffOrderStatusReminders';
     const audioMutedStorageKey = 'staffOrderReminderAudioMuted';
+    const notifMutedStorageKey = 'staffOrderReminderNotifMuted';
     const reminderStatuses = ['pending', 'confirmed', 'processing', 'ready'];
     const reminderDelay = 7000;
     const confirmedIdsUrl = @json(route('staff.orders.confirmed-reminder-ids'));
@@ -492,6 +496,7 @@
     let fallbackLoopTimer = null;
     let audioUnlocked = sessionStorage.getItem('staffReminderAudioUnlocked') === '1';
     let audioMuted = localStorage.getItem(audioMutedStorageKey) === '1';
+    let notifMuted = localStorage.getItem(notifMutedStorageKey) === '1';
 
     function readReminders() {
         try {
@@ -526,6 +531,32 @@
         }
 
         updateReminderAudioButton();
+    }
+
+    function updateNotifButton() {
+        const btn = document.getElementById('notifToggleButton');
+        if (!btn) return;
+        if (notifMuted) {
+            btn.style.background = '#fee2e2';
+            btn.style.color = '#991b1b';
+            btn.style.borderColor = '#fca5a5';
+            btn.innerHTML = '<i class="fas fa-bell-slash"></i> Thông báo: Tắt';
+        } else {
+            btn.style.background = '#f1f5f9';
+            btn.style.color = '#475569';
+            btn.style.borderColor = '#d1d5db';
+            btn.innerHTML = '<i class="fas fa-bell"></i> Thông báo: Bật';
+        }
+    }
+
+    function setNotifMuted(next) {
+        notifMuted = next;
+        localStorage.setItem(notifMutedStorageKey, next ? '1' : '0');
+        if (notifMuted) {
+            hideReminderBanner();
+            stopReminderSound();
+        }
+        updateNotifButton();
     }
 
     function updateReminderAudioButton() {
@@ -1075,10 +1106,12 @@
                     return;
                 }
 
-                showReminderBanner(reminderGroups);
-                startReminderSoundLoop();
-                if (shouldNotify) {
-                    showBrowserNotification(reminderGroups);
+                if (!notifMuted) {
+                    showReminderBanner(reminderGroups);
+                    startReminderSoundLoop();
+                    if (shouldNotify) {
+                        showBrowserNotification(reminderGroups);
+                    }
                 }
             } else {
                 hideReminderBanner();
@@ -1131,6 +1164,13 @@
         });
     }
 
+    const notifToggleButton = document.getElementById('notifToggleButton');
+    if (notifToggleButton) {
+        notifToggleButton.addEventListener('click', () => {
+            setNotifMuted(!notifMuted);
+        });
+    }
+
     document.addEventListener('pointerdown', primeAudio, { passive: true });
     document.addEventListener('keydown', primeAudio);
 
@@ -1148,6 +1188,7 @@
 
     registerVisibleConfirmedOrders();
     updateReminderAudioButton();
+    updateNotifButton();
     checkReminders();
     window.setInterval(checkReminders, 1000);
 })();

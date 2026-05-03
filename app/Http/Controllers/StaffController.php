@@ -93,7 +93,19 @@ class StaffController extends Controller
             ->take(10)
             ->get();
 
-        return view('staff.dashboard', compact('stats', 'recentOrders'));
+        // Lịch tuần này — ai đang làm từ T2 đến CN (đã được duyệt)
+        $dashWeekStart = now()->startOfWeek(Carbon::MONDAY);
+        $dashWeekEnd   = $dashWeekStart->copy()->endOfWeek(Carbon::SUNDAY);
+        $dashWeekDays  = collect(range(0, 6))->map(fn($offset) => $dashWeekStart->copy()->addDays($offset));
+        $thisWeekSchedule = WorkScheduleRegistration::with('staff:id,name,employment_type')
+            ->whereBetween('work_date', [$dashWeekStart->toDateString(), $dashWeekEnd->toDateString()])
+            ->whereIn('status', ['approved', 'closed'])
+            ->orderBy('work_date')
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy(fn($r) => Carbon::parse($r->work_date)->toDateString());
+
+        return view('staff.dashboard', compact('stats', 'recentOrders', 'thisWeekSchedule', 'dashWeekStart', 'dashWeekEnd', 'dashWeekDays'));
     }
 
     // ─── Danh sách đơn hàng ──────────────────────────────────────────────────

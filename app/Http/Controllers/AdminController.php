@@ -105,7 +105,24 @@ class AdminController extends Controller
             ->take(10)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'revenueChart', 'topProducts', 'recentOrders'));
+        // Lịch tuần này cho admin dashboard — ai đang được duyệt làm trong tuần này
+        $thisWeekStart = now()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $thisWeekEnd   = $thisWeekStart->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+        $todaySchedule = WorkScheduleRegistration::with('staff:id,name,employment_type')
+            ->whereDate('work_date', today())
+            ->whereIn('status', ['approved', 'closed'])
+            ->orderBy('start_time')
+            ->get();
+
+        $thisWeekSchedule = WorkScheduleRegistration::with('staff:id,name,employment_type')
+            ->whereBetween('work_date', [$thisWeekStart->toDateString(), $thisWeekEnd->toDateString()])
+            ->whereIn('status', ['approved', 'closed'])
+            ->orderBy('work_date')
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy(fn($r) => \Carbon\Carbon::parse($r->work_date)->toDateString());
+
+        return view('admin.dashboard', compact('stats', 'revenueChart', 'topProducts', 'recentOrders', 'todaySchedule', 'thisWeekSchedule', 'thisWeekStart', 'thisWeekEnd'));
     }
 
     // Trả về top 10 sản phẩm bán chạy dạng JSON cho AJAX auto-refresh dashboard.
