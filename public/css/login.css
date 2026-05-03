@@ -12,7 +12,7 @@
             background-color: #ececec;
             height: 100vh;
             padding: 20px;
-            background: url('images/backgrlogin.jpg') no-repeat center center/cover;
+            background: url('../images/backgrlogin.jpg') no-repeat center center/cover;
         }
 
         .container {

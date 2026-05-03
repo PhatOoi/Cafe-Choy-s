@@ -118,6 +118,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth','staff'])->group(func
     Route::get('/chat/conversation/{userId}',   [ChatController::class, 'conversation'])->name('chat.conversation');
     Route::post('/chat/reply/{userId}',         [ChatController::class, 'reply'])->name('chat.reply');
     Route::get('/chat/unread',                  [ChatController::class, 'unreadCount'])->name('chat.unread');
+    Route::delete('/chat/conversation/{userId}', [ChatController::class, 'closeConversation'])->name('chat.close');
     Route::get('/orders/confirmed-reminder-ids', [StaffController::class, 'confirmedOrderReminderIds'])->name('orders.confirmed-reminder-ids');
     Route::get('/orders/reminder-statuses', [StaffController::class, 'orderReminderStatuses'])->name('orders.reminder-statuses');
     Route::get('/revenue/daily', [StaffController::class, 'dailyRevenueReport'])->name('revenue.daily');

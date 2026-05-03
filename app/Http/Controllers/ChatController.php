@@ -151,4 +151,12 @@ class ChatController extends Controller
         $count = ChatMessage::where('sender', 'customer')->where('is_read', false)->count();
         return response()->json(['count' => $count]);
     }
+
+    // Staff kết thúc hội thoại — xóa toàn bộ tin nhắn của khách đó
+    public function closeConversation($userId)
+    {
+        User::findOrFail($userId);
+        ChatMessage::where('user_id', $userId)->delete();
+        return response()->json(['ok' => true]);
+    }
 }

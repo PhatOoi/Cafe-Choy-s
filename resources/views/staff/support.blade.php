@@ -201,10 +201,20 @@
         <div id="chatActive" style="display:none;flex-direction:column;height:100%;">
             <div class="chat-header">
                 <img id="activeAvatar" src="{{ asset('images/user.jpg') }}" class="conv-avatar">
-                <div>
+                <div style="flex:1;">
                     <div class="chat-header-name" id="activeName">—</div>
                     <div class="chat-header-sub" id="activeEmail">—</div>
                 </div>
+                <button type="button" id="closeConvBtn" onclick="closeConversation()" title="Kết thúc trò chuyện" style="
+                    display:flex;align-items:center;gap:6px;
+                    background:#fee2e2;color:#991b1b;
+                    border:1px solid #fca5a5;border-radius:10px;
+                    padding:7px 13px;font-size:12px;font-weight:700;
+                    cursor:pointer;white-space:nowrap;
+                    transition:background .15s;
+                " onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+                    <i class="fas fa-times-circle"></i> Kết thúc
+                </button>
             </div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-bar">
@@ -242,8 +252,12 @@
     // ── Load danh sách hội thoại ──
     function loadConversations() {
         fetch('{{ route("staff.chat.conversations") }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(r => r.json())
+        .then(function(r) {
+            if (r.status === 401) { window.location.href = '/login'; return null; }
+            return r.json();
+        })
         .then(function(list) {
+            if (!Array.isArray(list)) return;
             var total = list.reduce(function(s,c){ return s + (c.unread||0); }, 0);
             document.getElementById('totalUnread').textContent = total;
 
@@ -400,6 +414,30 @@
             }
 
             replyImageHint.textContent = 'Đã dán ảnh từ clipboard.';
+        });
+    }
+
+    // ── Kết thúc hội thoại ──
+    function closeConversation() {
+        if (!activeUserId) return;
+        if (!confirm('Kết thúc và xóa toàn bộ tin nhắn với khách này?')) return;
+
+        fetch('/staff/chat/conversation/' + activeUserId, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        }).then(function(r) { return r.json(); })
+        .then(function() {
+            clearInterval(msgPoll);
+            activeUserId = null;
+            lastMsgId = 0;
+            document.getElementById('chatEmpty').style.display  = '';
+            document.getElementById('chatActive').style.display = 'none';
+            document.getElementById('chatMessages').innerHTML   = '';
+            loadConversations();
         });
     }
 

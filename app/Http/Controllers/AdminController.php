@@ -88,13 +88,18 @@ class AdminController extends Controller
             'total_staff'     => User::where('role_id', 2)->count(),
         ];
 
-        // Dữ liệu biểu đồ doanh thu 7 ngày gần nhất.
-        $revenueChart = $this->paidRevenueOrders()
-            ->selectRaw('DATE(created_at) as date, SUM(final_price) as total')
+        // Dữ liệu biểu đồ doanh thu 7 ngày gần nhất — fill đủ 7 ngày kể cả ngày không có đơn.
+        $rawRevenue = $this->paidRevenueOrders()
+            ->selectRaw('DATE(created_at) as label, SUM(final_price) as total')
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+            ->groupBy('label')
+            ->orderBy('label')
+            ->pluck('total', 'label');
+
+        $revenueChart = collect(range(6, 0))->map(fn($i) => [
+            'label' => now()->subDays($i)->toDateString(),
+            'total' => $rawRevenue[now()->subDays($i)->toDateString()] ?? 0,
+        ]);
 
         // Top 10 sản phẩm bán chạy nhất toàn thời gian (cả đơn staff và khách web app).
         $topProducts = $this->getTop10Products();
