@@ -227,7 +227,7 @@
                                                     <div class="input-group-prepend">
                                                         <button class="btn btn-outline-secondary btn-qty" data-action="decrease" data-key="{{ $key }}" type="button">-</button>
                                                     </div>
-													<input type="text" class="form-control text-center cart-qty-input" value="{{ $item['qty'] }}" data-key="{{ $key }}" readonly>
+													<input type="number" class="form-control text-center cart-qty-input" value="{{ $item['qty'] }}" data-key="{{ $key }}" min="0" max="99">
                                                     <div class="input-group-append">
                                                         <button class="btn btn-outline-secondary btn-qty" data-action="increase" data-key="{{ $key }}" type="button">+</button>
                                                     </div>
@@ -884,6 +884,61 @@
                                                     }
                                                 });
                                             });
+                                        });
+                                    });
+
+                                    // Nhập tay số lượng trong giỏ hàng
+                                    function cartUpdateQty(key, newQty) {
+                                        var input = document.querySelector('.cart-qty-input[data-key="' + key + '"]');
+                                        fetch('/cart/update/' + key, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                            },
+                                            body: JSON.stringify({ qty: newQty })
+                                        })
+                                        .then(res => res.json())
+                                        .then(data => {
+                                            if (!data.success && data.is_limit_exceeded) {
+                                                showLimitDialog(data.message || 'Số lượng sản phẩm đã vượt quá mức cho phép.', data.support_url);
+                                                if (input) input.value = parseInt(input.dataset.prevQty) || 1;
+                                                return;
+                                            }
+                                            if (data.success) {
+                                                if (!data.cart || !data.cart[key]) {
+                                                    var row = input ? input.closest('tr') : null;
+                                                    if (row) row.remove();
+                                                } else {
+                                                    if (input) {
+                                                        input.value = newQty;
+                                                        input.dataset.prevQty = newQty;
+                                                    }
+                                                    var item = data.cart[key];
+                                                    var itemTotalCell = document.querySelector('.item-total[data-key="' + key + '"]');
+                                                    if (itemTotalCell) {
+                                                        itemTotalCell.textContent = (item.price * item.qty).toLocaleString('vi-VN') + ' đ';
+                                                    }
+                                                }
+                                                syncCartState(data.cart || {}, Number(data.total || 0));
+                                                syncCartCount(data.cart_count);
+                                            }
+                                        });
+                                    }
+
+                                    document.querySelectorAll('.cart-qty-input').forEach(function(input) {
+                                        input.dataset.prevQty = input.value;
+                                        input.addEventListener('change', function() {
+                                            var key = this.getAttribute('data-key');
+                                            var v = parseInt(this.value);
+                                            if (isNaN(v) || v < 0) v = 0;
+                                            if (v > 99) { v = 99; this.value = 99; }
+                                            cartUpdateQty(key, v);
+                                        });
+                                        input.addEventListener('blur', function() {
+                                            if (this.value === '' || isNaN(parseInt(this.value))) {
+                                                this.value = this.dataset.prevQty || 1;
+                                            }
                                         });
                                     });
 
@@ -1769,7 +1824,10 @@
         border-left: 0;
         border-right: 0;
         box-shadow: none;
+        -moz-appearance: textfield;
     }
+    .cart-qty-group .cart-qty-input::-webkit-inner-spin-button,
+    .cart-qty-group .cart-qty-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
     .btn-remove-item {
         color: #111 !important;

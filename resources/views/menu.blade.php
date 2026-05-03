@@ -478,7 +478,7 @@
                     <div class="confirm-row">
                         <div class="qty-wrap">
                             <button class="qty-btn" onclick="changeQty(-1)">−</button>
-                            <span class="qty-num" id="qtyNum">1</span>
+                            <input type="number" class="qty-num" id="qtyNum" value="1" min="1" max="99">
                             <button class="qty-btn" onclick="changeQty(1)">+</button>
                         </div>
                         <button class="btn-confirm" onclick="confirmAddToCart()">
@@ -1875,7 +1875,7 @@
         }
 
         .qty-num {
-            width: 42px;
+            width: 52px;
             text-align: center;
             font-family: 'DM Sans', 'Segoe UI', sans-serif;
             font-size: 16px;
@@ -1883,11 +1883,19 @@
             color: #1a110d;
             border-left: 1px solid #e0d4c8;
             border-right: 1px solid #e0d4c8;
+            border-top: none;
+            border-bottom: none;
             height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #fff;
+            outline: none;
+            box-shadow: none;
+            -moz-appearance: textfield;
         }
+        .qty-num::-webkit-inner-spin-button,
+        .qty-num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
         .btn-confirm {
             flex: 1;
@@ -2271,7 +2279,7 @@
             document.getElementById('priceBaseHero').textContent = fmtPrice(price);
             document.getElementById('sheetImg').src = imgUrl;
             document.getElementById('sheetImg').alt = name;
-            document.getElementById('qtyNum').textContent = '1';
+            document.getElementById('qtyNum').value = '1';
             document.getElementById('noteInput').value = '';
 
             var sizeBtns = document.querySelectorAll('.size-btn');
@@ -2374,10 +2382,31 @@
         }
 
         function changeQty(d) {
-            modalState.qty = Math.max(1, modalState.qty + d);
-            document.getElementById('qtyNum').textContent = modalState.qty;
+            var input = document.getElementById('qtyNum');
+            modalState.qty = Math.max(1, (parseInt(input.value) || 1) + d);
+            input.value = modalState.qty;
             updateTotal();
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var qtyInput = document.getElementById('qtyNum');
+            if (qtyInput) {
+                qtyInput.addEventListener('input', function() {
+                    var v = parseInt(this.value);
+                    if (isNaN(v) || v < 1) v = 1;
+                    if (v > 99) v = 99;
+                    modalState.qty = v;
+                    updateTotal();
+                });
+                qtyInput.addEventListener('blur', function() {
+                    if (!this.value || parseInt(this.value) < 1) {
+                        this.value = 1;
+                        modalState.qty = 1;
+                        updateTotal();
+                    }
+                });
+            }
+        });
 
         function updateTotal() {
             var unit = modalState.basePrice + modalState.sizeExtra + modalState.toppingTotal;
