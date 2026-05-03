@@ -354,13 +354,13 @@
 
 @section('content')
 
-{{-- Bảng đăng ký giờ làm theo tuần hiện tại từ thứ 2 tới chủ nhật. --}}
+{{-- Bảng đăng ký giờ làm theo tuần tới từ thứ 2 tới chủ nhật. --}}
 <div class="schedule-card">
     <div class="schedule-card-header">
         <div>
             <h3 class="schedule-card-title">Đăng ký giờ làm theo tuần</h3>
             <p class="schedule-card-sub">
-                Tuần hiện tại: {{ $weekStart->format('d/m/Y') }} - {{ $weekEnd->format('d/m/Y') }}
+                Tuần tới: {{ $weekStart->format('d/m/Y') }} - {{ $weekEnd->format('d/m/Y') }}
             </p>
         </div>
         @if($currentStaff->employment_type === 'full_time')

@@ -510,6 +510,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: opacity .24s ease, transform .24s ease;
+        }
+        .alert.is-hiding {
+            opacity: 0;
+            transform: translateY(-6px);
         }
         .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
         .alert-error   { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
@@ -647,7 +652,7 @@
 <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-brand">
         <a href="{{ route('admin.dashboard') }}" class="brand-logo">
-           <img src="{{ asset('images/logo.png') }}" alt="Logo" class="sidebar-brand">
+           <img src="{{ asset('images/logo.png') }}" alt="Logo">
             <div>
                 <div class="brand-text-name">Choy's Cafe</div>
                 <div class="brand-text-sub">Admin Panel</div>
@@ -778,12 +783,12 @@
     <div class="admin-content">
 
         @if(session('success'))
-        <div class="alert alert-success">
+        <div class="alert alert-success" data-auto-dismiss="4500">
             <i class="fas fa-check-circle"></i> {{ session('success') }}
         </div>
         @endif
         @if(session('error'))
-        <div class="alert alert-error">
+        <div class="alert alert-error" data-auto-dismiss="5500">
             <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
         </div>
         @endif
@@ -824,6 +829,19 @@ function confirmDelete(formId, msg) {
         document.getElementById(formId).submit();
     }
 }
+
+// Tự ẩn thông báo success sau vài giây để tránh bị kẹt trên màn hình.
+document.querySelectorAll('.alert[data-auto-dismiss]').forEach(function (alertEl) {
+    const timeoutValue = parseInt(alertEl.getAttribute('data-auto-dismiss') || '4500', 10);
+    const timeoutMs = Number.isNaN(timeoutValue) ? 4500 : Math.max(1500, timeoutValue);
+
+    window.setTimeout(function () {
+        alertEl.classList.add('is-hiding');
+        window.setTimeout(function () {
+            alertEl.remove();
+        }, 240);
+    }, timeoutMs);
+});
 </script>
 
 @yield('scripts')

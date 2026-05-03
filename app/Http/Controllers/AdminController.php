@@ -578,7 +578,7 @@ class AdminController extends Controller
 
     public function workSchedules(Request $request)
     {
-        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekStart = now()->addWeek()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
         $isAutoClosedAtNight = now()->greaterThanOrEqualTo(now()->copy()->setTime(22, 0));
         $weekDays = collect(range(0, 6))->map(fn ($offset) => $weekStart->copy()->addDays($offset));
@@ -586,7 +586,7 @@ class AdminController extends Controller
             ->whereDate('week_start', $weekStart->toDateString())
             ->first();
 
-        // Nạp tất cả đăng ký trong tuần hiện tại để admin xem bảng giống staff theo từng nhóm nhân viên.
+        // Nạp tất cả đăng ký trong tuần tới để admin xem bảng giống staff theo từng nhóm nhân viên.
         $weeklySchedules = WorkScheduleRegistration::with('staff:id,name,email,employment_type')
             ->whereBetween('work_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->whereIn('employment_type', ['full_time', 'part_time'])
@@ -683,7 +683,7 @@ class AdminController extends Controller
             return back()->with('error', 'Sau 22:00 bảng đăng ký tự động đóng, không thể mở lại.');
         }
 
-        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekStart = now()->addWeek()->startOfWeek(Carbon::MONDAY);
 
         $existingLock = WorkScheduleBoardLock::query()
             ->whereDate('week_start', $weekStart->toDateString())
@@ -722,10 +722,10 @@ class AdminController extends Controller
         ));
     }
 
-    // Admin bấm nút để duyệt và đóng toàn bộ bảng đăng ký giờ làm trong tuần hiện tại.
+    // Admin bấm nút để duyệt và đóng toàn bộ bảng đăng ký giờ làm trong tuần tới.
     public function closeWeeklyWorkScheduleBoard()
     {
-        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekStart = now()->addWeek()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
 
         $existingLock = WorkScheduleBoardLock::query()
@@ -772,12 +772,12 @@ class AdminController extends Controller
     public function approveWorkSchedule(Request $request, $id)
     {
         $registration = WorkScheduleRegistration::findOrFail($id);
-        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekStart = now()->addWeek()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
         $workDate = Carbon::parse($registration->work_date);
 
         if ($workDate->lt($weekStart->copy()->startOfDay()) || $workDate->gt($weekEnd->copy()->endOfDay())) {
-            $message = 'Chỉ được duyệt các ca nằm trong tuần hiện tại (7 ngày).';
+            $message = 'Chỉ được duyệt các ca nằm trong tuần tới (7 ngày).';
 
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
@@ -807,10 +807,20 @@ class AdminController extends Controller
         ]);
 
         if ($request->ajax() || $request->expectsJson()) {
+            $registration->load('staff:id,name,email,employment_type', 'approver:id,name');
             return response()->json([
                 'success' => true,
                 'message' => 'Đã duyệt đăng ký giờ làm.',
-                'registration_id' => $registration->id,
+                'registration' => [
+                    'id'              => $registration->id,
+                    'staff_name'      => $registration->staff->name ?? '',
+                    'staff_email'     => $registration->staff->email ?? '',
+                    'employment_type' => $registration->employment_type,
+                    'work_date'       => $registration->work_date->format('d/m/Y'),
+                    'shift_label'     => $registration->shift_label,
+                    'approver_name'   => $registration->approver->name ?? 'Admin',
+                    'approved_at'     => $registration->approved_at->format('d/m/Y H:i'),
+                ],
             ]);
         }
 

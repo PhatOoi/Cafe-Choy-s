@@ -338,7 +338,7 @@
 <div class="card" style="margin-bottom:22px;">
     <div class="card-header">
         <div>
-            <div class="card-header-title"><i class="fas fa-calendar-week" style="color:var(--primary);"></i> Bảng đăng ký giờ làm tuần hiện tại</div>
+            <div class="card-header-title"><i class="fas fa-calendar-week" style="color:var(--primary);"></i> Bảng đăng ký giờ làm tuần tới</div>
             <p class="schedule-table-note">Tuần: {{ $weekStart->format('d/m/Y') }} - {{ $weekEnd->format('d/m/Y') }}</p>
             <p class="schedule-table-note" style="color:#b45309;font-weight:600;">Bảng đăng ký tự động đóng sau 22:00 mỗi ngày.</p>
             @if($weekBoardLock)
@@ -686,13 +686,13 @@
         </div>
     @endif
 
-    <div class="card">
+    <div class="card" id="approved-schedules-card">
         <div class="card-header">
             <div>
                 <div class="card-header-title"><i class="fas fa-lock-open" style="color:#4338ca;"></i> Đăng ký đã duyệt</div>
             </div>
         </div>
-        <div class="card-body" style="padding:0;">
+        <div class="card-body" id="approved-schedules-card-body" style="padding:0;">
             @if($approvedSchedules->isNotEmpty())
                 <table class="admin-table">
                     <thead>
@@ -705,6 +705,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                    <tbody id="approved-schedules-tbody">
                         @foreach($approvedSchedules as $schedule)
                             <tr>
                                 <td>
@@ -777,7 +778,7 @@
                     </tbody>
                 </table>
             @else
-                <div class="schedule-empty">Chưa có ca nào ở trạng thái đã duyệt.</div>
+                <div class="schedule-empty" id="approved-empty-state">Chưa có ca nào ở trạng thái đã duyệt.</div>
             @endif
         </div>
     </div>
@@ -798,6 +799,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const pendingTable = document.getElementById('pending-schedules-table');
     const pendingTbody = document.getElementById('pending-schedules-tbody');
     const feedbackEl = document.getElementById('approve-feedback');
+    const approvedCardBody = document.getElementById('approved-schedules-card-body');
 
     const changeStat = function (element, delta) {
         if (!element) {
@@ -860,6 +862,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 changeStat(pendingCountEl, -1);
                 changeStat(approvedCountEl, 1);
                 showFeedback(payload.message || 'Đã duyệt đăng ký giờ làm.', false);
+
+                // Thêm row mới vào bảng "Đăng ký đã duyệt"
+                if (payload.registration && approvedCardBody) {
+                    const reg = payload.registration;
+                    const typeLabel = reg.employment_type === 'full_time' ? 'Full-time' : 'Part-time';
+
+                    // Xóa empty state nếu có
+                    const emptyState = document.getElementById('approved-empty-state');
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+
+                    // Tạo bảng nếu chưa có
+                    let approvedTbody = document.getElementById('approved-schedules-tbody');
+                    if (!approvedTbody) {
+                        const table = document.createElement('table');
+                        table.className = 'admin-table';
+                        table.innerHTML = '<thead><tr><th>Nhân viên</th><th>Ngày làm</th><th>Ca</th><th>Đã duyệt bởi</th><th>Thao tác</th></tr></thead><tbody id="approved-schedules-tbody"></tbody>';
+                        approvedCardBody.appendChild(table);
+                        approvedTbody = document.getElementById('approved-schedules-tbody');
+                    }
+
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td>
+                            <div class="staff-cell-name">${reg.staff_name}</div>
+                            <div class="staff-cell-sub">${typeLabel}</div>
+                        </td>
+                        <td>${reg.work_date}</td>
+                        <td>${reg.shift_label}</td>
+                        <td>
+                            <div class="staff-cell-sub">${reg.approver_name}</div>
+                            <div class="staff-cell-sub">${reg.approved_at}</div>
+                        </td>
+                        <td>—</td>
+                    `;
+                    approvedTbody.prepend(newRow);
+                }
 
                 if (pendingTbody && !pendingTbody.querySelector('tr')) {
                     if (pendingCard) {

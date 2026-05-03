@@ -686,7 +686,7 @@ class StaffController extends Controller
     public function workSchedules()
     {
         $currentStaff = Auth::user();
-        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekStart = now()->addWeek()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
         $isAutoClosedAtNight = now()->greaterThanOrEqualTo(now()->copy()->setTime(22, 0));
         $weekDays = collect(range(0, 6))->map(fn ($offset) => $weekStart->copy()->addDays($offset));
@@ -769,7 +769,7 @@ class StaffController extends Controller
         }
 
         $allowedSlots = $this->getScheduleSlotsByEmploymentType($staff->employment_type);
-        $weekStart = now()->startOfWeek(Carbon::MONDAY);
+        $weekStart = now()->addWeek()->startOfWeek(Carbon::MONDAY);
         $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
         $isAutoClosedAtNight = now()->greaterThanOrEqualTo(now()->copy()->setTime(22, 0));
 
@@ -779,7 +779,7 @@ class StaffController extends Controller
             ->exists();
 
         if ($isBoardLocked) {
-            return back()->with('error', 'Bảng đăng ký giờ làm tuần này đã được admin đóng. Bạn không thể đăng ký thêm.');
+            return back()->with('error', 'Bảng đăng ký giờ làm tuần tới đã được admin đóng. Bạn không thể đăng ký thêm.');
         }
 
         if ($isAutoClosedAtNight) {
@@ -793,11 +793,11 @@ class StaffController extends Controller
 
         $workDate = Carbon::parse($data['work_date'])->startOfDay();
 
-        // Chỉ cho đăng ký trong tuần hiện tại (thứ 2 -> chủ nhật) và không cho đăng ký ngày đã qua.
-        if ($workDate->lt(now()->startOfDay()) || $workDate->lt($weekStart->startOfDay()) || $workDate->gt($weekEnd->endOfDay())) {
+        // Chỉ cho đăng ký trong tuần tới (thứ 2 -> chủ nhật).
+        if ($workDate->lt($weekStart->startOfDay()) || $workDate->gt($weekEnd->endOfDay())) {
             return back()
                 ->withInput()
-                ->withErrors(['work_date' => 'Chỉ được đăng ký trong tuần hiện tại và từ ngày hôm nay trở đi.']);
+                ->withErrors(['work_date' => 'Chỉ được đăng ký trong tuần tới.']);
         }
 
         $selectedSlot = $allowedSlots[$data['slot_key']];
