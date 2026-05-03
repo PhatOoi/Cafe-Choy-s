@@ -274,7 +274,7 @@ class GeminiService
 
     private function buildSystemPrompt(): string
     {
-        ['menu' => $menuText, 'sizes' => $sizesText, 'extras' => $extrasText] = $this->buildDynamicContext();
+        ['menu' => $menuText, 'sizes' => $sizesText, 'extras' => $extrasText, 'bestsellers' => $bestsellerText] = $this->buildDynamicContext();
 
         return <<<PROMPT
 Ban la tro ly AI cua Choy's Cafe, ten la "Choy's AI". Ban CHI duoc tra loi cac cau hoi lien quan den quan ca phe Choy's Cafe.
@@ -324,6 +324,9 @@ KICH CO (lay tu database):
 
 TOPPING & TUY CHINH (lay tu database):
 {$extrasText}
+
+TOP 10 MON BAN CHAY NHAT (tinh theo so lan dat hang, cap nhat theo thoi gian thuc):
+{$bestsellerText}
 
 MENU HIEN TAI (lay tu database):
 {$menuText}
@@ -384,16 +387,35 @@ PROMPT;
                 }
             }
 
+            // Top 10 best-selling products based on order_items count (excluding cancelled orders)
+            $topSellers = DB::table('order_items')
+                ->join('products', 'order_items.product_id', '=', 'products.id')
+                ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                ->where('orders.status', '!=', 'cancelled')
+                ->select('products.name', DB::raw('SUM(order_items.quantity) as total_sold'))
+                ->groupBy('products.id', 'products.name')
+                ->orderByDesc('total_sold')
+                ->limit(10)
+                ->get();
+
+            $bestsellerLines = [];
+            foreach ($topSellers as $i => $item) {
+                $rank = $i + 1;
+                $bestsellerLines[] = "{$rank}. {$item->name} (da ban {$item->total_sold} lan)";
+            }
+
             return [
                 'menu' => implode("\n", $menuLines) ?: '(Chua co san pham)',
                 'sizes' => implode("\n", $sizeLines) ?: '(Chua co kich co)',
                 'extras' => implode("\n", $extraLines) ?: '(Chua co topping)',
+                'bestsellers' => implode("\n", $bestsellerLines) ?: '(Chua co du lieu ban hang)',
             ];
         } catch (\Exception $e) {
             return [
                 'menu' => '(Khong the tai menu luc nay)',
                 'sizes' => '(Khong the tai kich co luc nay)',
                 'extras' => '(Khong the tai topping luc nay)',
+                'bestsellers' => '(Khong the tai du lieu ban hang luc nay)',
             ];
         }
     }
