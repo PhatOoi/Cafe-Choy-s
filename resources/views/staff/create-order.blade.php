@@ -1263,7 +1263,7 @@ function renderCart() {
 }
 
 function buildStaffQrReference() {
-    return `STT${nextOrderNumber}-DH${nextOrderNumber}`;
+    return `#${String(nextOrderNumber).padStart(6, '0')}`;
 }
 
 function getCartTotal() {

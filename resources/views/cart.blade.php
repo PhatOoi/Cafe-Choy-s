@@ -336,7 +336,7 @@
                                                                 $qrName = 'TRAN QUOC LONG';
                                                                 $qrAccount = '1042131375';
                                                                 $qrAmount = $total ?? 0;
-                                                                $qrNote = 'DH' . (isset($cart) ? rand(1000,9999) : 'XXXX');
+                                                                $qrNote = '#' . str_pad((string) ($nextOrderNumber ?? 1), 6, '0', STR_PAD_LEFT);
                                                                 $qrApi = 'https://img.vietqr.io/image/' . 'vietcombank' . '-' . $qrAccount . '-print.png?amount=' . $qrAmount . '&addInfo=' . $qrNote . '&accountName=' . urlencode($qrName);
                                                             @endphp
                                                                 <img id="qr-code-image" src="{{ $qrApi }}" alt="QR code" style="width:220px;max-width:100%;border:2px solid #eee;padding:8px;background:#fff;">
