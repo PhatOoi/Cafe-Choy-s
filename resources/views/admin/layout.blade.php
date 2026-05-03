@@ -726,10 +726,6 @@
             <i class="fas fa-user-plus"></i> Thêm nhân viên
         </a>
 
-        <div class="nav-label">Hệ thống</div>
-        <a href="{{ route('staff.dashboard') }}" class="sidebar-link">
-            <i class="fas fa-exchange-alt"></i> Xem giao diện Staff
-        </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -802,7 +798,8 @@
 </button>
 
 <script src="{{ asset('js/jquery.min.js') }}"></script>
-<script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('js/popper.min.js') }}"></script>
+<script src="{{ asset('js/bootstrap.min.js') }}"></script>
 
 <script>
 (() => {
