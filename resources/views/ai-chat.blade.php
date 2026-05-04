@@ -531,7 +531,47 @@
     <script src="{{ asset('js/bootstrap.min.js') }}"></script>
     <script>
         const CSRF_TOKEN = '{{ csrf_token() }}';
+        const AI_DB_JSON_ENDPOINT = '{{ route("ai-chat.db-json") }}';
+        const AI_DB_LOCAL_KEY = 'choys_ai_db_snapshot_v1';
         let aiIsSending = false;
+
+        function loadAiSnapshotFromLocalStore() {
+            try {
+                const raw = localStorage.getItem(AI_DB_LOCAL_KEY);
+                if (!raw) return null;
+
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object') return null;
+                if (!parsed.snapshot || !parsed.signature) return null;
+
+                return parsed;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function syncAiSnapshotToLocalStore() {
+            return fetch(AI_DB_JSON_ENDPOINT, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data || data.ok !== true || !data.snapshot || !data.signature) {
+                    return null;
+                }
+
+                const payload = {
+                    snapshot: data.snapshot,
+                    signature: data.signature,
+                    updated_at: new Date().toISOString(),
+                };
+
+                localStorage.setItem(AI_DB_LOCAL_KEY, JSON.stringify(payload));
+                return payload;
+            })
+            .catch(() => null);
+        }
 
         function scrollToBottom() {
             const el = document.getElementById('aiChatMessages');
@@ -643,13 +683,20 @@
             appendMessage('user', escapeHtml(message));
             showTyping();
 
+            const localSnapshot = loadAiSnapshotFromLocalStore();
+            const bodyPayload = { message };
+            if (localSnapshot && localSnapshot.snapshot && localSnapshot.signature) {
+                bodyPayload.ai_snapshot = localSnapshot.snapshot;
+                bodyPayload.ai_snapshot_signature = localSnapshot.signature;
+            }
+
             fetch('{{ route("ai-chat.send") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': CSRF_TOKEN,
                 },
-                body: JSON.stringify({ message }),
+                body: JSON.stringify(bodyPayload),
             })
             .then(r => r.json())
             .then(data => {
@@ -700,6 +747,9 @@
             });
             document.addEventListener('click', function () { menu.classList.remove('active'); });
         }
+
+        // Đồng bộ DB.json về localStorage khi mở trang chat.
+        syncAiSnapshotToLocalStore();
     </script>
 </body>
 

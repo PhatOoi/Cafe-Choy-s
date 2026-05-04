@@ -4,16 +4,20 @@ namespace App\Http\Controllers;
 
 use App\AI\GeminiService;
 use App\Models\Product;
+use App\Support\AiMenuSnapshotService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class AiChatController extends Controller
 {
     private GeminiService $gemini;
+    private AiMenuSnapshotService $snapshotService;
 
-    public function __construct(GeminiService $gemini)
+    public function __construct(GeminiService $gemini, AiMenuSnapshotService $snapshotService)
     {
         $this->gemini = $gemini;
+        $this->snapshotService = $snapshotService;
     }
 
     // Hiển thị trang chat AI
@@ -22,16 +26,45 @@ class AiChatController extends Controller
         return view('ai-chat');
     }
 
+    // Trả về snapshot DB.json để frontend lưu vào localStorage.
+    public function dbJson()
+    {
+        $path = $this->snapshotService->absolutePath();
+        if (!File::exists($path)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'DB.json chua san sang.',
+            ], 503);
+        }
+
+        $decoded = json_decode((string) File::get($path), true);
+        if (!is_array($decoded)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'DB.json khong hop le.',
+            ], 500);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'snapshot' => $decoded,
+            'signature' => $this->signSnapshot($decoded),
+        ]);
+    }
+
     // Nhận tin nhắn và trả về phản hồi từ Gemini (trang ai-chat.blade.php)
     public function send(Request $request)
     {
         $request->validate([
             'message' => 'required|string|max:500',
+            'ai_snapshot' => 'nullable|array',
+            'ai_snapshot_signature' => 'nullable|string|max:255',
         ]);
 
         $message = trim($request->message);
         $history = session('ai_chat_history', []);
-        [$reply, $escalate] = $this->callGemini($message, $history, 'ai_chat_history');
+        $snapshotOverride = $this->extractSnapshotOverride($request);
+        [$reply, $escalate] = $this->callGemini($message, $history, 'ai_chat_history', $snapshotOverride);
         [$reply, $quickAction] = $this->resolveQuickActionFlow(
             $message,
             $history,
@@ -39,10 +72,6 @@ class AiChatController extends Controller
             'ai_chat_pending_quick_action'
         );
         $reply = $this->alignReplyWithQuickAction($reply, $quickAction);
-
-        if ($quickAction !== null && ($quickAction['intent'] ?? null) === 'not_found') {
-            $reply = "Xin loi anh/chi, hien mon nay chua co trong thuc don cua quan.\nBe gui menu hien co de anh/chi chon nhanh hon nha.";
-        }
 
         return response()->json([
             'reply'        => $reply,
@@ -56,11 +85,14 @@ class AiChatController extends Controller
     {
         $request->validate([
             'message' => 'required|string|max:500',
+            'ai_snapshot' => 'nullable|array',
+            'ai_snapshot_signature' => 'nullable|string|max:255',
         ]);
 
         $message = trim($request->message);
         $history = session('widget_ai_history', []);
-        [$reply, $escalate] = $this->callGemini($message, $history, 'widget_ai_history');
+        $snapshotOverride = $this->extractSnapshotOverride($request);
+        [$reply, $escalate] = $this->callGemini($message, $history, 'widget_ai_history', $snapshotOverride);
         [$reply, $quickAction] = $this->resolveQuickActionFlow(
             $message,
             $history,
@@ -68,10 +100,6 @@ class AiChatController extends Controller
             'widget_ai_pending_quick_action'
         );
         $reply = $this->alignReplyWithQuickAction($reply, $quickAction);
-
-        if ($quickAction !== null && ($quickAction['intent'] ?? null) === 'not_found') {
-            $reply = "Xin loi anh/chi, hien mon nay chua co trong thuc don cua quan.\nBe gui menu hien co de anh/chi chon nhanh hon nha.";
-        }
 
         return response()->json([
             'reply'        => $reply,
@@ -103,9 +131,9 @@ class AiChatController extends Controller
      *
      * @return array{0: string, 1: bool}  [replyText, escalate]
      */
-    private function callGemini(string $message, array $history, string $sessionKey): array
+    private function callGemini(string $message, array $history, string $sessionKey, ?array $snapshotOverride = null): array
     {
-        $raw = $this->gemini->chat($message, $history);
+        $raw = $this->gemini->chat($message, $history, $snapshotOverride);
 
         // Phát hiện yêu cầu chuyển sang nhân viên
         $escalate = str_contains($raw, '##ESCALATE##');
@@ -428,5 +456,37 @@ class AiChatController extends Controller
         $parts = array_filter($parts, static fn ($part) => strlen((string) $part) >= 2);
 
         return array_values(array_unique(array_map('strval', $parts)));
+    }
+
+    private function extractSnapshotOverride(Request $request): ?array
+    {
+        $snapshot = $request->input('ai_snapshot');
+        $signature = (string) $request->input('ai_snapshot_signature', '');
+
+        if (!is_array($snapshot) || $signature === '') {
+            return null;
+        }
+
+        // Tránh payload quá lớn từ client làm nặng request.
+        $encoded = json_encode($snapshot, JSON_UNESCAPED_SLASHES);
+        if ($encoded === false || strlen($encoded) > 1024 * 1024) {
+            return null;
+        }
+
+        if (!hash_equals($this->signSnapshot($snapshot), $signature)) {
+            return null;
+        }
+
+        return $snapshot;
+    }
+
+    private function signSnapshot(array $snapshot): string
+    {
+        $encoded = json_encode($snapshot, JSON_UNESCAPED_SLASHES);
+        if ($encoded === false) {
+            return '';
+        }
+
+        return hash_hmac('sha256', $encoded, (string) config('app.key'));
     }
 }

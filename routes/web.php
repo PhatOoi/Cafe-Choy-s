@@ -49,6 +49,7 @@ Route::get('/support', fn() => view('support'))->name('support');
 // Widget AI — public, không cần đăng nhập (dùng cho floating chatbot trên mọi trang).
 Route::post('/widget/ai-send',  [AiChatController::class, 'widgetSend'])->name('widget.ai-send');
 Route::post('/widget/ai-clear', [AiChatController::class, 'widgetClear'])->name('widget.ai-clear');
+Route::get('/widget/ai-db-json', [AiChatController::class, 'dbJson'])->name('widget.ai-db-json');
 
 // Route debug test DB — chỉ bật ở local, không dùng trên production.
 Route::get('/test-db', function () {
@@ -99,6 +100,7 @@ Route::middleware(['auth'])->group(function () {
 
     // AI Chat — Gemini-powered chatbot giới hạn phạm vi quán.
     Route::get('/ai-chat',        [AiChatController::class, 'index'])->name('ai-chat.index');
+    Route::get('/ai-chat/db-json',[AiChatController::class, 'dbJson'])->name('ai-chat.db-json');
     Route::post('/ai-chat/send',  [AiChatController::class, 'send'])->name('ai-chat.send');
     Route::post('/ai-chat/clear', [AiChatController::class, 'clear'])->name('ai-chat.clear');
 });

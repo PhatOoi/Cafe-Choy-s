@@ -552,6 +552,8 @@
 <script>
 (function () {
     var CSRF = '{{ csrf_token() }}';
+    var AI_DB_JSON_ENDPOINT = '{{ route("widget.ai-db-json") }}';
+    var AI_DB_LOCAL_KEY = 'choys_ai_db_snapshot_v1';
     var isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
     var mode = 'ai'; // 'ai' | 'human'
     var humanPollInterval = null;
@@ -559,6 +561,44 @@
     var isSending = false;
     var humanImageFile = null;
     var waitingEscalateChoice = false;
+
+    function loadAiSnapshotFromLocalStore() {
+        try {
+            var raw = localStorage.getItem(AI_DB_LOCAL_KEY);
+            if (!raw) return null;
+
+            var parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') return null;
+            if (!parsed.snapshot || !parsed.signature) return null;
+
+            return parsed;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function syncAiSnapshotToLocalStore() {
+        return fetch(AI_DB_JSON_ENDPOINT, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data || data.ok !== true || !data.snapshot || !data.signature) {
+                return null;
+            }
+
+            var payload = {
+                snapshot: data.snapshot,
+                signature: data.signature,
+                updated_at: new Date().toISOString(),
+            };
+
+            localStorage.setItem(AI_DB_LOCAL_KEY, JSON.stringify(payload));
+            return payload;
+        })
+        .catch(function () { return null; });
+    }
 
     window.aiBotToggle = function () {
         var panel = document.getElementById('aiBotPanel');
@@ -621,10 +661,17 @@
             hideEscalate();
 
             showTyping();
+            var localSnapshot = loadAiSnapshotFromLocalStore();
+            var requestBody = { message: msg };
+            if (localSnapshot && localSnapshot.snapshot && localSnapshot.signature) {
+                requestBody.ai_snapshot = localSnapshot.snapshot;
+                requestBody.ai_snapshot_signature = localSnapshot.signature;
+            }
+
             fetch('/widget/ai-send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-                body: JSON.stringify({ message: msg }),
+                body: JSON.stringify(requestBody),
             })
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -1144,5 +1191,8 @@
         initPos();
         snapToSide('right');
     }());
+
+    // Đồng bộ DB.json về localStorage khi widget được tải.
+    syncAiSnapshotToLocalStore();
 })();
 </script>
