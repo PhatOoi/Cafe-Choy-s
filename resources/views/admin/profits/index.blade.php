@@ -123,7 +123,6 @@
 <div class="page-header">
     <div>
         <div class="page-header-title">Bảng lợi nhuận theo tháng</div>
-        <div class="page-header-sub">Lợi nhuận = Doanh thu tháng - (nguyên liệu + điện + nước + dịch vụ + khấu hao + mặt bằng + lương nhân viên)</div>
     </div>
 </div>
 
