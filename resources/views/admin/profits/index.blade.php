@@ -150,9 +150,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">Tiền nguyên liệu</label>
-                        <input type="number" min="0" step="1000" name="ingredient_cost" class="form-control"
-                               value="{{ old('ingredient_cost', (int) $costs['ingredient_cost']) }}" required>
-                        @error('ingredient_cost')<div class="form-text form-text-error">{{ $message }}</div>@enderror
+                        <input type="text" class="form-control" value="{{ number_format($costs['ingredient_cost'], 0, ',', '.') }}đ" readonly>
                     </div>
 
                     <div class="form-group">
@@ -278,6 +276,28 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mini-title" style="margin-top:20px;">Tổng kết lợi nhuận năm {{ $yearSummary['year'] }}</div>
+            <div class="cost-list" style="margin-top:8px;">
+                <div class="cost-item">
+                    <div class="cost-item-label">Số tháng đã chốt</div>
+                    <div class="cost-item-value">{{ $yearSummary['months_count'] }}/12</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-item-label">Tổng doanh thu năm</div>
+                    <div class="cost-item-value">{{ number_format($yearSummary['total_revenue'], 0, ',', '.') }}đ</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-item-label">Tổng chi phí năm</div>
+                    <div class="cost-item-value">{{ number_format($yearSummary['total_expense'], 0, ',', '.') }}đ</div>
+                </div>
+                <div class="cost-item" style="background:#f8fafc;">
+                    <div class="cost-item-label">Lợi nhuận ròng năm</div>
+                    <div class="cost-item-value {{ $yearSummary['net_profit'] >= 0 ? 'profit-text-positive' : 'profit-text-negative' }}">
+                        {{ number_format($yearSummary['net_profit'], 0, ',', '.') }}đ
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -1146,6 +1146,7 @@ class AdminController extends Controller
         $monthInput = $request->input('month', now()->format('Y-m'));
         $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
+        $ingredientMonthlyCost = $this->getIngredientCostForMonth($monthStart, $monthEnd);
 
         $record = MonthlyProfit::query()
             ->whereDate('month_start', $monthStart->toDateString())
@@ -1158,7 +1159,7 @@ class AdminController extends Controller
         $salaryCost = (float) ($this->buildPayrollDataForMonth($monthStart, $monthEnd)['payrollStats']['gross_salary_total'] ?? 0);
 
         $costs = [
-            'ingredient_cost' => (float) ($record->ingredient_cost ?? 0),
+            'ingredient_cost' => $ingredientMonthlyCost,
             'electricity_cost' => (float) ($record->electricity_cost ?? 0),
             'water_cost' => (float) ($record->water_cost ?? 0),
             'service_cost' => (float) ($record->service_cost ?? 0),
@@ -1185,8 +1186,10 @@ class AdminController extends Controller
 
                 $salary = (float) ($this->buildPayrollDataForMonth($targetStart, $targetEnd)['payrollStats']['gross_salary_total'] ?? 0);
 
+                $ingredientCost = $this->getIngredientCostForMonth($targetStart, $targetEnd);
+
                 $expense =
-                    (float) ($saved->ingredient_cost ?? 0) +
+                    $ingredientCost +
                     (float) ($saved->electricity_cost ?? 0) +
                     (float) ($saved->water_cost ?? 0) +
                     (float) ($saved->service_cost ?? 0) +
@@ -1204,6 +1207,21 @@ class AdminController extends Controller
             })
             ->values();
 
+        $targetYearStart = $monthStart->copy()->startOfYear();
+        $targetYearEnd = $monthStart->copy()->endOfYear();
+        $yearRows = MonthlyProfit::query()
+            ->whereBetween('month_start', [$targetYearStart->toDateString(), $targetYearEnd->toDateString()])
+            ->orderBy('month_start')
+            ->get();
+
+        $yearSummary = [
+            'year' => (int) $monthStart->format('Y'),
+            'months_count' => $yearRows->count(),
+            'total_revenue' => (float) $yearRows->sum('monthly_revenue'),
+            'total_expense' => (float) $yearRows->sum('total_expense'),
+            'net_profit' => (float) $yearRows->sum('net_profit'),
+        ];
+
         return view('admin.profits.index', compact(
             'monthInput',
             'record',
@@ -1211,7 +1229,8 @@ class AdminController extends Controller
             'costs',
             'totalExpense',
             'netProfit',
-            'historyRows'
+            'historyRows',
+            'yearSummary'
         ));
     }
 
@@ -1220,7 +1239,6 @@ class AdminController extends Controller
     {
         $data = $request->validate([
             'month' => 'required|date_format:Y-m',
-            'ingredient_cost' => 'required|numeric|min:0',
             'electricity_cost' => 'required|numeric|min:0',
             'water_cost' => 'required|numeric|min:0',
             'service_cost' => 'required|numeric|min:0',
@@ -1228,17 +1246,36 @@ class AdminController extends Controller
             'rent_cost' => 'required|numeric|min:0',
         ]);
 
-        $monthStart = Carbon::createFromFormat('Y-m', $data['month'])->startOfMonth()->toDateString();
+        $monthStart = Carbon::createFromFormat('Y-m', $data['month'])->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+        $monthlyRevenue = (float) $this->paidRevenueOrders()
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->sum('final_price');
+        $salaryCost = (float) ($this->buildPayrollDataForMonth($monthStart, $monthEnd)['payrollStats']['gross_salary_total'] ?? 0);
+        $ingredientCost = $this->getIngredientCostForMonth($monthStart, $monthEnd);
+        $totalExpense =
+            $ingredientCost +
+            (float) $data['electricity_cost'] +
+            (float) $data['water_cost'] +
+            (float) $data['service_cost'] +
+            (float) $data['depreciation_cost'] +
+            (float) $data['rent_cost'] +
+            $salaryCost;
+        $netProfit = $monthlyRevenue - $totalExpense;
 
         MonthlyProfit::query()->updateOrCreate(
-            ['month_start' => $monthStart],
+            ['month_start' => $monthStart->toDateString()],
             [
-                'ingredient_cost' => $data['ingredient_cost'],
+                'ingredient_cost' => $ingredientCost,
                 'electricity_cost' => $data['electricity_cost'],
                 'water_cost' => $data['water_cost'],
                 'service_cost' => $data['service_cost'],
                 'depreciation_cost' => $data['depreciation_cost'],
                 'rent_cost' => $data['rent_cost'],
+                'salary_cost' => $salaryCost,
+                'monthly_revenue' => $monthlyRevenue,
+                'total_expense' => $totalExpense,
+                'net_profit' => $netProfit,
             ]
         );
 
@@ -1422,6 +1459,15 @@ class AdminController extends Controller
             'payrollRows' => $payrollRows,
             'payrollStats' => $payrollStats,
         ];
+    }
+
+    // Chi phí nguyên liệu theo tháng = tổng tiền nhập nguyên liệu có received_date trong tháng.
+    private function getIngredientCostForMonth(Carbon $monthStart, Carbon $monthEnd): float
+    {
+        return (float) Ingredient::query()
+            ->whereBetween('received_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, stock_quantity * unit_price)), 0) as total_monthly_ingredient_cost')
+            ->value('total_monthly_ingredient_cost');
     }
 
     // Tính tổng phút làm việc của một ca, có bù 1 phút cho slot 24h được lưu thành 23:59.

@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             OrderSeeder::class,
             InventorySeeder::class,
             IngredientSeeder::class,
-            PayrollAprilSampleSeeder::class,
+            PayrollCurrentMonthSampleSeeder::class,
         ]);
     }
 }
