@@ -51,11 +51,17 @@
                     @if(!(auth()->check() && auth()->user()->isStaff()))
                         <li class="nav-item"><a href="{{ url('/menu') }}" class="nav-link">Menu</a></li>
                     @endif
+                    @auth
+                        @if(!auth()->user()->isStaff())
+                            <li class="nav-item"><a href="{{ route('orders.history') }}" class="nav-link">Lịch sử đơn hàng</a></li>
+                        @endif
+                    @endauth
                     @guest
                         <li class="nav-item">
                             <a href="{{ url('/login') }}" class="nav-link">Đăng nhập</a>
                         </li>
                     @endguest
+                    <li class="nav-item"><a href="{{ route('support') }}" class="nav-link">Hỗ trợ</a></li>
                     <!-- SPACER -->
                     <li class="nav-item flex-spacer"></li>
 
@@ -71,24 +77,25 @@
 
                     <!-- USER DROPDOWN -->
                     @if(Auth::check())
+                                    @php
+                                        $menuUserAvatar = Auth::user()->avatar_url
+                                            ? asset('storage/' . Auth::user()->avatar_url)
+                                            : asset('images/user.jpg');
+                                    @endphp
                                     <li class="nav-item user-dropdown-wrapper">
                                         <div class="user-dropdown-container">
 
-                                            <button class="user-avatar-btn" type="button" id="userMenuBtn">
-                                                @if(Auth::user()->avatar_url)
-                                                    <img src="{{ asset('storage/' . Auth::user()->avatar_url) }}" class="user-avatar">
-                                                @else
-                                                    <img img src="{{ asset('images/user.jpg') }}" 
-                                                        class="user-avatar">
-                                                @endif
+                                            <button class="user-avatar-btn" type="button" id="userMenuBtn" aria-label="Mở menu người dùng">
+                                                <img src="{{ $menuUserAvatar }}" alt="{{ Auth::user()->name }}"
+                                                    class="user-avatar"
+                                                    onerror="this.onerror=null;this.src='{{ asset('images/user.jpg') }}';">
                                             </button>
 
                                             <div class="user-dropdown-menu" id="userDropdownMenu">
                                                 <div class="dropdown-header-info">
-                                                    <img src="{{ Auth::user()->avatar_url
-                                                        ? asset('storage/' . Auth::user()->avatar_url)
-                                                        : asset('images/user.jpg') }}"
-                                                        class="dropdown-avatar">
+                                                    <img src="{{ $menuUserAvatar }}" alt="{{ Auth::user()->name }}"
+                                                        class="dropdown-avatar"
+                                                        onerror="this.onerror=null;this.src='{{ asset('images/user.jpg') }}';">
 
                                                     <div class="user-details">
                                                         <p class="user-name">{{ Auth::user()->name }}</p>
@@ -149,10 +156,6 @@
 
 {{-- ===== KẾT QUẢ TÌM KIẾM ===== --}}
 <section class="menu-section">
-    <h2 class="menu-category-title search-result-title">
-        Kết quả cho "{{ $q }}"
-    </h2>
-
     @forelse($categories as $category)
         <div class="menu-category-block" id="search-cat-{{ \Illuminate\Support\Str::slug($category->name) }}">
             <h2 class="menu-category-title" style="
@@ -545,17 +548,56 @@
         }
 
         .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #ff6b00;
-    transition: 0.3s;
-}
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 2px solid rgba(201, 169, 110, 0.42);
+            background: #f6ede3;
+            box-shadow: 0 8px 20px rgba(26, 17, 13, 0.14);
+            display: block;
+            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+        }
 
-.user-avatar:hover {
-    transform: scale(1.1);
-}
+        .user-avatar-btn {
+            width: 48px;
+            height: 48px;
+            margin-left: 8px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            appearance: none;
+            border-radius: 999px;
+            overflow: visible;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .user-avatar-btn:hover .user-avatar,
+        .user-avatar-btn:focus-visible .user-avatar {
+            transform: translateY(-1px) scale(1.03);
+            border-color: rgba(201, 169, 110, 0.82);
+            box-shadow: 0 12px 24px rgba(26, 17, 13, 0.18);
+        }
+
+        .user-avatar-btn:focus-visible {
+            outline: none;
+        }
+
+        .dropdown-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 2px solid rgba(201, 169, 110, 0.42);
+            background: #f6ede3;
+            box-shadow: 0 10px 24px rgba(26, 17, 13, 0.12);
+            display: block;
+            flex-shrink: 0;
+        }
 
 /* DROPDOWN */
 .user-dropdown {
