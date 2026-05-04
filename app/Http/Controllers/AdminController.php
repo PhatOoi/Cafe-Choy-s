@@ -280,11 +280,18 @@ class AdminController extends Controller
 
     public function destroyProduct($id)
     {
-        // Xóa sản phẩm khỏi hệ thống.
         $product = Product::findOrFail($id);
-        $product->delete();
 
-        return back()->with('success', 'Đã xóa sản phẩm!');
+        DB::transaction(function () use ($product) {
+            // Xóa dữ liệu phụ thuộc để tránh lỗi FK khi xóa sản phẩm.
+            DB::table('cart_items')->where('product_id', $product->id)->delete();
+            DB::table('order_items')->where('product_id', $product->id)->delete();
+
+            // product_extras đã khai báo cascadeOnDelete theo product_id.
+            $product->delete();
+        });
+
+        return back()->with('success', 'Đã xóa sản phẩm khỏi hệ thống!');
     }
 
     // ─── Quản lý danh mục ────────────────────────────────────────────────────
