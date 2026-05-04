@@ -182,6 +182,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     // Kho nguyên liệu
     Route::get('/ingredients', [AdminController::class, 'ingredients'])->name('ingredients');
     Route::post('/ingredients', [AdminController::class, 'storeIngredient'])->name('ingredients.store');
+    Route::post('/ingredients/{id}/withdraw', [AdminController::class, 'withdrawIngredient'])->name('ingredients.withdraw');
     Route::put('/ingredients/{id}', [AdminController::class, 'updateIngredient'])->name('ingredients.update');
     Route::delete('/ingredients/{id}', [AdminController::class, 'destroyIngredient'])->name('ingredients.destroy');
 

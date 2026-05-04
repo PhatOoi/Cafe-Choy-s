@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\Overtime;
 use App\Models\Ingredient;
+use App\Models\IngredientWithdrawal;
 use App\Models\MonthlyProfit;
 use App\Models\UserRole;
 use App\Models\WorkScheduleBoardLock;
@@ -341,19 +342,33 @@ class AdminController extends Controller
 
     // ─── Kho nguyên liệu ────────────────────────────────────────────────────
 
-    public function ingredients()
+    public function ingredients(Request $request)
     {
-        $ingredients = Ingredient::query()
-            ->orderBy('name')
+        $filterMonth = $request->input('filter_month'); // format: "2026-05"
+
+        $allIngredients = Ingredient::query()->orderBy('name')->get();
+        $totalInventoryValue = $allIngredients->sum('purchase_amount');
+
+        // Danh sách nhập kho — lọc theo tháng nếu có
+        $ingredientsQuery = Ingredient::query()->orderByDesc('received_date')->orderBy('name');
+        if ($filterMonth) {
+            [$y, $m] = explode('-', $filterMonth);
+            $ingredientsQuery->whereYear('received_date', $y)->whereMonth('received_date', $m);
+        }
+        $ingredients = $ingredientsQuery->get();
+
+        $withdrawalLogs = IngredientWithdrawal::with('creator')
+            ->orderByDesc('created_at')
+            ->limit(100)
             ->get();
 
-        return view('admin.ingredients.index', compact('ingredients'));
+        return view('admin.ingredients.index', compact('ingredients', 'totalInventoryValue', 'withdrawalLogs', 'filterMonth'));
     }
 
     public function storeIngredient(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:120|unique:ingredients,name',
+            'name' => 'required|string|max:120',
             'brand' => 'required|string|max:120',
             'unit' => 'required|string|max:30',
             'stock_quantity' => 'required|numeric|min:0',
@@ -363,9 +378,12 @@ class AdminController extends Controller
             'expiry_date' => 'required|date|after_or_equal:manufacture_date',
             'lot_number' => 'required|string|max:80|unique:ingredients,lot_number',
             'note' => 'nullable|string|max:255',
+        ], [
+            'lot_number.unique' => 'Số lô "' . $request->input('lot_number') . '" đã tồn tại trong kho. Vui lòng nhập số lô khác.',
         ]);
         $data['minimum_quantity'] = 0;
-        $data['total_amount'] = $data['stock_quantity'] * $data['unit_price'];
+        $data['total_amount']    = $data['stock_quantity'] * $data['unit_price'];
+        $data['purchase_amount'] = $data['total_amount']; // cố định, không đổi khi xuất kho
 
         Ingredient::create($data);
 
@@ -398,6 +416,48 @@ class AdminController extends Controller
         $ingredient->delete();
 
         return back()->with('success', 'Đã xóa nguyên liệu khỏi kho.');
+    }
+
+    public function withdrawIngredient(Request $request, $id)
+    {
+        $ingredient = Ingredient::findOrFail($id);
+
+        $data = $request->validate([
+            'withdraw_quantity' => [
+                'required',
+                'numeric',
+                'min:0.01',
+                function ($attribute, $value, $fail) use ($ingredient) {
+                    if ($value > $ingredient->stock_quantity) {
+                        $fail('Số lượng lấy ra (' . $value . ') vượt quá tồn kho (' . $ingredient->stock_quantity . ' ' . $ingredient->unit . ').');
+                    }
+                },
+            ],
+        ]);
+
+        $newQty = $ingredient->stock_quantity - $data['withdraw_quantity'];
+        $ingredient->update([
+            'stock_quantity' => $newQty,
+            'total_amount'   => $newQty * $ingredient->unit_price,
+        ]);
+
+        IngredientWithdrawal::create([
+            'ingredient_id'   => $ingredient->id,
+            'ingredient_name' => $ingredient->name,
+            'quantity'        => $data['withdraw_quantity'],
+            'unit'            => $ingredient->unit,
+            'stock_before'    => $ingredient->stock_quantity + $data['withdraw_quantity'],
+            'stock_after'     => $newQty,
+            'note'            => $request->input('note'),
+            'created_by'      => auth()->id(),
+        ]);
+
+        $msg = 'Đã lấy ' . rtrim(rtrim(number_format($data['withdraw_quantity'], 2, ',', '.'), '0'), ',')
+             . ' ' . $ingredient->unit . ' — ' . $ingredient->name
+             . '. Còn lại: ' . rtrim(rtrim(number_format($newQty, 2, ',', '.'), '0'), ',')
+             . ' ' . $ingredient->unit . '.';
+
+        return back()->with('withdraw_success', $msg);
     }
 
     // ─── Quản lý nhân viên & người dùng ──────────────────────────────────────

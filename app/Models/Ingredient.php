@@ -24,6 +24,7 @@ class Ingredient extends Model
         'note',
         'unit_price',
         'total_amount',
+        'purchase_amount',
     ];
 
     protected $casts = [
@@ -33,7 +34,8 @@ class Ingredient extends Model
         'manufacture_date' => 'date',
         'expiry_date' => 'date',
         'is_active' => 'boolean',
-        'unit_price' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'unit_price'       => 'decimal:2',
+        'total_amount'     => 'decimal:2',
+        'purchase_amount'  => 'decimal:2',
     ];
 }
