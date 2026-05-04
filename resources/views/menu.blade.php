@@ -216,6 +216,94 @@
 
     {{-- ===== GRID SẢN PHẨM THEO PHÂN LOẠI ===== --}}
     <section class="menu-section">
+        @if(($topProducts ?? collect())->isNotEmpty())
+            <div class="menu-category-block" id="menu-cat-best-seller">
+                <h2 class="menu-category-title" style="
+                            border-bottom: 2px solid #c8b8a8;
+                            margin-top: 10px;
+                            margin-bottom: 24px;
+                            padding-bottom: 8px;
+                            color: var(--category-title-color, #1a110d);
+                            text-align: left;
+                        ">
+                    Best Seller
+                </h2>
+
+                <div class="menu-grid">
+                    @foreach($topProducts as $product)
+                        @php
+                            $isUnavailable = $product->status !== 'available';
+                            $imageUrl = str_starts_with((string) $product->image_url, 'http')
+                                ? $product->image_url
+                                : asset('images/' . $product->image_url);
+                        @endphp
+
+                        <div class="product-card{{ $isUnavailable ? ' product-card--unavailable' : '' }}">
+                            <div class="card-image-wrap">
+                                <img src="{{ $imageUrl }}"
+                                    onerror="this.src='https://via.placeholder.com/400x280/c8b8a8/ffffff?text=Coffee'"
+                                    alt="{{ $product->name }}" class="card-img">
+                                <div class="card-shine"></div>
+                                <span class="card-badge badge-hot">Top {{ $loop->iteration }}</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-cat">{{ $product->category_name }}</p>
+                                <h3 class="card-name">{{ $product->name }}</h3>
+                                @if($product->description)
+                                    <p class="card-desc">{{ Str::limit($product->description, 65) }}</p>
+                                @endif
+                                <p class="card-cat" style="margin-top:8px;">Đã bán {{ number_format($product->total_sold) }} ly</p>
+
+                                <div class="card-footer">
+                                    <span class="card-price">
+                                        {{ number_format($product->price) }}<span class="price-unit">đ</span>
+                                    </span>
+
+                                    @auth
+                                        @if($isUnavailable)
+                                            <button class="btn-add-cart btn-unavailable" disabled>
+                                                <i class="fas fa-lock" style="font-size:12px;"></i>
+                                                <span>Đang cập nhật</span>
+                                            </button>
+                                        @else
+                                            <button class="btn-add-cart" onclick='openModal(
+                                                            {{ $product->id }},
+                                                            @json($product->name),
+                                                            {{ $product->price }},
+                                                            @json($product->category_name),
+                                                            @json($imageUrl),
+                                                            @json(\Illuminate\Support\Str::slug($product->category_name)),
+                                                            @json($product->description ?? "")
+                                                        )'>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="9" cy="21" r="1" />
+                                                    <circle cx="20" cy="21" r="1" />
+                                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                                                </svg>
+                                                <span>Thêm vào giỏ</span>
+                                            </button>
+                                        @endif
+                                    @else
+                                        @if($isUnavailable)
+                                            <button class="btn-add-cart btn-unavailable" disabled>
+                                                <i class="fas fa-lock" style="font-size:12px;"></i>
+                                                <span>Đang cập nhật</span>
+                                            </button>
+                                        @else
+                                            <button class="btn-add-cart" onclick="redirectLogin()">
+                                                <span>Đăng nhập để mua</span>
+                                            </button>
+                                        @endif
+                                    @endauth
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         @foreach($categories as $category)
             <div class="menu-category-block" id="menu-cat-{{ \Illuminate\Support\Str::slug($category->name) }}">
                 <h2 class="menu-category-title" style="

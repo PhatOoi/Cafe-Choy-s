@@ -101,8 +101,8 @@ class AdminController extends Controller
             'total' => $rawRevenue[now()->subDays($i)->toDateString()] ?? 0,
         ]);
 
-        // Top 10 sản phẩm bán chạy nhất toàn thời gian (cả đơn staff và khách web app).
-        $topProducts = $this->getTop10Products();
+        // Top 6 sản phẩm bán chạy nhất toàn thời gian (cả đơn staff và khách web app).
+        $topProducts = $this->getTopProducts();
 
         // 10 đơn gần nhất để admin theo dõi nhanh hoạt động hệ thống.
         $recentOrders = Order::with(['user', 'payment'])
@@ -130,14 +130,14 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('stats', 'revenueChart', 'topProducts', 'recentOrders', 'todaySchedule', 'thisWeekSchedule', 'thisWeekStart', 'thisWeekEnd'));
     }
 
-    // Trả về top 10 sản phẩm bán chạy dạng JSON cho AJAX auto-refresh dashboard.
+    // Trả về top 6 sản phẩm bán chạy dạng JSON cho AJAX auto-refresh dashboard.
     public function topProductsJson(): \Illuminate\Http\JsonResponse
     {
-        return response()->json($this->getTop10Products());
+        return response()->json($this->getTopProducts());
     }
 
-    // Query dùng chung để lấy top 10 sản phẩm bán chạy từ tất cả đơn đã thanh toán.
-    private function getTop10Products(): \Illuminate\Support\Collection
+    // Query dùng chung để lấy top 6 sản phẩm bán chạy từ tất cả đơn đã thanh toán.
+    private function getTopProducts(): \Illuminate\Support\Collection
     {
         return DB::table('order_items')
             ->join('products', 'order_items.product_id', '=', 'products.id')
@@ -147,7 +147,7 @@ class AdminController extends Controller
             ->selectRaw('products.id, products.name, SUM(order_items.quantity) as total_sold, SUM(order_items.quantity * order_items.unit_price) as revenue')
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_sold')
-            ->limit(10)
+            ->limit(6)
             ->get();
     }
 

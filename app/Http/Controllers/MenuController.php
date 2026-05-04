@@ -7,6 +7,7 @@ use App\Models\Size;
 use App\Models\Extra;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 // Controller hiển thị menu sản phẩm cho khách hàng.
 class MenuController extends Controller
@@ -31,7 +32,28 @@ class MenuController extends Controller
         $ices = Extra::ice()->get();
         $sizes = Size::all();
 
+        // Lấy 6 món bestseller theo đúng logic top của admin: chỉ tính đơn đã thanh toán.
+        $topProducts = DB::table('order_items')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('payments', 'payments.order_id', '=', 'orders.id')
+            ->where('payments.status', 'paid')
+            ->selectRaw('products.id, products.name, products.description, products.price, products.image_url, products.status, categories.name as category_name, SUM(order_items.quantity) as total_sold')
+            ->groupBy(
+                'products.id',
+                'products.name',
+                'products.description',
+                'products.price',
+                'products.image_url',
+                'products.status',
+                'categories.name'
+            )
+            ->orderByDesc('total_sold')
+            ->limit(6)
+            ->get();
+
         // Trả dữ liệu sang view menu để render danh mục và modal đặt món.
-        return view('menu', compact('categories', 'toppings', 'sugars', 'ices', 'sizes'));
+        return view('menu', compact('categories', 'toppings', 'sugars', 'ices', 'sizes', 'topProducts'));
     }
 }
