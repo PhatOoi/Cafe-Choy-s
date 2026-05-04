@@ -1270,6 +1270,17 @@ function getCartTotal() {
     return Object.keys(cart).reduce((sum, id) => sum + cart[id].price * cart[id].quantity, 0);
 }
 
+function getEffectiveCartTotal() {
+    const base = getCartTotal();
+    const usePoints = document.getElementById('usePointsHidden').value === '1';
+
+    if (linkedCustomer && usePoints && currentPointsDiscount > 0) {
+        return Math.max(0, base - currentPointsDiscount);
+    }
+
+    return base;
+}
+
 function ensureStaffQrReference() {
     if (!staffQrReference) {
         staffQrReference = buildStaffQrReference();
@@ -1285,7 +1296,7 @@ function resetStaffQrReference() {
 }
 
 function openStaffQrModal() {
-    const total = getCartTotal();
+    const total = getEffectiveCartTotal();
     const reference = ensureStaffQrReference();
 
     document.getElementById('staffQrBankName').textContent = staffBankInfo.bankName;
@@ -1333,7 +1344,7 @@ function resetStaffBillCode() {
 function renderStaffCashBill() {
     const now = new Date();
     const code = ensureStaffBillCode();
-    const total = getCartTotal();
+    const total = getEffectiveCartTotal();
     const itemsContainer = document.getElementById('staffBillItems');
 
     document.getElementById('staffBillDate').textContent = now.toLocaleDateString('vi-VN');

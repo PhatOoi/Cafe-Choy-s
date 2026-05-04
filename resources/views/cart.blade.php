@@ -504,9 +504,9 @@
                                         var discountAmt = document.getElementById('points-discount-amount');
                                         if (discountRow) discountRow.style.display = checked ? 'block' : 'none';
                                         if (discountAmt) discountAmt.textContent = discount.toLocaleString('vi-VN');
-                                        // Cập nhật tổng tiền hiển thị
-                                        var cartTotalEl = document.getElementById('cart-total');
-                                        if (cartTotalEl) cartTotalEl.textContent = finalTotal.toLocaleString('vi-VN') + ' đ';
+
+                                        // Đồng bộ lại toàn bộ summary (bill + QR amount + QR image) theo số tiền đã giảm.
+                                        syncPaymentSummary(window.currentCartState || {}, base);
                                     }
 
                                     function getEffectiveTotal() {
@@ -1108,6 +1108,9 @@
                                             showToast('Giỏ hàng đang trống.');
                                             return;
                                         }
+
+                                        // Đảm bảo modal QR luôn hiển thị số tiền mới nhất sau khi áp điểm.
+                                        syncPaymentSummary(window.currentCartState || {}, window.currentCartTotal || 0);
 
                                         $('#paymentMethodModal').modal('hide');
                                         setTimeout(function() { $('#qrPaymentModal').modal('show'); }, 400);
