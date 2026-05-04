@@ -76,9 +76,24 @@
 <div class="page-header">
     <div>
         <div class="page-header-title">Bảng lương nhân viên</div>
-        <div class="page-header-sub">Tổng hợp lương tạm tính từ các ca đã duyệt trong tháng.</div>
+        <div class="page-header-sub">Cập nhật hàng ngày theo ca đã duyệt. Cuối tháng bấm Chốt lương để gửi email cho từng nhân viên.</div>
     </div>
+    @if($canFinalize)
+    <form method="POST" action="{{ route('admin.payroll.finalize') }}" onsubmit="return confirm('Chốt lương và gửi email bảng lương tháng {{ $monthStart->format('m/Y') }} đến toàn bộ nhân viên?')">
+        @csrf
+        <input type="hidden" name="month" value="{{ $monthInput }}">
+        <button type="submit" class="btn-primary-admin">
+            <i class="fas fa-paper-plane"></i> Chốt lương &amp; Gửi email
+        </button>
+    </form>
+    @endif
 </div>
+
+@if(session('success'))
+<div class="alert alert-success" id="payroll-success-alert">
+    <i class="fas fa-check-circle"></i> {{ session('success') }}
+</div>
+@endif
 
 <form method="GET" action="{{ route('admin.payroll') }}" class="payroll-filter-bar">
     <div class="payroll-filter-group">
@@ -98,15 +113,7 @@
     <button type="submit" class="btn-primary-admin"><i class="fas fa-filter"></i> Lọc dữ liệu</button>
 </form>
 
-@if(!$isPayrollVisible)
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i>
-        Bảng lương tháng {{ $monthStart->format('m/Y') }} sẽ hiển thị sau khi kết thúc tháng (sau {{ $monthEnd->format('d/m/Y') }} 23:59).
-    </div>
-@endif
-
-@if($isPayrollVisible)
-    <div class="stat-grid">
+<div class="stat-grid">
         <div class="stat-card">
             <div class="stat-icon si-gold"><i class="fas fa-check-circle"></i></div>
             <div>
@@ -238,5 +245,4 @@
             @endif
         </div>
     </div>
-@endif
 @endsection

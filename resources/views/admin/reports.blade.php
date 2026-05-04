@@ -75,14 +75,7 @@
     <div>
         <div class="page-header-title">Báo cáo & Thống kê</div>
     </div>
-    <div class="period-tabs">
-        <a href="{{ route('admin.reports', ['period'=>'day']) }}"
-           class="period-tab {{ $period === 'day' ? 'active' : '' }}">Theo ngày</a>
-        <a href="{{ route('admin.reports', ['period'=>'month']) }}"
-           class="period-tab {{ $period === 'month' ? 'active' : '' }}">12 Tháng</a>
-        <a href="{{ route('admin.reports', ['period'=>'year']) }}"
-           class="period-tab {{ $period === 'year' ? 'active' : '' }}">Theo Năm</a>
-    </div>
+
 </div>
 
 {{-- Summary --}}

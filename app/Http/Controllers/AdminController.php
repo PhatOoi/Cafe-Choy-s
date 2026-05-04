@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
@@ -736,33 +737,76 @@ class AdminController extends Controller
         $monthInput = $request->input('month', now()->format('Y-m'));
         $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
-        $isPayrollVisible = now()->greaterThan($monthEnd->copy()->endOfDay());
 
-        $payrollRows = collect();
-        $payrollStats = [
-            'completed_shift_count' => 0,
-            'gross_salary_total' => 0,
-        ];
+        // Có thể chốt lương từ ngày cuối tháng trở đi.
+        $canFinalize = now()->gte($monthEnd->copy()->startOfDay());
 
-        if ($isPayrollVisible) {
-            $payrollData = $this->buildPayrollDataForMonth(
-                $monthStart,
-                $monthEnd,
-                $request->input('employment_type')
-            );
+        $payrollData = $this->buildPayrollDataForMonth(
+            $monthStart,
+            $monthEnd,
+            $request->input('employment_type')
+        );
 
-            $payrollRows = $payrollData['payrollRows'];
-            $payrollStats = $payrollData['payrollStats'];
-        }
+        $payrollRows  = $payrollData['payrollRows'];
+        $payrollStats = $payrollData['payrollStats'];
 
         return view('admin.payroll.index', compact(
             'monthInput',
             'monthStart',
             'monthEnd',
-            'isPayrollVisible',
+            'canFinalize',
             'payrollRows',
             'payrollStats'
         ));
+    }
+
+    // Admin chốt lương cuối tháng và gửi email bảng lương đến từng nhân viên.
+    public function finalizePayroll(Request $request)
+    {
+        $monthInput = $request->input('month', now()->format('Y-m'));
+        $monthStart = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
+        $monthEnd   = $monthStart->copy()->endOfMonth();
+
+        $payrollData = $this->buildPayrollDataForMonth($monthStart, $monthEnd);
+        $payrollRows = $payrollData['payrollRows'];
+        $monthLabel  = $monthStart->format('m/Y');
+
+        $sentCount = 0;
+        foreach ($payrollRows as $row) {
+            $staff = $row['staff'];
+            if (!$staff || !$staff->email) {
+                continue;
+            }
+
+            $grossFormatted   = number_format($row['gross_salary'], 0, ',', '.') . 'đ';
+            $hourlyFormatted  = number_format($row['hourly_rate'], 0, ',', '.') . 'đ';
+            $otRateFormatted  = number_format($row['overtime_rate'], 0, ',', '.') . 'đ';
+            $totalHours       = $row['total_hours'];
+            $overtimeHours    = $row['overtime_hours'];
+            $shiftCount       = $row['shift_count'];
+
+            $body = "Kính gửi {$staff->name},\n\n"
+                . "Bảng lương tháng {$monthLabel} của bạn đã được chốt:\n\n"
+                . "  - Số ca đã làm  : {$shiftCount} ca\n"
+                . "  - Tổng giờ công : {$totalHours} giờ\n"
+                . "  - Đơn giá/giờ   : {$hourlyFormatted}\n"
+                . "  - Giờ tăng ca   : {$overtimeHours} giờ\n"
+                . "  - Đơn giá TC    : {$otRateFormatted}\n"
+                . "  ─────────────────────────────\n"
+                . "  - Tổng lương    : {$grossFormatted}\n\n"
+                . "Mọi thắc mắc vui lòng liên hệ quản lý.\n\n"
+                . "Trân trọng,\nQuản lý Choy's Cafe";
+
+            Mail::raw($body, function ($message) use ($staff, $monthLabel) {
+                $message->to($staff->email, $staff->name)
+                        ->subject("Bảng lương tháng {$monthLabel} - Choy's Cafe");
+            });
+
+            $sentCount++;
+        }
+
+        return redirect()->route('admin.payroll', ['month' => $monthInput])
+            ->with('success', "Đã chốt lương và gửi email bảng lương tháng {$monthLabel} đến {$sentCount} nhân viên.");
     }
 
     // Admin bấm nút để duyệt và đóng toàn bộ bảng đăng ký giờ làm trong tuần tới.
@@ -1043,7 +1087,7 @@ class AdminController extends Controller
     public function reports(Request $request)
     {
         // period điều khiển cách gom dữ liệu doanh thu theo ngày/tháng/năm.
-        $period = $request->input('period', 'month'); // day | month | year
+        $period = $request->input('period', 'year'); // day | month | year
 
         // Chọn nguồn dữ liệu biểu đồ phù hợp với period đang xem.
         $revenueData = match ($period) {

@@ -311,7 +311,7 @@
 
         .global-back-btn {
             position: fixed;
-            left: 22px;
+            right: 22px;
             bottom: 22px;
             width: 46px;
             height: 46px;
@@ -341,7 +341,7 @@
             .staff-sidebar.open { transform: translateX(0); }
             .staff-main { margin-left: 0; }
             .sidebar-toggle { display: block; }
-            .global-back-btn { left: 14px; bottom: 14px; width: 42px; height: 42px; }
+            .global-back-btn { right: 14px; bottom: 14px; width: 42px; height: 42px; }
         }
     </style>
 

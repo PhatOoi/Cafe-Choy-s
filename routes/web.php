@@ -149,7 +149,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
     Route::get('/dashboard/top-products', [AdminController::class, 'topProductsJson'])->name('dashboard.top-products');
     Route::get('/reports',   [AdminController::class, 'reports'])->name('reports');
     Route::get('/work-schedules', [AdminController::class, 'workSchedules'])->name('work-schedules.index');
-    Route::get('/payroll',   [AdminController::class, 'payroll'])->name('payroll');
+    Route::get('/payroll',          [AdminController::class, 'payroll'])->name('payroll');
+    Route::post('/payroll/finalize', [AdminController::class, 'finalizePayroll'])->name('payroll.finalize');
     Route::get('/profits', [AdminController::class, 'monthlyProfit'])->name('profits');
     Route::post('/profits', [AdminController::class, 'saveMonthlyProfit'])->name('profits.save');
     Route::post('/work-schedules/open-week-board', [AdminController::class, 'openWeeklyWorkScheduleBoard'])->name('work-schedules.open-week-board');
