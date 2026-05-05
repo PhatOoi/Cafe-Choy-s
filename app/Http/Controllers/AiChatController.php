@@ -248,7 +248,7 @@ class AiChatController extends Controller
 
             return [
                 'intent' => 'product_found',
-                'label' => 'Di den mon: ' . $productName,
+                'label' => 'Đi đến món: ' . $productName,
                 'url' => '/search?q=' . urlencode($productName) . '&ai_jump=1',
             ];
         }
@@ -260,7 +260,7 @@ class AiChatController extends Controller
 
         return [
             'intent' => 'not_found',
-            'label' => 'Xem menu hien co',
+            'label' => 'Xem menu hiện có',
             'url' => '/menu',
         ];
     }
@@ -356,21 +356,21 @@ class AiChatController extends Controller
             $normalizedReply
         );
 
-        $productName = trim((string) preg_replace('/^Di den mon:\s*/u', '', (string) ($quickAction['label'] ?? '')));
+        $productName = trim((string) preg_replace('/^Đi đến món:\s*/u', '', (string) ($quickAction['label'] ?? '')));
 
         if ($hasContradiction) {
-            $cleanProductName = $productName !== '' ? $productName : 'mon ban vua chon';
+            $cleanProductName = $productName !== '' ? $productName : 'món bạn vừa chọn';
 
-            return "Da tim thay {$cleanProductName}.\nAnh/chi bam nut ben duoi de mo dung mon nha.";
+            return "Đã tìm thấy {$cleanProductName}.\nAnh/chị bấm nút bên dưới để mở đúng món nha.";
         }
 
         $trimmed = trim($reply);
         if ($trimmed === '') {
-            return 'Anh/chi bam nut ben duoi de di den dung mon nha.';
+            return 'Anh/chị bấm nút bên dưới để đi đến đúng món nha.';
         }
 
         if (stripos($normalizedReply, 'bam nut') === false && stripos($normalizedReply, 'di den mon') === false) {
-            $trimmed .= "\n\nAnh/chi bam nut ben duoi de di den mon nha.";
+            $trimmed .= "\n\nAnh/chị bấm nút bên dưới để đi đến món nha.";
         }
 
         return $trimmed;
@@ -388,17 +388,17 @@ class AiChatController extends Controller
             if ($this->isAffirmativeIntent($normalized)) {
                 session()->forget($pendingKey);
 
-                $productName = trim((string) preg_replace('/^Di den mon:\s*/u', '', (string) ($pendingAction['label'] ?? '')));
+                $productName = trim((string) preg_replace('/^Đi đến món:\s*/u', '', (string) ($pendingAction['label'] ?? '')));
                 $replyText = $productName !== ''
-                    ? "Oke anh/chi, be gui nut de di den {$productName} nha."
-                    : 'Oke anh/chi, be gui nut de di den mon ban vua chon nha.';
+                    ? "Oke anh/chị, bé gửi nút để đi đến {$productName} nha."
+                    : 'Oke anh/chị, bé gửi nút để đi đến món bạn vừa chọn nha.';
 
                 return [$replyText, $pendingAction];
             }
 
             if ($this->isNegativeIntent($normalized)) {
                 session()->forget($pendingKey);
-                return ['Dạ oke anh/chị, khi nào cần thì nhắn bé để gửi nút chuyển món nha.', null];
+                return ['Dạ oke anh/chị, khi nào cần thì nhắn bé để gửi nút chuyển món nha! 😊', null];
             }
         }
 
@@ -414,10 +414,10 @@ class AiChatController extends Controller
 
             session([$pendingKey => $candidateAction]);
 
-            $productName = trim((string) preg_replace('/^Di den mon:\s*/u', '', (string) ($candidateAction['label'] ?? '')));
+            $productName = trim((string) preg_replace('/^Đi đến món:\s*/u', '', (string) ($candidateAction['label'] ?? '')));
             $askReply = $productName !== ''
-                ? "Anh/chi co muon be chuyen den mon {$productName} khong? Neu dong y, chi can nhan 'co' hoac 'gui nut chuyen'."
-                : "Anh/chi co muon be gui nut chuyen den mon nay khong? Neu dong y, chi can nhan 'co' hoac 'gui nut chuyen'.";
+                ? "Anh/chị có muốn bé chuyển đến món {$productName} không? Nếu đồng ý, chỉ cần nhắn 'có' hoặc 'gửi nút' nha."
+                : "Anh/chị có muốn bé gửi nút chuyển đến món này không? Nếu đồng ý, chỉ cần nhắn 'có' hoặc 'gửi nút' nha.";
 
             return [$askReply, null];
         }
@@ -427,10 +427,21 @@ class AiChatController extends Controller
 
     private function isAffirmativeIntent(string $normalizedMessage): bool
     {
-        return (bool) preg_match(
-            '/\b(co|ok|oke|dong\s*y|gui\s+nut|chuyen\s+den|di\s+den|mo\s+mon|xac\s+nhan|di|luon|ngay)\b/u',
-            $normalizedMessage
-        );
+        // Các từ khẳng định mạnh — match bất kể độ dài message
+        if (preg_match('/\b(ok|oke|dong\s*y|gui\s+nut|chuyen\s+den|di\s+den|mo\s+mon|xac\s+nhan|di\s+luon|ngay\s+di)\b/u', $normalizedMessage)) {
+            return true;
+        }
+
+        // "co" / "di" / "luon" chỉ tính là khẳng định khi message ngắn (≤ 4 từ)
+        // và KHÔNG chứa từ hỏi như "gi", "khong", "nao", "sao", "bao"
+        // tránh bắt nhầm "cơ chế", "có gì", "có không"...
+        $wordCount = count(array_filter(explode(' ', trim($normalizedMessage)), fn ($w) => $w !== ''));
+        $hasQuestionWord = (bool) preg_match('/\b(gi|khong|ko|nao|sao|bao|may|la gi|the nao|nhu nao)\b/u', $normalizedMessage);
+        if ($wordCount <= 4 && !$hasQuestionWord && preg_match('/\b(co|di|luon)\b/u', $normalizedMessage)) {
+            return true;
+        }
+
+        return false;
     }
 
     private function isNegativeIntent(string $normalizedMessage): bool

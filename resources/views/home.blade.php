@@ -429,9 +429,9 @@
                     <div class="footer-links">
                         <h4>Khám phá</h4>
                         <ul>
-                            <li><a href="#">Menu</a></li>
-                            <li><a href="#">Đặt hàng online</a></li>
-                            <li><a href="#">Tuyển dụng</a></li>
+                            <li><a href="/menu">Menu</a></li>
+                            <li><a href="/menu">Đặt hàng online</a></li>
+                            <li><a href="/careers">Tuyển dụng</a></li>
                         </ul>
                     </div>
 
@@ -439,9 +439,9 @@
                     <div class="footer-links">
                         <h4>Dịch vụ</h4>
                         <ul>
-                            <li><a href="#">Ship tận nơi</a></li>
+                            <li><a href="/menu">Ship tận nơi</a></li>
                             <li><a href="#">Catering</a></li>
-                            <li><a href="#">Thẻ thành viên</a></li>
+                            <li><a href="/profile">Thẻ thành viên</a></li>
                         </ul>
                     </div>
 

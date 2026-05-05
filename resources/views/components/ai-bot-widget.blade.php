@@ -156,7 +156,9 @@
     position: absolute;
     bottom: 72px;
     right: 0;
-    width: 340px;
+    width: 420px;
+    height: min(700px, calc(100vh - 120px));
+    max-height: min(700px, calc(100vh - 120px));
     border-radius: 18px;
     background: #1e140a;
     border: 1px solid rgba(200,162,107,.22);
@@ -165,6 +167,11 @@
     flex-direction: column;
     overflow: hidden;
     transition: opacity .25s, transform .25s;
+}
+
+.aibot-panel.aibot-panel-below {
+    bottom: auto;
+    top: 72px;
 }
 
 #aiBotWidget.aibot-side-left .aibot-panel {
@@ -178,9 +185,7 @@
 }
 
 .aibot-hidden {
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(12px) scale(.97);
+    display: none !important;
 }
 
 /* Header */
@@ -276,9 +281,8 @@
 
 /* Messages */
 .aibot-messages {
-    flex: 1;
-    min-height: 260px;
-    max-height: 340px;
+    flex: 1 1 0;
+    min-height: 0;
     overflow-y: auto;
     padding: 14px;
     display: flex;
@@ -600,8 +604,24 @@
         .catch(function () { return null; });
     }
 
+    function adjustPanelDirection() {
+        var panel  = document.getElementById('aiBotPanel');
+        var trigger = document.getElementById('aiBotTrigger');
+        var triggerRect = trigger.getBoundingClientRect();
+        // Estimate panel height (header ~60 + messages max 340 + input ~58 + modebar ~36 = ~494)
+        var estimatedH = Math.min(630, window.innerHeight - 120);
+        // If not enough space above the trigger, flip to open downward
+        var spaceAbove = triggerRect.top;
+        if (spaceAbove < estimatedH + 16) {
+            panel.classList.add('aibot-panel-below');
+        } else {
+            panel.classList.remove('aibot-panel-below');
+        }
+    }
+
     window.aiBotToggle = function () {
         var panel = document.getElementById('aiBotPanel');
+        adjustPanelDirection();
         panel.classList.toggle('aibot-hidden');
         if (!panel.classList.contains('aibot-hidden')) {
             document.getElementById('aiBotInput').focus();

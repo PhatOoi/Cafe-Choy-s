@@ -51,8 +51,8 @@ class GeminiService
             ],
             'contents' => $contents,
             'generationConfig' => [
-                'temperature' => 0.4,
-                'maxOutputTokens' => 1024,
+                'temperature' => 0.2,
+                'maxOutputTokens' => 1500,
             ],
         ];
 
@@ -130,19 +130,42 @@ class GeminiService
             return "Mình đặt món theo 3 bước nha: (1) vào Menu chọn món + số lượng + tùy chỉnh, (2) thêm vào giỏ hàng, (3) vào giỏ hàng để kiểm tra và thanh toán.\nNếu cần, bé có thể gợi ý món hợp vị để mình chọn nhanh hơn.";
         }
 
-        if (preg_match('/(gio mo cua|mo cua|may gio|thoi gian lam viec)/u', $normalizedAscii)) {
-            return 'Quán mở cửa từ 8:00 đến 24:00 hàng ngày nha anh/chị.';
+        $hasGio     = (bool) preg_match('/(gio mo cua|mo cua|may gio|thoi gian lam viec)/u', $normalizedAscii);
+        $hasDiaChi  = (bool) preg_match('/(dia chi|o dau|vi tri|duong nao|quan may)/u', $normalizedAscii);
+        if ($hasGio || $hasDiaChi) {
+            $parts = [];
+            if ($hasGio) {
+                $parts[] = 'Quán mở cửa từ 8:00 đến 24:00 hàng ngày nha anh/chị.';
+            }
+            if ($hasDiaChi) {
+                $parts[] = 'Địa điểm hiện đang được ghim trên bản đồ của Choy\'s Cafe là khu vực Cao Đẳng Kỹ Thuật Du Lịch Sài Gòn. Anh/chị có thể xem map ngay trên trang chủ để mở đường đi nhanh nha.';
+            }
+            return implode(' ', $parts);
         }
 
-        if (preg_match('/(dia chi|o dau|vi tri)/u', $normalizedAscii)) {
-            return 'Địa điểm hiện đang được ghim trên bản đồ của Choy\'s Cafe là khu vực Cao Đẳng Kỹ Thuật Du Lịch Sài Gòn. Anh/chị có thể xem map ngay trên trang chủ để mở đường đi nhanh nha.';
+        if (preg_match('/(diem thuong|loyalty|tich diem|dung diem|doi diem|diem thuong la gi|kiem diem|diem cua toi|bao nhieu diem|diem ton tai|su dung diem|co \d+ diem|diem dung duoc|diem giam duoc)/u', $normalizedAscii)) {
+            // Nếu hỏi cụ thể: "có X điểm dùng được bao nhiêu" → tính luôn
+            if (preg_match('/co\s+(\d+)\s+diem/u', $normalizedAscii, $m)) {
+                $pts = (int) $m[1];
+                return "Với {$pts} điểm, anh/chị giảm được tối đa " . number_format($pts, 0, ',', '.') . "đ (1 điểm = 1đ).\n"
+                    . "Lưu ý: mỗi đơn chỉ được dùng tối đa 10% giá trị đơn nha anh/chị!\n"
+                    . "Ví dụ đơn 200.000đ → dùng tối đa 20.000 điểm, dù có nhiều hơn cũng chỉ trừ 20.000đ thôi. 😊";
+            }
+            return "Hệ thống điểm thưởng của Choy's hoạt động như sau:\n"
+                . "- Kiếm điểm: mỗi 10đ thanh toán thực tế = 1 điểm. Ví dụ đơn 150.000đ → nhận 15.000 điểm ngay sau khi đặt.\n"
+                . "- Dùng điểm: 1 điểm = giảm 1đ, chọn \"Dùng điểm\" khi thanh toán trong giỏ hàng.\n"
+                . "- Giới hạn dùng mỗi đơn:\n"
+                . "  Đơn từ 300.000đ trở lên: tối đa 10% giá trị đơn.\n"
+                . "  Đơn dưới 300.000đ: tối đa phần lẻ để làm tròn (vd: đơn 175.000đ → dùng tối đa 5.000 điểm).\n"
+                . "- Cần đăng nhập mới tích và dùng điểm được nha.\n"
+                . "Điểm không có hạn dùng, không quy đổi tiền mặt nhé anh/chị! 😊";
         }
 
         if (preg_match('/(khieu nai|buc xuc|that vong|giao cham|nhan vien|quan ly)/u', $normalizedAscii)) {
             return 'Xin lỗi vì sự bất tiện này. Bạn có muốn mình kết nối ngay với nhân viên hỗ trợ không? ##ESCALATE##';
         }
 
-        if (preg_match('/\b(bong da|chinh tri|thoi tiet|lap trinh|toan hoc|giai toan)\b/u', $normalizedAscii)) {
+        if (preg_match('/\b(bong da|chinh tri|thoi tiet|lap trinh|toan hoc|giai toan|ngan hang|tai khoan|vietcombank|mbbank|techcombank|bidv|agribank|atm|dang ky|mat khau|password|hack|crack|bot|malware|virus|kiem tien|dau tu|chung khoan|crypto|bitcoin|benh vien|thuoc|bac si|y te)\b/u', $normalizedAscii)) {
             return $this->outOfScopeEscalationReply();
         }
 
@@ -153,16 +176,22 @@ class GeminiService
             }
         }
 
+        // --- Gợi ý theo cảm xúc (ưu tiên trước preference vì emotion cụ thể hơn) ---
+        $emotionSuggestion = $this->fallbackSuggestByEmotion($normalizedAscii, $snapshot);
+        if ($emotionSuggestion !== null) {
+            return $emotionSuggestion;
+        }
+
         // --- Gợi ý theo khẩu vị nếu user đã nói rõ ---
         $preferenceSuggestion = $this->fallbackSuggestByPreference($normalized, $history, $snapshot);
         if ($preferenceSuggestion !== null) {
             return $preferenceSuggestion;
         }
 
-        // --- Gợi ý theo cảm xúc đơn giản khi AI offline ---
-        $emotionSuggestion = $this->fallbackSuggestByEmotion($normalizedAscii, $snapshot);
-        if ($emotionSuggestion !== null) {
-            return $emotionSuggestion;
+        // --- Tính tổng đơn hàng nhiều món ---
+        $calcResult = $this->fallbackCalculateOrder($normalizedAscii, $snapshot);
+        if ($calcResult !== null) {
+            return $calcResult;
         }
 
         // --- Tìm theo tên món nếu user nhắn tên cụ thể ---
@@ -214,39 +243,41 @@ class GeminiService
         }
 
         $emotionMap = [
-            'chia tay|that tinh|buon|co don|khoc' => [
-                'keywords' => ['ca phe den', 'tra chanh', 'espresso', 'bac xiu', 'ca phe sua'],
+            'chia tay|thất tình|buồn|cô đơn|khóc' => [
+                'keywords' => ['cà phê đen', 'trà chanh', 'espresso', 'bạc xỉu', 'cà phê sữa'],
                 'intro'    => 'Chia tay rồi à? Uống gì cũng đắng, chi bằng uống đắng có chủ đích cho nó sang nhỉ! Bé gợi ý:',
             ],
-            'vui|hanh phuc|tin tot|thang|dat|sinh nhat|ky niem' => [
-                'keywords' => ['tra sua', 'matcha', 'latte', 'da xay', 'sinh to'],
+            'vui|hạnh phúc|tin tốt|thắng|đạt|sinh nhật|kỷ niệm' => [
+                'keywords' => ['trà sữa', 'matcha', 'latte', 'đá xay', 'sinh tố'],
                 'intro'    => 'Ngày vui thì phải thưởng mình một thứ ngọt xứng đáng chứ! Bé gợi ý:',
             ],
-            'hen ho|crush|yeu|nguoi thuong|dat hen' => [
-                'keywords' => ['tra sua', 'sinh to', 'matcha', 'latte', 'da xay'],
+            'hẹn hò|crush|yêu|người thương|đặt hẹn' => [
+                'keywords' => ['trà sữa', 'sinh tố', 'matcha', 'latte', 'đá xay'],
                 'intro'    => 'Hẹn hò thì phải order đôi cho đẹp cặp nha! Bé gợi ý:',
             ],
-            'met|buon ngu|can tinh|ot|trang dem|cay' => [
-                'keywords' => ['ca phe', 'espresso', 'bac xiu', 'latte', 'ca phe den'],
+            'mệt|buồn ngủ|cần tỉnh|ot|thức đêm|cày' => [
+                'keywords' => ['cà phê', 'espresso', 'bạc xỉu', 'latte', 'cà phê đen'],
                 'intro'    => 'Não đang lag thì phải reboot bằng caffeine thôi! Bé gợi ý:',
             ],
-            'stress|ap luc|lo lang|cang thang' => [
-                'keywords' => ['tra', 'nuoc ep', 'sinh to', 'matcha'],
+            'stress|áp lực|lo lắng|căng thẳng' => [
+                'keywords' => ['trà', 'nước ép', 'sinh tố', 'matcha'],
                 'intro'    => 'Stress rồi thì cần gì thanh mát, nhẹ nhàng cho não nghỉ ngơi! Bé gợi ý:',
             ],
-            'nong|nang|oi buc|nong qua' => [
-                'keywords' => ['da xay', 'nuoc ep', 'sinh to', 'tra da'],
+            'nóng|nắng|oi bức|nóng quá' => [
+                'keywords' => ['đá xay', 'nước ép', 'sinh tố', 'trà đá'],
                 'intro'    => 'Trời nóng chảy mỡ rồi, phải đá nhiều thôi! Bé gợi ý:',
             ],
-            'mua|lanh|se se' => [
-                'keywords' => ['ca phe nong', 'tra nong', 'latte', 'bac xiu'],
+            'mưa|lạnh|se se' => [
+                'keywords' => ['cà phê nóng', 'trà nóng', 'latte', 'bạc xỉu'],
                 'intro'    => 'Mưa mà không có ly nóng trong tay thì phí cả buổi chiều! Bé gợi ý:',
             ],
         ];
 
         $matchedEmotion = null;
         foreach ($emotionMap as $pattern => $config) {
-            if (preg_match('/(' . $pattern . ')/u', $normalizedAscii)) {
+            // Normalize pattern về ASCII để so với $normalizedAscii (input đã bỏ dấu)
+            $asciiPattern = Str::lower(Str::ascii($pattern));
+            if (preg_match('/(' . $asciiPattern . ')/u', $normalizedAscii)) {
                 $matchedEmotion = $config;
                 break;
             }
@@ -261,7 +292,7 @@ class GeminiService
         foreach ($products as $p) {
             $pName = Str::lower(Str::ascii((string) ($p['name'] ?? '')));
             foreach ($matchedEmotion['keywords'] as $kw) {
-                if (str_contains($pName, $kw)) {
+                if (str_contains($pName, Str::lower(Str::ascii($kw)))) {
                     $matched[] = '- ' . $p['name'] . ' (' . number_format((float) ($p['price'] ?? 0), 0, ',', '.') . 'đ)';
                     break;
                 }
@@ -276,6 +307,81 @@ class GeminiService
         }
 
         return $matchedEmotion['intro'] . "\n" . implode("\n", $matched) . "\nThích món nào cứ vào giỏ hàng nhé! ☕";
+    }
+
+    private function fallbackCalculateOrder(string $normalizedAscii, array $snapshot): ?string
+    {
+        // Chỉ kích hoạt khi có từ khóa tính tiền
+        if (!preg_match('/(bao nhieu|tinh tien|het bao|tong tien|tong cong|tinh thu|cuoi cung|gom lai|thanh tien)/u', $normalizedAscii)) {
+            return null;
+        }
+
+        $products = array_values(array_filter((array) ($snapshot['products'] ?? []), static fn ($p) => is_array($p) && ($p['status'] ?? '') === 'available'));
+        if (empty($products)) {
+            return null;
+        }
+
+        // Tách các đoạn theo "va", "và", ",", "+"
+        $segments = preg_split('/(\bva\b|,|\+)/u', $normalizedAscii);
+        if (!$segments) {
+            return null;
+        }
+
+        $lines = [];
+        $total = 0;
+        $notFound = [];
+
+        foreach ($segments as $segment) {
+            $segment = trim($segment);
+            // Tìm số lượng + tên món: "5 ly ca phe den" hoặc "3 tra sua"
+            if (!preg_match('/^(\d+)\s+(?:ly\s+|coc\s+|phan\s+|chiec\s+|cai\s+)?(.+)/u', $segment, $m)) {
+                continue;
+            }
+            $qty     = (int) $m[1];
+            $keyword = trim($m[2]);
+            // Bỏ phần hỏi cuối: "thi het bao nhieu", "tong..."
+            $keyword = trim((string) preg_replace('/(\b(thi|het|la|bao nhieu|tong|cong|tinh)\b.*)/u', '', $keyword));
+            if ($keyword === '' || $qty <= 0) {
+                continue;
+            }
+
+            // Tìm sản phẩm khớp nhất: ưu tiên substring match trước, rồi mới similar_text
+            $bestMatch = null;
+            $bestScore = 0.0;
+            foreach ($products as $p) {
+                $pNameAscii = Str::lower(Str::ascii((string) ($p['name'] ?? '')));
+                // Substring match được cộng thêm 50 điểm để luôn thắng similar_text thuần
+                $bonus = str_contains($pNameAscii, $keyword) ? 50.0 : 0.0;
+                similar_text($keyword, $pNameAscii, $pct);
+                $score = $pct + $bonus;
+                if ($score > $bestScore && ($pct > 38 || $bonus > 0)) {
+                    $bestScore = $score;
+                    $bestMatch = $p;
+                }
+            }
+
+            if ($bestMatch === null) {
+                $notFound[] = $keyword;
+                continue;
+            }
+
+            $price    = (float) ($bestMatch['price'] ?? 0);
+            $subtotal = $qty * $price;
+            $total   += $subtotal;
+            $lines[]  = "- {$qty} ly {$bestMatch['name']}: {$qty} × " . number_format($price, 0, ',', '.') . 'đ = ' . number_format($subtotal, 0, ',', '.') . 'đ';
+        }
+
+        if (empty($lines)) {
+            return null;
+        }
+
+        $reply = implode("\n", $lines) . "\n=> Tổng cộng: " . number_format($total, 0, ',', '.') . 'đ';
+
+        if (!empty($notFound)) {
+            $reply .= "\n(Bé chưa tìm được: " . implode(', ', $notFound) . " — anh/chị kiểm tra lại tên món trong menu nha)";
+        }
+
+        return $reply . "\nMời anh/chị vào giỏ hàng để đặt nha! 🧾";
     }
 
     private function fallbackSearchProduct(string $normalizedAscii, array $snapshot): ?string
@@ -344,8 +450,8 @@ class GeminiService
                     break;
                 }
 
-                $grouped[$cat][] = (string) ($product['name'] ?? 'Mon')
-                    . ' (' . number_format((float) ($product['price'] ?? 0), 0, ',', '.') . 'd)';
+                $grouped[$cat][] = (string) ($product['name'] ?? 'Món')
+                    . ' (' . number_format((float) ($product['price'] ?? 0), 0, ',', '.') . 'đ)';
             }
         }
 
@@ -362,14 +468,16 @@ class GeminiService
     {
         $context = $normalized . ' ' . mb_strtolower($this->latestUserMessages($history, 3));
 
+        $wantsFood = preg_match('/(muon an|đói|doi|an gi|an cai gi|an banh|banh gi|do an|an nhẹ|an nhe)/u', $context)
+            || preg_match('/(muon an|doi|an gi|an cai gi|an banh|banh gi|do an|an nhe)/u', Str::ascii($context));
+
         $isAskingRecommendation =
-            str_contains($context, 'goi y')
-            || str_contains($context, 'uong gi')
-            || str_contains($context, 'muon uong')
+            $wantsFood
+            || preg_match('/(goi y mon|goi y gi|uong gi ngon|muon uong|uong gi di)/u', $context)
             || str_contains($context, 'nuoc mat')
-            || str_contains($context, 'ngot')
-            || str_contains($context, 'chua')
-            || str_contains($context, 'thanh mat');
+            || str_contains($context, 'thanh mat')
+            || (str_contains($context, 'ngot') && str_contains($context, 'uong'))
+            || (str_contains($context, 'chua') && str_contains($context, 'uong'));
 
         if (!$isAskingRecommendation) {
             return null;
@@ -386,6 +494,33 @@ class GeminiService
 
         if (empty($products)) {
             return 'Hiện mình chưa tải được danh sách món để gợi ý. Bạn thử lại sau ít phút nhe.';
+        }
+
+        // Khi khách muốn ăn: ưu tiên các món có tên liên quan đến bánh/đồ ăn
+        if ($wantsFood) {
+            $foodKeywords = ['banh', 'bánh', 'cake', 'toast', 'sandwich', 'waffle', 'cookie', 'muffin', 'croissant', 'snack', 'an'];
+            $foodItems = [];
+            foreach ($products as $product) {
+                $nameAscii = Str::lower(Str::ascii((string) ($product['name'] ?? '')));
+                $catName   = Str::lower(Str::ascii($categories[(int) ($product['category_id'] ?? 0)] ?? ''));
+                foreach ($foodKeywords as $kw) {
+                    if (str_contains($nameAscii, $kw) || str_contains($catName, $kw)) {
+                        $foodItems[] = $product;
+                        break;
+                    }
+                }
+            }
+            if (!empty($foodItems)) {
+                $picks = array_slice($foodItems, 0, 4);
+                $lines = [];
+                foreach ($picks as $item) {
+                    $lines[] = '- ' . $item['name'] . ' (' . number_format((float) ($item['price'] ?? 0), 0, ',', '.') . 'đ)';
+                }
+                return "Muốn ăn thì bé gợi ý mấy món này nè:\n" . implode("\n", $lines)
+                    . "\nVào giỏ hàng đặt luôn nha! 🍰";
+            }
+            // Không có đồ ăn trong menu → thông báo thật thà
+            return 'Hiện tại quán mình chủ yếu phục vụ đồ uống, chưa có đồ ăn trong menu anh/chị ơi. Để bé gợi ý món nước hợp vị nhé?';
         }
 
         $wantsCool = str_contains($context, 'nuoc mat') || str_contains($context, 'thanh mat');
@@ -441,7 +576,7 @@ class GeminiService
 
         $lines = [];
         foreach ($top as $item) {
-            $lines[] = '- ' . $item['name'] . ' (' . number_format($item['price'], 0, ',', '.') . 'd)';
+            $lines[] = '- ' . $item['name'] . ' (' . number_format($item['price'], 0, ',', '.') . 'đ)';
         }
 
         return "Mình gợi ý 4 món hợp vị bạn:\n" . implode("\n", $lines)
@@ -517,59 +652,79 @@ class GeminiService
         ['menu' => $menuText, 'sizes' => $sizesText, 'extras' => $extrasText, 'bestsellers' => $bestsellerText] = $this->buildDynamicContext($snapshot);
 
         return <<<PROMPT
-Bạn là Choy's AI, trợ lý thông minh của Choy's Cafe. Nhiệm vụ chính là hỗ trợ khách hàng hiểu về menu, tính toán tiền hàng, gợi ý món uống và hướng dẫn đặt hàng.
+[QUY TẮC BẮT BUỘC — ĐỌC TRƯỚC KHI LÀM BẤT CỨ ĐIỀU GÌ]
+1. MỌI câu trả lời PHẢI viết bằng tiếng Việt CÓ DẤU đầy đủ, chính xác. Không được bỏ dấu, không viết tắt kiểu "ko", "dc", "vs" trừ khi chính khách dùng cách đó trước.
+2. Không dùng ký hiệu markdown: không **, không __, không *, không _, không `, không #, không ~~.
+3. Chỉ dùng văn bản thuần, ngắn gọn, tự nhiên.
+4. Nếu khách nhắn tiếng Anh hoặc ngôn ngữ khác thì trả lời đúng ngôn ngữ đó, vẫn không dùng markdown.
 
-== NGÔN NGỮ ==
-- LUÔN trả lời bằng tiếng Việt có dấu, rõ ràng, tự nhiên.
-- Nếu khách nhắn bằng tiếng Anh hoặc ngôn ngữ khác,hãy trả lời bằng tiếng của khách.
-- Không dùng tiếng Việt không dấu hoặc viết tắt kiểu chat trừ khi khách yêu cầu.
+Bạn là Choy's AI, trợ lý thông minh của Choy's Cafe. Nhiệm vụ chính là hỗ trợ khách hàng về menu, tính tiền, gợi ý món và hướng dẫn đặt hàng.
+
+== PHONG CÁCH GIAO TIẾP ==
+- Dí dỏm, thân thiện, tự nhiên — như người bạn đang rủ uống cà phê, không phải robot đọc kịch bản.
+- Được dùng tiếng lóng thân thiện Gen Z ("oke nha", "ngon lành", "quẩy thôi", "hợp vị ghê") nhưng vẫn lịch sự.
+- Thi thoảng thêm emoji phù hợp (☕ 🧋 😄) nhưng không spam.
+- Khi gợi ý món: sale nhiệt tình như nhân viên thực sự yêu menu quán.
+- Ngắn gọn, đúng trọng tâm, không dài dòng.
+- Nếu khách chào thì chào lại vui vẻ trước.
+- Nếu không chắc thông tin thì thú nhận thật thà thay vì bịa.
+- Nếu khách hỏi mơ hồ (ví dụ: "cho mình xem"), hãy hỏi lại một câu ngắn để hiểu rõ ý hơn thay vì đoán bừa.
+- Nhớ ngữ cảnh hội thoại: nếu khách đã đề cập khẩu vị hoặc tình huống trước đó, hãy dùng thông tin đó để gợi ý thay vì hỏi lại từ đầu.
+- Nếu khách tỏ ra không hài lòng hoặc phàn nàn, hãy xin lỗi chân thành trước rồi mới giải quyết vấn đề.
+- Sau khi gợi ý xong, chủ động hỏi thêm một câu dẫn dắt ngắn để duy trì cuộc trò chuyện (ví dụ: "Anh/chị muốn thêm topping gì không?" hoặc "Mình uống nóng hay đá ạ?").
 
 == PHẠM VI HỖ TRỢ ==
 - Thông tin quán: giờ mở cửa, địa chỉ, liên hệ, chính sách hủy đơn
-- Menu: danh sách món, giá, mô tả, hình thức tùy chỉnh (size, topping, đường, đá)
-- Tính toán liên quan đến việc mua hàng: tổng tiền nhiều ly/món, so sánh giá, ước tính hóa đơn
+- Menu: danh sách món, giá, mô tả, tùy chỉnh (size, topping, đường, đá)
+- Tính toán mua hàng: tổng tiền nhiều ly/món, so sánh giá, ước tính hóa đơn
 - Gợi ý món theo khẩu vị, ngân sách, số người, thời tiết, tâm trạng, cảm xúc
 - Hướng dẫn đặt món, thanh toán trong hệ thống
 
+== GỢI Ý ĐỒ ĂN ==
+Khi khách nói "muốn ăn", "đói", "ăn gì", "ăn bánh" hoặc hỏi về đồ ăn:
+- Tìm trong MENU HIỆN TẠI các món có tên hoặc danh mục liên quan đến bánh, đồ ăn, snack.
+- Nếu có: gợi ý ngay 2-3 món kèm giá.
+- Nếu menu hiện tại KHÔNG có đồ ăn: trả lời thật thà "Hiện quán mình chủ yếu phục vụ đồ uống, chưa có đồ ăn trong menu" rồi hỏi xem khách có muốn gợi ý đồ uống không.
+- KHÔNG được tự ý gợi ý đồ uống khi khách hỏi đồ ăn mà không giải thích trước.
+
 == GỢI Ý THEO CẢM XÚC ==
-Khi khách chia sẻ tâm trạng hoặc hoàn cảnh, hãy dùng não để đọc vị cảm xúc rồi gợi ý món từ menu một cách thấu cảm và dí dỏm. Nguyên tắc map cảm xúc → khẩu vị:
+Khi khách chia sẻ tâm trạng, đọc vị cảm xúc rồi gợi ý món thấu cảm và dí dỏm:
 
-Buồn / chia tay / thất tình → đắng nhẹ + chua dịu (cà phê đen, trà chanh, các món có vị chua): "Chia tay rồi thì uống gì cũng đắng, chi bằng uống đắng có chủ đích cho nó sang!"
-Vui / có tin tốt / kỷ niệm → ngọt béo ấm áp (trà sữa, matcha latte, đá xay): "Hôm nay được điểm cao / thăng chức thì phải reward bản thân một ly ngọt xứng đáng chứ!"
-Yêu đương / hẹn hò / crush → ngọt ngào lãng mạn (trà sữa, sinh tố, các món màu đẹp): "Hẹn hò thì phải order đôi cho nó đẹp cặp nha!"
-Mệt mỏi / cần tỉnh táo / OT → cà phê mạnh (cà phê đen, espresso, bạc xỉu): "Não đang lag thì phải reboot bằng caffeine thôi!"
-Căng thẳng / stress → thanh mát nhẹ nhàng (trà, nước ép, sinh tố): "Stress rồi thì cần gì mạnh, thanh mát một cái cho não nghỉ ngơi!"
-Nắng nóng / oi bức → lạnh sảng khoái (đá xay, nước ép, sinh tố đá): "Trời nóng chảy mỡ thì phải đá nhiều, đá xay, đá cục gì cũng được!"
-Trời mưa / lạnh → ấm nóng dễ chịu (cà phê nóng, trà nóng): "Mưa mà không có ly nóng trong tay thì phí cả buổi chiều!"
+Buồn / chia tay / thất tình → đắng nhẹ + chua dịu (cà phê đen, trà chanh): "Chia tay rồi thì uống gì cũng đắng, chi bằng uống đắng có chủ đích cho nó sang!"
+Vui / tin tốt / kỷ niệm → ngọt béo ấm áp (trà sữa, matcha latte, đá xay): "Hôm nay vui thì phải thưởng mình một ly ngọt xứng đáng chứ!"
+Hẹn hò / crush / yêu → ngọt lãng mạn (trà sữa, sinh tố, món màu đẹp): "Hẹn hò thì phải order đôi cho đẹp cặp nha!"
+Mệt / buồn ngủ / OT / cần tỉnh → cà phê mạnh (cà phê đen, espresso, bạc xỉu): "Não đang lag thì phải reboot bằng caffeine thôi!"
+Stress / căng thẳng / lo lắng → thanh mát nhẹ (trà, nước ép, sinh tố): "Stress rồi thì thanh mát một cái cho não nghỉ ngơi!"
+Nắng nóng / oi bức → lạnh sảng khoái (đá xay, nước ép, sinh tố đá): "Trời nóng chảy mỡ thì phải đá nhiều thôi!"
+Trời mưa / lạnh / se se → ấm nóng (cà phê nóng, trà nóng): "Mưa mà không có ly nóng trong tay thì phí cả buổi chiều!"
 
-Quy trình gợi ý theo cảm xúc:
+Quy trình khi gợi ý theo cảm xúc:
 1. Nhận diện cảm xúc/hoàn cảnh từ lời khách
-2. Map sang khẩu vị/tông vị phù hợp theo bảng trên
+2. Map sang khẩu vị phù hợp
 3. Tìm trong MENU HIỆN TẠI các món khớp nhất
-4. Gợi ý 2-3 món cụ thể kèm giá, giải thích ngắn tại sao hợp với tâm trạng đó
-5. Thêm câu hài nhẹ hoặc lời động viên phù hợp tâm trạng
+4. Gợi ý 2-3 món kèm giá, giải thích ngắn tại sao hợp tâm trạng
+5. Thêm câu hài nhẹ hoặc lời động viên, rồi hỏi thêm một câu dẫn dắt
 
 == TÍNH TOÁN TIỀN HÀNG ==
-- Được phép và PHẢI thực hiện mọi phép tính liên quan đến mua hàng tại quán (số lượng × đơn giá, tổng hóa đơn, tiền thừa, v.v.)
+- PHẢI thực hiện mọi phép tính mua hàng (số lượng × đơn giá, tổng hóa đơn, tiền thừa).
+- Nếu có chọn size hoặc topping thì cộng phụ thu vào đơn giá trước khi nhân số lượng.
 - Ví dụ: "10 ly Cà Phê Đen" → 10 × 25.000đ = 250.000đ. Trả lời rõ ràng, chính xác.
-- Nếu tính có chọn size hoặc topping thì cộng thêm phụ thu tương ứng vào đơn giá trước khi nhân số lượng.
-- KHÔNG được tự tạo đơn/bill chính thức, chỉ tính toán để khách tham khảo trước khi vào giỏ hàng.
+- KHÔNG tự tạo đơn/bill chính thức, chỉ tính để khách tham khảo.
 
 == GIỚI HẠN ==
-- Không trả lời chủ đề hoàn toàn ngoài phạm vi quán: chính trị, thể thao, thời tiết, lịch sử, khoa học phổ thông, v.v.
-- Nếu câu hỏi không liên quan gì đến quán, trả lời: "Ngoài phạm vi thực hiện của bé, anh/chị có muốn chuyển sang nhắn với nhân viên để nhân viên trả lời không? ##ESCALATE##"
-- Không tiết lộ thông tin nội bộ, cấu trúc database, code hay logic hệ thống.
+- Không trả lời chủ đề ngoài phạm vi quán: chính trị, thể thao, thời tiết, lịch sử, khoa học, v.v.
+- Nếu không liên quan đến quán: "Ngoài phạm vi thực hiện của bé, anh/chị có muốn chuyển sang nhắn với nhân viên không? ##ESCALATE##"
+- Không tiết lộ thông tin nội bộ, database, code, logic hệ thống.
 - Không xác nhận hoặc tạo đơn hàng thay khách, không hiển thị QR thanh toán.
 
-== PHONG CÁCH TRẢ LỜI ==
-- Dí dỏm, hài hước, vui vẻ — như người bạn thân đang rủ đi uống cà phê chứ không phải robot trả lời tự động.
-- Được phép dùng tiếng lóng thân thiện kiểu Gen Z ("oke bé", "ngon lành", "quẩy thôi", "hợp vị ghê") nhưng vẫn lịch sự, không thô tục.
-- Thi thoảng thêm câu hài nhẹ hoặc emoji phù hợp để tạo không khí (☕ 🧋 😄) nhưng đừng spam.
-- Khi gợi ý món, hãy "sale" nhiệt tình như nhân viên thực sự yêu menu của quán.
-- Ngắn gọn, đúng trọng tâm — tránh dài dòng giáo khoa không cần thiết.
-- Nếu khách chào thì chào lại vui vẻ trước khi hỗ trợ.
-- Chỉ dùng văn bản thường, KHÔNG dùng ký hiệu markdown như ** __ * _ ` # ~~.
-- Nếu không chắc thông tin, thú nhận thật thà thay vì bịa đặt.
+== ĐIỂM THƯỞNG (LOYALTY POINTS) ==
+- Cách kiếm: mỗi 10đ thanh toán thực tế = 1 điểm (ví dụ: đơn 150.000đ → nhận 15.000 điểm). Điểm được cộng ngay sau khi đặt hàng thành công.
+- Cách dùng: 1 điểm = giảm 1đ, chọn "Dùng điểm" khi thanh toán trong giỏ hàng.
+- Giới hạn dùng mỗi đơn:
+  Đơn từ 300.000đ trở lên: dùng tối đa 10% giá trị đơn.
+  Đơn dưới 300.000đ: dùng tối đa 10% hoặc phần lẻ để làm tròn đơn (ví dụ: đơn 175.000đ → dùng tối đa 5.000 điểm để thành 170.000đ).
+- Điều kiện: phải đăng nhập mới tích/dùng điểm được.
+- Điểm không có hạn sử dụng, không quy đổi thành tiền mặt.
 
 == THÔNG TIN QUÁN ==
 - Tên: Choy's Cafe
@@ -590,6 +745,8 @@ Quy trình gợi ý theo cảm xúc:
 
 == MENU HIỆN TẠI ==
 {$menuText}
+
+[NHẮC LẠI QUY TẮC QUAN TRỌNG NHẤT: Luôn viết tiếng Việt có dấu đầy đủ trong mọi câu trả lời.]
 PROMPT;
     }
 
@@ -601,8 +758,8 @@ PROMPT;
             foreach ($sizes as $size) {
                 $extraPrice = (float) ($size['extra_price'] ?? 0);
                 $extra = $extraPrice > 0
-                    ? '+' . number_format($extraPrice, 0, ',', '.') . 'd'
-                    : 'khong phu thu';
+                    ? '+' . number_format($extraPrice, 0, ',', '.') . 'đ'
+                    : 'không phụ thu';
                 $sizeLines[] = '- Size ' . ($size['name'] ?? 'N/A') . ': ' . $extra;
             }
 
@@ -611,15 +768,15 @@ PROMPT;
             foreach ($extras as $extra) {
                 $typeLabel = match ($extra['type'] ?? null) {
                     'topping' => 'Topping',
-                    'sugar' => 'Tuy chinh sua/duong',
-                    'ice' => 'Tuy chinh da',
-                    default => ucfirst((string) ($extra['type'] ?? 'khac')),
+                    'sugar'   => 'Tùy chỉnh sữa/đường',
+                    'ice'     => 'Tùy chỉnh đá',
+                    default   => ucfirst((string) ($extra['type'] ?? 'Khác')),
                 };
 
                 $extraPrice = (float) ($extra['price'] ?? 0);
                 $price = $extraPrice > 0
-                    ? '+' . number_format($extraPrice, 0, ',', '.') . 'd'
-                    : 'mien phi';
+                    ? '+' . number_format($extraPrice, 0, ',', '.') . 'đ'
+                    : 'miễn phí';
 
                 $extraGroups[$typeLabel][] = ($extra['name'] ?? 'Extra') . ' (' . $price . ')';
             }
@@ -637,12 +794,12 @@ PROMPT;
                     continue;
                 }
 
-                $categoryName = (string) ($group['category']['name'] ?? 'Khac');
+                $categoryName = (string) ($group['category']['name'] ?? 'Khác');
                 $menuLines[] = "\n[{$categoryName}]";
                 foreach ($products as $product) {
-                    $price = number_format((float) ($product['price'] ?? 0), 0, ',', '.') . 'd';
+                    $price = number_format((float) ($product['price'] ?? 0), 0, ',', '.') . 'đ';
                     $description = (string) ($product['description'] ?? '');
-                    $menuLines[] = '- ' . ($product['name'] ?? 'Mon') . " ({$price}): {$description}";
+                    $menuLines[] = '- ' . ($product['name'] ?? 'Món') . " ({$price}): {$description}";
                 }
             }
 
@@ -650,14 +807,14 @@ PROMPT;
             $bestsellerLines = [];
             foreach ($topSellers as $i => $item) {
                 $rank = $i + 1;
-                $bestsellerLines[] = $rank . '. ' . ($item['name'] ?? 'Mon')
-                    . ' (da ban ' . (int) ($item['total_sold'] ?? 0) . ' lan)';
+                $bestsellerLines[] = $rank . '. ' . ($item['name'] ?? 'Món')
+                    . ' (đã bán ' . (int) ($item['total_sold'] ?? 0) . ' lần)';
             }
 
             return [
-                'menu' => implode("\n", $menuLines) ?: '(Chưa có sản phẩm)',
-                'sizes' => implode("\n", $sizeLines) ?: '(Chưa có kích cỡ)',
-                'extras' => implode("\n", $extraLines) ?: '(Chưa có topping)',
+                'menu'        => implode("\n", $menuLines) ?: '(Chưa có sản phẩm)',
+                'sizes'       => implode("\n", $sizeLines) ?: '(Chưa có kích cỡ)',
+                'extras'      => implode("\n", $extraLines) ?: '(Chưa có topping)',
                 'bestsellers' => implode("\n", $bestsellerLines) ?: '(Chưa có dữ liệu bán hàng)',
             ];
         } catch (\Exception $e) {
