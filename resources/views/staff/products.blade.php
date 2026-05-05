@@ -165,6 +165,118 @@
     .summary-icon { font-size: 22px; }
     .summary-label { font-size: 12px; color: #999; }
     .summary-value { font-size: 20px; font-weight: 700; color: #333; line-height: 1; }
+
+    .confirm-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(18, 23, 35, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+        padding: 18px;
+    }
+    .confirm-modal.is-open {
+        display: flex;
+        animation: modalFadeIn .2s ease;
+    }
+    .confirm-modal-box {
+        width: 100%;
+        max-width: 520px;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 18px 45px rgba(15, 25, 40, 0.25);
+        border: 1px solid #f0f0f4;
+        overflow: hidden;
+        animation: modalSlideUp .24s ease;
+    }
+    .confirm-modal-body {
+        padding: 24px 26px 14px;
+    }
+    .confirm-modal-title {
+        margin: 0 0 9px;
+        font-size: 21px;
+        font-weight: 700;
+        color: #1f2433;
+        line-height: 1.25;
+    }
+    .confirm-modal-message {
+        margin: 0;
+        color: #4c5468;
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-line;
+    }
+    .confirm-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 14px 22px 22px;
+    }
+    .confirm-btn {
+        border: 1px solid transparent;
+        border-radius: 999px;
+        height: 44px;
+        min-width: 96px;
+        padding: 0 18px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform .12s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+        font-family: inherit;
+    }
+    .confirm-btn:focus-visible {
+        outline: 3px solid rgba(212, 129, 58, 0.3);
+        outline-offset: 2px;
+    }
+    .confirm-btn-ok {
+        background: #2fa866;
+        color: #fff;
+        box-shadow: 0 7px 14px rgba(47, 168, 102, 0.28);
+    }
+    .confirm-btn-ok:hover {
+        background: #278b54;
+        transform: translateY(-1px);
+    }
+    .confirm-btn-cancel {
+        background: #eef1e9;
+        color: #3d4c3e;
+        border-color: #d7dfd2;
+    }
+    .confirm-btn-cancel:hover {
+        background: #e6ebdf;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes modalSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(14px) scale(.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .confirm-modal-body {
+            padding: 20px 18px 10px;
+        }
+        .confirm-modal-title {
+            font-size: 19px;
+        }
+        .confirm-modal-actions {
+            padding: 12px 16px 16px;
+            justify-content: stretch;
+        }
+        .confirm-btn {
+            flex: 1;
+        }
+    }
 </style>
 
 {{-- Tóm tắt --}}
@@ -274,12 +386,20 @@
                         @method('PATCH')
                         @if($product->status === 'available')
                             <button type="submit" class="btn-toggle-off"
-                                    onclick="return confirm('Khóa món « {{ addslashes($product->name) }} »?\nMón sẽ không thể đặt hàng cho đến khi mở lại.')">
+                                    data-confirm-title="Khóa món {{ $product->name }}?"
+                                    data-confirm-message="Món sẽ không thể đặt hàng cho đến khi mở lại."
+                                    data-confirm-ok="Khóa"
+                                    data-confirm-cancel="Hủy"
+                                    onclick="return openProductConfirm(event, this)">
                                 <i class="fas fa-lock"></i> Khóa món
                             </button>
                         @else
                             <button type="submit" class="btn-toggle-on"
-                                    onclick="return confirm('Mở bán lại món « {{ addslashes($product->name) }} »?')">
+                                    data-confirm-title="Mở bán lại món {{ $product->name }}?"
+                                    data-confirm-message="Món sẽ hiển thị trở lại và khách có thể đặt hàng."
+                                    data-confirm-ok="Mở bán"
+                                    data-confirm-cancel="Hủy"
+                                    onclick="return openProductConfirm(event, this)">
                                 <i class="fas fa-lock-open"></i> Mở bán
                             </button>
                         @endif
@@ -297,5 +417,84 @@
         </tbody>
     </table>
 </div>
+
+<div class="confirm-modal" id="product-confirm-modal" aria-hidden="true">
+    <div class="confirm-modal-box" role="dialog" aria-modal="true" aria-labelledby="product-confirm-title" aria-describedby="product-confirm-message">
+        <div class="confirm-modal-body">
+            <h3 class="confirm-modal-title" id="product-confirm-title">Xác nhận thao tác</h3>
+            <p class="confirm-modal-message" id="product-confirm-message">Bạn có chắc chắn muốn tiếp tục?</p>
+        </div>
+        <div class="confirm-modal-actions">
+            <button type="button" class="confirm-btn confirm-btn-ok" id="product-confirm-ok">OK</button>
+            <button type="button" class="confirm-btn confirm-btn-cancel" id="product-confirm-cancel">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var modal = document.getElementById('product-confirm-modal');
+        var titleEl = document.getElementById('product-confirm-title');
+        var messageEl = document.getElementById('product-confirm-message');
+        var okBtn = document.getElementById('product-confirm-ok');
+        var cancelBtn = document.getElementById('product-confirm-cancel');
+        var pendingForm = null;
+        var lastTrigger = null;
+
+        function closeModal() {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            pendingForm = null;
+            if (lastTrigger) {
+                lastTrigger.focus();
+            }
+        }
+
+        okBtn.addEventListener('click', function () {
+            if (!pendingForm) {
+                closeModal();
+                return;
+            }
+
+            var form = pendingForm;
+            closeModal();
+            form.submit();
+        });
+
+        cancelBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+                closeModal();
+            }
+        });
+
+        window.openProductConfirm = function (event, trigger) {
+            event.preventDefault();
+            pendingForm = trigger.closest('form');
+            if (!pendingForm) {
+                return false;
+            }
+
+            lastTrigger = trigger;
+            titleEl.textContent = trigger.getAttribute('data-confirm-title') || 'Xác nhận thao tác';
+            messageEl.textContent = trigger.getAttribute('data-confirm-message') || 'Bạn có chắc chắn muốn tiếp tục?';
+            okBtn.textContent = trigger.getAttribute('data-confirm-ok') || 'OK';
+            cancelBtn.textContent = trigger.getAttribute('data-confirm-cancel') || 'Hủy';
+
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            okBtn.focus();
+
+            return false;
+        };
+    })();
+</script>
 
 @endsection
