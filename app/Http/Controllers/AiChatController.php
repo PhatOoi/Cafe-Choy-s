@@ -209,6 +209,10 @@ class AiChatController extends Controller
             return null;
         }
 
+        if ($this->isProductInfoIntent($normalized)) {
+            return null;
+        }
+
         $isDirectRequest = $this->isDrinkNavigationIntent($normalized);
         $isFollowupNavigation = $this->isNavigationFollowupIntent($normalized);
 
@@ -323,6 +327,14 @@ class AiChatController extends Controller
     private function isNavigationFollowupIntent(string $normalizedMessage): bool
     {
         return (bool) preg_match('/\b(nut|button|chuyen\s+den|di\s+den|link|mo\s+mon|mo\s+toi\s+mon|den\s+mon)\b/u', $normalizedMessage);
+    }
+
+    private function isProductInfoIntent(string $normalizedMessage): bool
+    {
+        return (bool) preg_match(
+            '/\b(gia|gia\s+cua|bao\s+nhieu|nhieu\s+tien|thong\s+tin|mo\s+ta|thanh\s+phan|calo|size|co\s+gi|gom\s+gi)\b/u',
+            $normalizedMessage
+        );
     }
 
     private function latestHistoryText(array $history, string $role, int $limit = 2): string
