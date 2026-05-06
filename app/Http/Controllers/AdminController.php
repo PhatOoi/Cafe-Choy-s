@@ -1552,8 +1552,11 @@ class AdminController extends Controller
     // Resolve slot key theo nhóm nhân viên để map dữ liệu vào bảng tuần.
     private function resolveScheduleSlotKey(string $employmentType, string $startTime, string $endTime): ?string
     {
+        $start = substr($startTime, 0, 5);
+        $end = substr($endTime, 0, 5);
+
         foreach (self::SCHEDULE_SLOTS[$employmentType] ?? [] as $slotKey => $slot) {
-            if ($slot['start'] === substr($startTime, 0, 5) && $slot['end'] === substr($endTime, 0, 5)) {
+            if ($slot['start'] === $start && $slot['end'] === $end) {
                 return $slotKey;
             }
         }

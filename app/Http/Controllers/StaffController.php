@@ -683,11 +683,6 @@ class StaffController extends Controller
         $start = substr($startTime, 0, 5);
         $end = substr($endTime, 0, 5);
 
-        // Tương thích dữ liệu full-time cũ lưu theo khung 08:00-17:00.
-        if ($employmentType === 'full_time' && $start === '08:00' && $end === '17:00') {
-            return '08_16';
-        }
-
         foreach ($this->getScheduleSlotsByEmploymentType($employmentType) as $slotKey => $slot) {
             if ($slot['start'] === $start && $slot['end'] === $end) {
                 return $slotKey;
