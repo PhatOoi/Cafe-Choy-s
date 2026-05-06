@@ -32,6 +32,7 @@ Route::get('/search', [SearchController::class, 'index'])->name('search');
 
 Route::get('/login',[LoginController::class,'index']);
 Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Nhóm route giỏ hàng và checkout của khách hàng.
@@ -97,6 +98,7 @@ Route::middleware(['auth'])->group(function () {
     // Chat hỗ trợ khách hàng — 2 route cho cả polling lấy tin và gửi tin.
     Route::get('/chat/messages',  [ChatController::class, 'messages'])->name('chat.messages');
     Route::post('/chat/send',     [ChatController::class, 'send'])->name('chat.send');
+    Route::post('/chat/clear',    [ChatController::class, 'clearMyConversation'])->name('chat.clear');
 
     // AI Chat — Gemini-powered chatbot giới hạn phạm vi quán.
     Route::get('/ai-chat',        [AiChatController::class, 'index'])->name('ai-chat.index');

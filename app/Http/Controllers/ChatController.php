@@ -159,4 +159,11 @@ class ChatController extends Controller
         ChatMessage::where('user_id', $userId)->delete();
         return response()->json(['ok' => true]);
     }
+
+    // User tự xóa cuộc hội thoại của mình
+    public function clearMyConversation()
+    {
+        ChatMessage::where('user_id', Auth::id())->delete();
+        return response()->json(['ok' => true]);
+    }
 }

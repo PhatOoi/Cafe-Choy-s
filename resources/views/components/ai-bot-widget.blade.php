@@ -558,6 +558,8 @@
     var CSRF = '{{ csrf_token() }}';
     var AI_DB_JSON_ENDPOINT = '{{ route("widget.ai-db-json") }}';
     var AI_DB_LOCAL_KEY = 'choys_ai_db_snapshot_v1';
+    var AI_CHAT_KEY = 'choys_ai_chat_v1';
+    var HUMAN_CHAT_KEY = 'choys_human_chat_v1';
     var isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
     var mode = 'ai'; // 'ai' | 'human'
     var humanPollInterval = null;
@@ -565,6 +567,79 @@
     var isSending = false;
     var humanImageFile = null;
     var waitingEscalateChoice = false;
+
+    // ── Human chat persistence helpers ───────────────────────
+    function loadHumanChat() {
+        try {
+            var raw = localStorage.getItem(HUMAN_CHAT_KEY);
+            if (!raw) return null;
+            var obj = JSON.parse(raw);
+            if (!obj || typeof obj !== 'object') return null;
+            // Hết hạn sau 24 giờ
+            if (!obj.expiry || Date.now() > obj.expiry) {
+                localStorage.removeItem(HUMAN_CHAT_KEY);
+                return null;
+            }
+            return obj;
+        } catch (e) { return null; }
+    }
+
+    function saveHumanChat(msgs, lastId) {
+        try {
+            var existing = loadHumanChat();
+            // Không bao giờ ghi đè dữ liệu có tin nhắn bằng mảng rỗng
+            if ((!msgs || msgs.length === 0) && existing && existing.msgs && existing.msgs.length > 0) {
+                return;
+            }
+            if (!msgs || msgs.length === 0) return; // Không lưu khi chưa có tin
+            var expiry = existing ? existing.expiry : Date.now() + 24 * 60 * 60 * 1000;
+            localStorage.setItem(HUMAN_CHAT_KEY, JSON.stringify({
+                msgs: msgs,
+                lastId: lastId,
+                expiry: expiry,
+            }));
+        } catch (e) {}
+    }
+
+    function clearHumanChat() {
+        localStorage.removeItem(HUMAN_CHAT_KEY);
+    }
+
+    // ── AI chat persistence helpers ──────────────────────────
+    function loadAiChat() {
+        try {
+            var raw = localStorage.getItem(AI_CHAT_KEY);
+            if (!raw) return null;
+            var obj = JSON.parse(raw);
+            if (!obj || typeof obj !== 'object') return null;
+            if (!obj.expiry || Date.now() > obj.expiry) {
+                localStorage.removeItem(AI_CHAT_KEY);
+                return null;
+            }
+            return obj;
+        } catch (e) { return null; }
+    }
+
+    function saveAiChat(msgs) {
+        try {
+            if (!msgs || msgs.length === 0) return;
+            var existing = loadAiChat();
+            var expiry = existing ? existing.expiry : Date.now() + 24 * 60 * 60 * 1000;
+            localStorage.setItem(AI_CHAT_KEY, JSON.stringify({
+                msgs: msgs,
+                expiry: expiry,
+            }));
+        } catch (e) {}
+    }
+
+    function clearAiChat() {
+        localStorage.removeItem(AI_CHAT_KEY);
+    }
+
+    // Danh sách tin nhắn đang lưu (dùng để persist)
+    var aiMsgs = [];
+    var isRestoringAi = false;
+    var humanMsgs = [];
 
     function loadAiSnapshotFromLocalStore() {
         try {
@@ -642,7 +717,14 @@
                 updateModeUI();
                 return;
             }
-            humanLastId = 0;
+            // Giữ lastId + lịch sử hiện tại để tránh poll lại từ đầu gây trùng tin nhắn.
+            if (humanLastId === 0 && humanMsgs.length === 0) {
+                var saved = loadHumanChat();
+                if (saved && saved.msgs && saved.msgs.length > 0) {
+                    humanLastId = saved.lastId || 0;
+                    humanMsgs = saved.msgs;
+                }
+            }
             startHumanPoll();
         }
     };
@@ -746,6 +828,8 @@
 
                 appendHumanMessage('user', result.data);
                 if (result.data.id > humanLastId) humanLastId = result.data.id;
+                humanMsgs.push({ sender: 'user', message: result.data.message || '', image_url: result.data.image_url || null });
+                saveHumanChat(humanMsgs, humanLastId);
 
                 if (fileInput) {
                     fileInput.value = '';
@@ -786,10 +870,22 @@
         container.innerHTML = '';
         appendMsg('ai', 'Hội thoại đã được xóa. Tôi có thể giúp gì cho bạn?');
         hideEscalate();
+        clearAiChat();
+        aiMsgs = [];
+        clearHumanChat();
+        humanMsgs = [];
+        humanLastId = 0;
         fetch('/widget/ai-clear', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF },
         });
+        // Xóa chat nhân viên trên server nếu đang ở mode human
+        if (isLoggedIn) {
+            fetch('/chat/clear', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF },
+            }).catch(function () {});
+        }
     };
 
     // ── Private helpers ──────────────────────────────────────
@@ -870,6 +966,14 @@
         row.appendChild(bubble);
         container.appendChild(row);
         container.scrollTop = container.scrollHeight;
+
+        // Chỉ lưu hội thoại AI khi đang ở mode AI và không trong lúc restore.
+        if (!isRestoringAi && mode === 'ai' && (role === 'ai' || role === 'user')) {
+            aiMsgs.push({ role: role, html: String(html || '') });
+            if (aiMsgs.length > 200) aiMsgs = aiMsgs.slice(aiMsgs.length - 200);
+            saveAiChat(aiMsgs);
+        }
+
         return row;
     }
 
@@ -980,13 +1084,22 @@
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {
-            if (data.reset) { humanLastId = 0; return; }
+            if (data.reset) {
+                humanLastId = 0;
+                humanMsgs = [];
+                clearHumanChat();
+                return;
+            }
             (data.messages || []).forEach(function (msg) {
                 if (msg.sender === 'staff') {
                     appendHumanMessage('human', msg);
+                    humanMsgs.push({ sender: 'staff', message: msg.message || '', image_url: msg.image_url || null });
                 }
                 if (msg.id > humanLastId) humanLastId = msg.id;
             });
+            if ((data.messages || []).length > 0 && humanMsgs.length > 0) {
+                saveHumanChat(humanMsgs, humanLastId);
+            }
         })
         .catch(function () {});
     }
@@ -1212,7 +1325,46 @@
         snapToSide('right');
     }());
 
+    // Lưu trạng thái chat trước khi rời trang
+    window.addEventListener('beforeunload', function () {
+        if (mode === 'human' && humanMsgs.length > 0) {
+            saveHumanChat(humanMsgs, humanLastId);
+        }
+    });
+
     // Đồng bộ DB.json về localStorage khi widget được tải.
     syncAiSnapshotToLocalStore();
+
+    // Khôi phục hội thoại AI nếu còn trong vòng 24 giờ.
+    var savedAi = loadAiChat();
+    if (savedAi && savedAi.msgs && savedAi.msgs.length > 0) {
+        aiMsgs = savedAi.msgs;
+        var aiContainer = document.getElementById('aiBotMessages');
+        aiContainer.innerHTML = '';
+        isRestoringAi = true;
+        savedAi.msgs.forEach(function (msg) {
+            appendMsg(msg.role === 'user' ? 'user' : 'ai', String(msg.html || ''));
+        });
+        isRestoringAi = false;
+    }
+
+    // Khôi phục hội thoại nhân viên nếu còn trong vòng 24 giờ
+    if (isLoggedIn) {
+        var saved = loadHumanChat();
+        if (saved && saved.msgs && saved.msgs.length > 0) {
+            // Chuyển sang mode human và restore messages
+            mode = 'human';
+            humanLastId = saved.lastId || 0;
+            humanMsgs = saved.msgs;
+            updateModeUI();
+            var container = document.getElementById('aiBotMessages');
+            container.innerHTML = '';
+            saved.msgs.forEach(function (msg) {
+                appendHumanMessage(msg.sender === 'user' ? 'user' : 'human', msg);
+            });
+            // Bắt đầu poll để lấy tin mới nếu có
+            startHumanPoll();
+        }
+    }
 })();
 </script>
