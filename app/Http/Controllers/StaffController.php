@@ -680,8 +680,16 @@ class StaffController extends Controller
     // Resolve slot key từ start/end time đã lưu trong DB.
     private function resolveSlotKey(string $employmentType, string $startTime, string $endTime): ?string
     {
+        $start = substr($startTime, 0, 5);
+        $end = substr($endTime, 0, 5);
+
+        // Tương thích dữ liệu full-time cũ lưu theo khung 08:00-17:00.
+        if ($employmentType === 'full_time' && $start === '08:00' && $end === '17:00') {
+            return '08_16';
+        }
+
         foreach ($this->getScheduleSlotsByEmploymentType($employmentType) as $slotKey => $slot) {
-            if ($slot['start'] === substr($startTime, 0, 5) && $slot['end'] === substr($endTime, 0, 5)) {
+            if ($slot['start'] === $start && $slot['end'] === $end) {
                 return $slotKey;
             }
         }
@@ -720,6 +728,13 @@ class StaffController extends Controller
                 ->get();
 
             foreach ($registrations as $registration) {
+                $dateKey = Carbon::parse($registration->work_date)->toDateString();
+
+                // Luôn đánh dấu ngày đã có ca của chính staff, kể cả ca cũ không còn map đúng slot hiện tại.
+                if ((int) $registration->staff_id === (int) $currentStaff->id) {
+                    $mySelectedDates[$dateKey] = true;
+                }
+
                 $slotKey = $this->resolveSlotKey(
                     $currentStaff->employment_type,
                     (string) $registration->start_time,
@@ -730,13 +745,8 @@ class StaffController extends Controller
                     continue;
                 }
 
-                $dateKey = Carbon::parse($registration->work_date)->toDateString();
                 $weeklyAssignments[$dateKey][$slotKey] ??= [];
                 $weeklyAssignments[$dateKey][$slotKey][] = $registration;
-
-                if ((int) $registration->staff_id === (int) $currentStaff->id) {
-                    $mySelectedDates[$dateKey] = true;
-                }
             }
         }
 
