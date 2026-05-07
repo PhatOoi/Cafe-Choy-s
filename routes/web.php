@@ -90,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
     // FIX: route PUT profile bị thiếu hoàn toàn
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/name', [ProfileController::class, 'updateName'])->name('profile.update.name');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
     // FIX: thêm route payment

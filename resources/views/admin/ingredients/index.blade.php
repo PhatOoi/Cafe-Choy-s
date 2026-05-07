@@ -218,7 +218,7 @@
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 3fr auto;gap:10px;align-items:end;">
                 <div>
                     <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Ngày nhập hàng</div>
-                    <input type="date" name="received_date" class="inventory-field" value="{{ old('received_date') }}" required>
+                    <input type="date" name="received_date" class="inventory-field" value="{{ old('received_date') }}" max="{{ date('Y-m-d') }}" required>
                 </div>
                 <div>
                     <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;">Ngày sản xuất</div>

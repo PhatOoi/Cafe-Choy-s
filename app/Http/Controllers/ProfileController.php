@@ -80,6 +80,24 @@ class ProfileController extends Controller
         return redirect()->route('profile.index')->with('success', 'Đổi mật khẩu thành công!');
     }
 
+    // Cập nhật tên hiển thị của người dùng.
+    public function updateName(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:100',
+        ], [
+            'name.required' => 'Tên không được để trống.',
+            'name.max'      => 'Tên không được vượt quá 100 ký tự.',
+        ]);
+
+        $user->name = $request->name;
+        $user->save();
+
+        return redirect()->route('profile.index')->with('name_success', 'Cập nhật tên thành công!');
+    }
+
     public function updateAvatar(Request $request)
     {
         $request->validate([

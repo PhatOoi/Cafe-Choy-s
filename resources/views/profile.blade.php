@@ -298,6 +298,42 @@
                     </section>
                     @endif
 
+                    {{-- ── Panel cập nhật tên ── --}}
+                    <section class="profile-panel panel-wide" id="name-panel">
+                        <div class="panel-heading">
+                            <span class="panel-kicker">Thông tin cá nhân</span>
+                            <h3>Cập nhật tên</h3>
+                        </div>
+                        <form action="{{ route('profile.update.name') }}" method="POST">
+                            @csrf
+                            @method('PUT')
+
+                            @if(session('name_success'))
+                                <div style="background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;">
+                                    {{ session('name_success') }}
+                                </div>
+                            @endif
+
+                            @error('name')
+                                <div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+
+                            <div class="form-field" style="max-width:400px;">
+                                <label for="name">Tên hiển thị</label>
+                                <input type="text" id="name" name="name"
+                                    value="{{ old('name', $user->name) }}"
+                                    placeholder="Nhập tên mới" required maxlength="100"
+                                    style="width:100%;">
+                            </div>
+
+                            <div class="password-form-actions" style="margin-top:16px;">
+                                <button type="submit" class="profile-action-btn primary-btn">Lưu tên</button>
+                            </div>
+                        </form>
+                    </section>
+
                     {{-- ── Panel đổi mật khẩu: validate mật khẩu mạnh + xác nhận ── --}}
                     <section class="profile-panel panel-wide" id="password-panel">
                         <div class="panel-heading">
