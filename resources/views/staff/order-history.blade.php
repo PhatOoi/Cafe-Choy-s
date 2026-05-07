@@ -16,11 +16,10 @@
     .page-subtitle { font-size: 13px; color: #8a8fa8; margin-top: 2px; }
 
     .history-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 20px;
     }
-    @media (max-width: 992px) { .history-grid { grid-template-columns: 1fr; } }
 
     .section-tag {
         display: inline-flex;
@@ -96,7 +95,7 @@
 
 <div class="history-grid">
     {{-- ── Bảng 1: Đơn nhân viên tạo tại quán ── --}}
-    <div class="card">
+    <div class="card" style="width:100%;">
         <div class="card-header" style="background:#fff8ef;">
             <i class="fas fa-user-tie" style="color:#d4813a;"></i>
             Đơn tại quán (nhân viên tạo)
@@ -171,10 +170,10 @@
     </div>
 
     {{-- ── Bảng 2: Đơn khách đặt online ── --}}
-    <div class="card">
+    <div class="card" style="width:100%;">
         <div class="card-header" style="background:#e5f6ff;">
             <i class="fas fa-mobile-alt" style="color:#0077b6;"></i>
-            Đơn khách tự đặt (online)
+            Đơn khách tự đặt
             <span class="section-tag tag-online">App</span>
             <span class="section-tag tag-count">{{ $customerOrders->count() }} đơn</span>
         </div>

@@ -725,19 +725,20 @@ class StaffController extends Controller
             foreach ($registrations as $registration) {
                 $dateKey = Carbon::parse($registration->work_date)->toDateString();
 
-                // Luôn đánh dấu ngày đã có ca của chính staff, kể cả ca cũ không còn map đúng slot hiện tại.
-                if ((int) $registration->staff_id === (int) $currentStaff->id) {
-                    $mySelectedDates[$dateKey] = true;
-                }
-
                 $slotKey = $this->resolveSlotKey(
                     $currentStaff->employment_type,
                     (string) $registration->start_time,
                     (string) $registration->end_time
                 );
 
+                // Chỉ đánh dấu ngày đã có ca khi slot được nhận diện hợp lệ.
+                // Tránh trường hợp dữ liệu cũ với giờ không chuẩn khóa toàn bộ các slot còn lại.
                 if (!$slotKey) {
                     continue;
+                }
+
+                if ((int) $registration->staff_id === (int) $currentStaff->id) {
+                    $mySelectedDates[$dateKey] = true;
                 }
 
                 $weeklyAssignments[$dateKey][$slotKey] ??= [];

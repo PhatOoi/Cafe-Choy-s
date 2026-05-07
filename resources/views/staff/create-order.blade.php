@@ -858,7 +858,7 @@
                 </div>
             </div>
             <div class="staff-qr-col">
-                <div class="staff-qr-col-title">Cách 2: Chuyển khoản thủ công theo thông tin</div>
+                <div class="staff-qr-col-title">Cách 2: Chuyển khoản theo thông tin</div>
                 <div class="staff-bank-card">
                     <div class="staff-bank-name" id="staffQrBankName">Vietcombank</div>
                     <div class="staff-bank-line"><strong>Ngân hàng:</strong> <span id="staffQrBankLabel">Vietcombank</span></div>

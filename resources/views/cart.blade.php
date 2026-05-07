@@ -342,7 +342,7 @@
                                                                 <img id="qr-code-image" src="{{ $qrApi }}" alt="QR code" style="width:220px;max-width:100%;border:2px solid #eee;padding:8px;background:#fff;">
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <div class="font-weight-bold mb-2" style="font-size:16px;">Cách 2: Chuyển khoản <b>thủ công</b> theo thông tin</div>
+                                                            <div class="font-weight-bold mb-2" style="font-size:16px;">Cách 2: Chuyển khoản theo thông tin</div>
                                                             <div class="card p-3" style="background:#fff;border:1px solid #e0e0e0;">
                                                                     <div class="d-flex align-items-center mb-2">
                                                                         <span style="font-weight:bold;font-size:18px;color:#1f9d55;">Vietcombank</span>
