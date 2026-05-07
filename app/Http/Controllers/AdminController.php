@@ -13,6 +13,7 @@ use App\Models\MonthlyProfit;
 use App\Models\UserRole;
 use App\Models\WorkScheduleBoardLock;
 use App\Models\WorkScheduleRegistration;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -243,7 +244,6 @@ class AdminController extends Controller
             'description' => 'nullable|string',
             'status'      => 'required|in:available,unavailable',
             'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'image_url'   => 'nullable|url|max:500',
         ]);
 
         $imagePath = $product->image_url;
@@ -251,7 +251,7 @@ class AdminController extends Controller
         // ✅ Nếu upload ảnh mới
         if ($request->hasFile('image')) {
             // Xóa ảnh cũ nếu là ảnh local
-            if ($product->image_url && !str_starts_with($product->image_url, ['http://', 'https://'])) {
+            if ($product->image_url && !Str::startsWith($product->image_url, ['http://', 'https://'])) {
                 $oldPath = public_path('images/' . $product->image_url);
                 if (file_exists($oldPath)) {
                     unlink($oldPath);
@@ -262,10 +262,6 @@ class AdminController extends Controller
             $imageName = time() . '.' . $request->image->extension();
             $request->image->move(public_path('images'), $imageName);
             $imagePath = $imageName;
-        }
-        // ✅ Nếu nhập URL mới
-        elseif ($request->image_url) {
-            $imagePath = $request->image_url;
         }
 
         $product->update([

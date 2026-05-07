@@ -58,13 +58,6 @@
                     <label class="form-label">Hình ảnh sản phẩm</label>
                     <input type="file" name="image" class="form-control" accept="image/*"
                         onchange="previewFile(this)">
-                    <small style="color: var(--text-muted); margin-top: 4px; display: block;">Hoặc nhập URL hình ảnh bên dưới</small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">URL hình ảnh (nếu không upload file)</label>
-                    <input type="url" name="image_url" class="form-control" 
-                           value="{{ old('image_url', $product->image_url) }}" placeholder="https://example.com/image.jpg">
-                    @error('image_url')<div class="form-text form-text-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="form-group">
@@ -75,21 +68,20 @@
                     </select>
                 </div>
 
-                <div style="display:flex;gap:10px;justify-content:space-between;margin-top:8px;flex-wrap:wrap;">
-                    <form method="POST" action="{{ route('admin.products.destroy', $product->id) }}">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn-danger"
-                                onclick="return confirm('Xóa sản phẩm này? Không thể hoàn tác!')">
-                            <i class="fas fa-trash"></i> Xóa sản phẩm
-                        </button>
-                    </form>
-                    <div style="display:flex;gap:10px;">
-                        <a href="{{ route('admin.products') }}" class="btn-outline-admin">Hủy</a>
-                        <button type="submit" class="btn-primary-admin">
-                            <i class="fas fa-save"></i> Lưu thay đổi
-                        </button>
-                    </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap;">
+                    <a href="{{ route('admin.products') }}" class="btn-outline-admin">Hủy</a>
+                    <button type="submit" class="btn-primary-admin">
+                        <i class="fas fa-save"></i> Lưu thay đổi
+                    </button>
                 </div>
+            </form>
+
+            <form method="POST" action="{{ route('admin.products.destroy', $product->id) }}" style="margin-top:10px;">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn-danger"
+                        onclick="return confirm('Xóa sản phẩm này? Không thể hoàn tác!')">
+                    <i class="fas fa-trash"></i> Xóa sản phẩm
+                </button>
             </form>
         </div>
     </div>

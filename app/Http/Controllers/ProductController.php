@@ -49,30 +49,23 @@ class ProductController extends Controller
     // ➕ CREATE
     public function store(Request $request)
     {
-        // Validate dữ liệu cơ bản và cho phép chọn 1 trong 2 cách ảnh: upload file hoặc nhập URL.
+        // Validate dữ liệu cơ bản.
         $request->validate([
             'name' => 'required',
             'price' => 'required|numeric',
             'category_id' => 'required',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'image_url' => 'nullable|url'
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
         ]);
 
         $imagePath = null;
 
-        // ✅ Ưu tiên upload file
+        // ✅ Xử lý upload file
         if ($request->hasFile('image')) {
             // Ảnh upload local sẽ được lưu vào public/images và chỉ lưu tên file trong database.
             $imageName = time() . '.' . $request->image->extension();
             $request->image->move(public_path('images'), $imageName);
 
             $imagePath = $imageName;
-        }
-
-        // ✅ Nếu nhập URL
-        elseif ($request->image_url) {
-            // Nếu dùng URL thì lưu nguyên chuỗi URL để frontend load ảnh từ nguồn ngoài.
-            $imagePath = $request->image_url;
         }
 
         // Tạo sản phẩm mới cho khu vực admin quản lý menu.
@@ -99,8 +92,7 @@ class ProductController extends Controller
             'name' => 'required',
             'price' => 'required|numeric',
             'category_id' => 'required',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'image_url' => 'nullable|url'
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
         ]);
 
         $imagePath = $product->image_url;
@@ -121,11 +113,6 @@ class ProductController extends Controller
             $request->image->move(public_path('images'), $imageName);
 
             $imagePath = $imageName;
-        }
-
-        // ✅ Nếu nhập URL mới
-        elseif ($request->image_url) {
-            $imagePath = $request->image_url;
         }
 
         // Cập nhật thông tin sản phẩm sau khi xử lý ảnh.

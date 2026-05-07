@@ -176,6 +176,37 @@ class GeminiService
             }
         }
 
+        if (preg_match('/(ban chay|ban nhieu|pho bien|duoc goi nhieu|hot nhat|top mon|mon nao hot|thu hang|best seller|bestseller)/u', $normalizedAscii)) {
+            $topSellers = $snapshot['top_sellers'] ?? [];
+            if (!empty($topSellers)) {
+                $lines = [];
+                foreach ($topSellers as $i => $item) {
+                    $rank = $i + 1;
+                    $name = (string) ($item['name'] ?? '');
+                    if ($name === '') {
+                        continue;
+                    }
+                    $price = 0;
+                    foreach (($snapshot['products'] ?? []) as $p) {
+                        if (($p['name'] ?? '') === $name) {
+                            $price = (float) ($p['price'] ?? 0);
+                            break;
+                        }
+                    }
+                    $priceStr = $price > 0 ? ' (' . number_format($price, 0, ',', '.') . 'đ)' : '';
+                    $soldStr  = isset($item['total_sold']) ? ' — đã bán ' . (int) $item['total_sold'] . ' lần' : '';
+                    $lines[]  = $rank . '. ' . $name . $priceStr . $soldStr;
+                    if (count($lines) >= 5) {
+                        break;
+                    }
+                }
+                if (!empty($lines)) {
+                    return "Top món bán chạy nhất tại Choy's Cafe:\n" . implode("\n", $lines) . "\nAnh/chị muốn thử món nào, bé đặt ngay nha! ☕";
+                }
+            }
+            return 'Hiện bé chưa có dữ liệu bán hàng để xếp hạng, anh/chị vào menu xem trực tiếp nhé!';
+        }
+
         // --- Gợi ý theo cảm xúc (ưu tiên trước preference vì emotion cụ thể hơn) ---
         $emotionSuggestion = $this->fallbackSuggestByEmotion($normalizedAscii, $snapshot);
         if ($emotionSuggestion !== null) {
